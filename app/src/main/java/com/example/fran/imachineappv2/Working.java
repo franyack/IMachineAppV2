@@ -232,7 +232,7 @@ public class Working extends Activity {
                 }
             }
         }
-        Intent i = new Intent(this, Results.class);
+        Intent i = new Intent(this, ResultsActivityView.class);
         i.putExtra("vImages",vImages);
         i.putExtra("vClusters", vClusters);
         startActivity(i);

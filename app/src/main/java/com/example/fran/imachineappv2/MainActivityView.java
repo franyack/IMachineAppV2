@@ -1,6 +1,7 @@
 package com.example.fran.imachineappv2;
 
 import android.Manifest;
+import android.content.Intent;
 import android.os.Build;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
@@ -73,16 +74,16 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         workingText = (TextView) findViewById(R.id.workingTexto);
 
         presenter.fillWorkingText();
-//        presenter.showProgressBarWorking(progressBarWorking);//TODO:Pensar en implementar progressBar
-//        presenter.fillWorkingText();//TODO:Preguntar porque no anda cuando se cambia el content view
-//        Intent i = new Intent(this, Working.class);
-//        i.putExtra("imagesPath",imagespath);
-//        i.putExtra("imagesSize", images.size());
-//        startActivity(i);
+
         presenter.procesarImagenes(MainActivityView.this);
 
     }
 
+    @Override
+    public void clusterReady() {
+        Intent i = new Intent(this, ResultsActivityView.class);
+        startActivity(i);
+    }
 
 
 

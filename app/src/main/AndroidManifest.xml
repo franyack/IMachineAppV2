@@ -19,7 +19,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".Working" android:noHistory="true"></activity>
-        <activity android:name=".Results" android:noHistory="true"></activity>
+        <activity android:name=".ResultsActivityView" android:noHistory="true"></activity>
     </application>
 
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>

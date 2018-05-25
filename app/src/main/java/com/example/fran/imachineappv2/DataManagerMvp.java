@@ -22,5 +22,7 @@ public interface DataManagerMvp {
 
     void startImageProcess(MainActivityView mainActivityView);
 
+    boolean clustersReady();
+
 //    void procesarImagenes();
 }

@@ -18,12 +18,16 @@ import java.io.IOException;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 /**
  * Created by fran on 02/04/18.
  */
 
-public class Results extends Activity {
+public class ResultsActivityView extends Activity {
+
+    private static final Logger LOGGER = Logger.getLogger(ResultsActivityView.class.getName());
+
 
     ArrayList<String> vImages = new ArrayList<>();
     ArrayList<Integer> vClusters = new ArrayList<>();
@@ -31,10 +35,10 @@ public class Results extends Activity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
-        vImages = (ArrayList<String>) getIntent().getSerializableExtra("vImages");
-        vClusters = (ArrayList<Integer>) getIntent().getSerializableExtra("vClusters");
-        obtenerClusters(vImages,vClusters);
+        LOGGER.info("Hello World!");
+//        vImages = (ArrayList<String>) getIntent().getSerializableExtra("vImages");
+//        vClusters = (ArrayList<Integer>) getIntent().getSerializableExtra("vClusters");
+//        obtenerClusters(vImages,vClusters);
 
     }
 
@@ -112,7 +116,7 @@ public class Results extends Activity {
                 }
             }
         }
-        AlertDialog.Builder alert = new AlertDialog.Builder(Results.this);
+        AlertDialog.Builder alert = new AlertDialog.Builder(ResultsActivityView.this);
         alert.setTitle("Proceso finalizado!");
         alert.setMessage("La carpeta fue creada en la siguiente ubicación:\n\n" + pathFolder);
         alert.setPositiveButton("OK", null);

@@ -193,7 +193,12 @@ public class DataManager implements  DataManagerMvp {
         }
     }
 
-//    @Override
+    @Override
+    public boolean clustersReady() {
+        return (vImages.size()==imagespath.length);
+    }
+
+    //    @Override
     public void processImages() {
         result = new String[imagespath.length];
         for (int i = 0; i< imagespath.length; i++){
@@ -254,7 +259,7 @@ public class DataManager implements  DataManagerMvp {
                 }
             }
         }
-
+        presenter.clustersReady();
     }
 
     public static Bitmap lessResolution (String filePath, int width, int height){

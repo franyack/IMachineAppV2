@@ -80,5 +80,10 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
 //        dataManager.procesarImagenes();
     }
 
+    @Override
+    public void clustersReady() {
+        view.clusterReady();
+    }
+
 
 }

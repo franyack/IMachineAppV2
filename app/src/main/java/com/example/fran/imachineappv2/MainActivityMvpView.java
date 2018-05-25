@@ -10,4 +10,6 @@ public interface MainActivityMvpView {
     void buttonChooseGalleryEnable(boolean b);
 
     void showWorkingText(String result);
+
+    void clusterReady();
 }

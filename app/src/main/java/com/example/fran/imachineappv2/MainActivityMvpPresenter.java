@@ -30,4 +30,6 @@ public interface MainActivityMvpPresenter {
     void showProgressBarWorking(ProgressBar progressBarWorking);
 
     void procesarImagenes(MainActivityView mainActivityView);
+
+    void clustersReady();
 }
