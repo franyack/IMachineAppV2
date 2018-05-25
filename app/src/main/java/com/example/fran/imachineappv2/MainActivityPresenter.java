@@ -76,7 +76,8 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
 
     @Override
     public void procesarImagenes(MainActivityView mainActivityView) {
-        dataManager.procesarImagenes(mainActivityView);
+        dataManager.startImageProcess(mainActivityView);
+//        dataManager.procesarImagenes();
     }
 
 

@@ -80,6 +80,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 //        i.putExtra("imagesSize", images.size());
 //        startActivity(i);
         presenter.procesarImagenes(MainActivityView.this);
+
     }
 
 

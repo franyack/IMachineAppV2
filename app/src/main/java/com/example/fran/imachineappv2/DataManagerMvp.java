@@ -20,5 +20,7 @@ public interface DataManagerMvp {
 
     void fillWorkingText();
 
-    void procesarImagenes(MainActivityView mainActivityView);
+    void startImageProcess(MainActivityView mainActivityView);
+
+//    void procesarImagenes();
 }
