@@ -2,6 +2,8 @@ package com.example.fran.imachineappv2;
 
 import android.widget.CheckBox;
 
+import java.util.ArrayList;
+
 /**
  * Created by fran on 24/05/18.
  */
@@ -22,7 +24,7 @@ public interface DataManagerMvp {
 
     void startImageProcess(MainActivityView mainActivityView);
 
-    boolean clustersReady();
+    void showClustersResults(ArrayList<String> vImages, ArrayList<Integer> vClusters);
 
-//    void procesarImagenes();
+    void folderGenerator(String pathFolder);
 }

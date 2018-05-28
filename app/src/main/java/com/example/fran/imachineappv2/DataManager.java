@@ -9,15 +9,16 @@ import android.view.Gravity;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.CheckBox;
-
 import com.codekidlabs.storagechooser.StorageChooser;
-
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.ejml.data.DMatrixRMaj;
-
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -33,7 +34,9 @@ import java.util.logging.Logger;
 
 public class DataManager implements  DataManagerMvp {
 
-    private MainActivityMvpPresenter presenter;
+    private MainActivityMvpPresenter mainActivityPresenter;
+    private ResultsActivityMvpPresenter resultsActivityPresenter;
+
     String[] imagespath;
     String[] result;
     Vector<String> images = new Vector<>();
@@ -52,14 +55,17 @@ public class DataManager implements  DataManagerMvp {
     List<String> label_lookup = new ArrayList<>();
     double[][] g_aff_matrix;
 
-    Vector<String> vImages = new Vector<>();
-    Vector<Integer> vClusters = new Vector<>();
+    ArrayList<String> vImages = new ArrayList<>();
+    ArrayList<Integer> vClusters = new ArrayList<>();
     List<Top_Predictions> top_predictions = new ArrayList<>();
 
-    public DataManager(MainActivityPresenter mainActivityPresenter) {
-        presenter = mainActivityPresenter;
+    Vector<Integer> vClustersResult = new Vector<>();
+
+    public DataManager(MainActivityPresenter presenter) {
+        this.mainActivityPresenter = presenter;
     }
 
+    public DataManager(ResultsActivityPresenter presenter) {this.resultsActivityPresenter = presenter;}
 
     @Override
     public void deleteClusterResultFolder() {
@@ -91,7 +97,7 @@ public class DataManager implements  DataManagerMvp {
         chooser.setOnSelectListener(new StorageChooser.OnSelectListener() {
             @Override
             public void onSelect(String path) {
-                presenter.showGalleryChosen(path);
+                mainActivityPresenter.showGalleryChosen(path);
             }
         });
     }
@@ -99,11 +105,11 @@ public class DataManager implements  DataManagerMvp {
     @Override
     public void checkBoxClick(CheckBox chAllImages) {
         if (chAllImages.isChecked()){
-            presenter.buttonChooseGalleryEnable(false);
+            mainActivityPresenter.buttonChooseGalleryEnable(false);
         }else{
-            presenter.buttonChooseGalleryEnable(true);
+            mainActivityPresenter.buttonChooseGalleryEnable(true);
         }
-        presenter.showGalleryChosen("");
+        mainActivityPresenter.showGalleryChosen("");
     }
 
     @Override
@@ -178,7 +184,7 @@ public class DataManager implements  DataManagerMvp {
     @Override
     public void fillWorkingText() {
         String setearTexto = "Procesando " + images.size() +  " imagenes, aguarde por favor…";
-        presenter.showWorkingText(setearTexto);
+        mainActivityPresenter.showWorkingText(setearTexto);
     }
 
     @Override
@@ -193,9 +199,80 @@ public class DataManager implements  DataManagerMvp {
         }
     }
 
+
     @Override
-    public boolean clustersReady() {
-        return (vImages.size()==imagespath.length);
+    public void showClustersResults(ArrayList<String> vImages, ArrayList<Integer> vClusters) {
+        this.vImages = vImages;
+        this.vClusters = vClusters;
+        ArrayList<Integer> vClustersCopy = new ArrayList<Integer>(vClusters);
+        if (vClustersResult.size()>0){
+            vClustersResult.clear();
+        }
+        int cant;
+        while (!vClustersCopy.isEmpty()) {
+            cant = 1;
+            for (int i = 1; i < vClustersCopy.size(); i++) {
+                if (vClustersCopy.get(i) == null) {
+                    break;
+                }
+                if (vClustersCopy.get(0).equals(vClustersCopy.get(i))) {
+                    cant++;
+                    vClustersCopy.remove(i);
+                    i -= 1;
+                }
+            }
+            vClustersResult.add(cant);
+            vClustersCopy.remove(0);
+        }
+
+        String resu="";
+        for (int i=0;i<vClustersResult.size();i++){
+            resu=resu+"\n"+"Cluster "+i+": "+vClustersResult.get(i)+" image/s";
+        }
+
+
+        resultsActivityPresenter.showClustersResult(resu);
+
+    }
+
+    @Override
+    public void folderGenerator(String pathFolder) {
+        File folder = new File(pathFolder);
+        if (!folder.exists()) {
+            folder.mkdirs();
+        } else {
+            try {
+                FileUtils.cleanDirectory(folder);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        for (int i = 0; i < vClustersResult.size(); i++) {
+            folder = new File(Environment.getExternalStorageDirectory() +
+                    File.separator + "clusterResult" + File.separator + "Cluster" + i);
+            folder.mkdirs();
+            for (int j = 0; j < vClusters.size(); j++) {
+                if (vClusters.get(j) == i) {
+                    File source = new File(vImages.get(j));
+                    File destination = new File(folder.getAbsolutePath() + File.separator + "image" + j + ".jpg");
+                    FileChannel src = null;
+                    FileChannel dst = null;
+                    try {
+                        src = new FileInputStream(source).getChannel();
+                        dst = new FileOutputStream(destination).getChannel();
+                        dst.transferFrom(src, 0, src.size());
+                        src.close();
+                        dst.close();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        }
+        resultsActivityPresenter.showFolderAlert(pathFolder);
     }
 
     //    @Override
@@ -259,7 +336,9 @@ public class DataManager implements  DataManagerMvp {
                 }
             }
         }
-        presenter.clustersReady();
+//        mainActivityPresenter.clustersReady();
+//        obtenerClusters(vImages,vClusters);
+        mainActivityPresenter.clustersReady(vImages,vClusters);
     }
 
     public static Bitmap lessResolution (String filePath, int width, int height){
@@ -495,4 +574,6 @@ public class DataManager implements  DataManagerMvp {
         }
         return result;
     }
+
+
 }

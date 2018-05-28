@@ -3,6 +3,8 @@ package com.example.fran.imachineappv2;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 
+import java.util.ArrayList;
+
 /**
  * Created by fran on 24/05/18.
  */
@@ -31,5 +33,5 @@ public interface MainActivityMvpPresenter {
 
     void procesarImagenes(MainActivityView mainActivityView);
 
-    void clustersReady();
+    void clustersReady(ArrayList<String> vImages, ArrayList<Integer> vClusters);
 }
