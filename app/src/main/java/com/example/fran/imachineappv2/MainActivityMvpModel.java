@@ -8,7 +8,7 @@ import java.util.ArrayList;
  * Created by fran on 24/05/18.
  */
 
-public interface DataManagerMvp {
+public interface MainActivityMvpModel {
 
     void deleteClusterResultFolder();
 
@@ -23,8 +23,4 @@ public interface DataManagerMvp {
     void fillWorkingText();
 
     void startImageProcess(MainActivityView mainActivityView);
-
-    void showClustersResults(ArrayList<String> vImages, ArrayList<Integer> vClusters);
-
-    void folderGenerator(String pathFolder);
 }

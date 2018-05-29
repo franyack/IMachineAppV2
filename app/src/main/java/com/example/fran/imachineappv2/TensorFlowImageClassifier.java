@@ -21,7 +21,7 @@ import java.util.List;
 import java.util.PriorityQueue;
 
 /**
- * Created by amitshekhar on 17/03/18.
+ * Based on: https://github.com/amitshekhariitbhu/Android-TensorFlow-Lite-Example
  */
 
 public class TensorFlowImageClassifier implements Classifier {

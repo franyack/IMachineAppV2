@@ -14,11 +14,7 @@ import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.ejml.data.DMatrixRMaj;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -32,14 +28,12 @@ import java.util.logging.Logger;
  * Created by fran on 24/05/18.
  */
 
-public class DataManager implements  DataManagerMvp {
+public class MainActivityModel implements MainActivityMvpModel {
 
     private MainActivityMvpPresenter mainActivityPresenter;
-    private ResultsActivityMvpPresenter resultsActivityPresenter;
 
-    String[] imagespath;
-    String[] result;
-    Vector<String> images = new Vector<>();
+    private String[] imagespath;
+    private Vector<String> images = new Vector<>();
 
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
     private static final String MODEL_PATH = "mobilenet_quant_v1_224.tflite";
@@ -51,21 +45,18 @@ public class DataManager implements  DataManagerMvp {
     private Classifier classifier;
     private Executor executor = Executors.newSingleThreadExecutor();
 
-    imagenet wnid_lookup = new imagenet();
-    List<String> label_lookup = new ArrayList<>();
-    double[][] g_aff_matrix;
+    private Imagenet wnid_lookup = new Imagenet();
+//    private List<String> label_lookup = new ArrayList<>();
+
 
     ArrayList<String> vImages = new ArrayList<>();
     ArrayList<Integer> vClusters = new ArrayList<>();
-    List<Top_Predictions> top_predictions = new ArrayList<>();
+    private List<Top_Predictions> top_predictions = new ArrayList<>();
 
-    Vector<Integer> vClustersResult = new Vector<>();
-
-    public DataManager(MainActivityPresenter presenter) {
+    //Constructor
+    MainActivityModel(MainActivityPresenter presenter) {
         this.mainActivityPresenter = presenter;
     }
-
-    public DataManager(ResultsActivityPresenter presenter) {this.resultsActivityPresenter = presenter;}
 
     @Override
     public void deleteClusterResultFolder() {
@@ -121,7 +112,8 @@ public class DataManager implements  DataManagerMvp {
         if (chAllImages.isChecked()){
             curDir = new File("/storage/emulated/0");
         }else{
-            curDir = new File((String) path_chosen);
+            assert path_chosen != null;
+            curDir = new File(path_chosen);
         }
         if (images.size()>0){
             images.clear();
@@ -191,7 +183,7 @@ public class DataManager implements  DataManagerMvp {
     public void startImageProcess(MainActivityView mainActivityView) {
         try {
             wnid_lookup.wnidWordsList = wnid_lookup.loadWnIDWords(mainActivityView.getAssets(),WORDS_PATH);
-            label_lookup = TensorFlowImageClassifier.loadLabelList(mainActivityView.getAssets(),LABEL_PATH);
+//            label_lookup = TensorFlowImageClassifier.loadLabelList(mainActivityView.getAssets(),LABEL_PATH);
             wnid_lookup.hierarchyLookupList = wnid_lookup.loadHierarchy_lookup(mainActivityView.getAssets(),HIERARCHY_PATH);
             initTensorFlowAndLoadModel(mainActivityView);
         } catch (IOException e) {
@@ -199,90 +191,12 @@ public class DataManager implements  DataManagerMvp {
         }
     }
 
-
-    @Override
-    public void showClustersResults(ArrayList<String> vImages, ArrayList<Integer> vClusters) {
-        this.vImages = vImages;
-        this.vClusters = vClusters;
-        ArrayList<Integer> vClustersCopy = new ArrayList<Integer>(vClusters);
-        if (vClustersResult.size()>0){
-            vClustersResult.clear();
-        }
-        int cant;
-        while (!vClustersCopy.isEmpty()) {
-            cant = 1;
-            for (int i = 1; i < vClustersCopy.size(); i++) {
-                if (vClustersCopy.get(i) == null) {
-                    break;
-                }
-                if (vClustersCopy.get(0).equals(vClustersCopy.get(i))) {
-                    cant++;
-                    vClustersCopy.remove(i);
-                    i -= 1;
-                }
-            }
-            vClustersResult.add(cant);
-            vClustersCopy.remove(0);
-        }
-
-        String resu="";
-        for (int i=0;i<vClustersResult.size();i++){
-            resu=resu+"\n"+"Cluster "+i+": "+vClustersResult.get(i)+" image/s";
-        }
-
-
-        resultsActivityPresenter.showClustersResult(resu);
-
-    }
-
-    @Override
-    public void folderGenerator(String pathFolder) {
-        File folder = new File(pathFolder);
-        if (!folder.exists()) {
-            folder.mkdirs();
-        } else {
-            try {
-                FileUtils.cleanDirectory(folder);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        for (int i = 0; i < vClustersResult.size(); i++) {
-            folder = new File(Environment.getExternalStorageDirectory() +
-                    File.separator + "clusterResult" + File.separator + "Cluster" + i);
-            folder.mkdirs();
-            for (int j = 0; j < vClusters.size(); j++) {
-                if (vClusters.get(j) == i) {
-                    File source = new File(vImages.get(j));
-                    File destination = new File(folder.getAbsolutePath() + File.separator + "image" + j + ".jpg");
-                    FileChannel src = null;
-                    FileChannel dst = null;
-                    try {
-                        src = new FileInputStream(source).getChannel();
-                        dst = new FileOutputStream(destination).getChannel();
-                        dst.transferFrom(src, 0, src.size());
-                        src.close();
-                        dst.close();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }
-        }
-        resultsActivityPresenter.showFolderAlert(pathFolder);
-    }
-
     //    @Override
     public void processImages() {
-        result = new String[imagespath.length];
         for (int i = 0; i< imagespath.length; i++){
-            Bitmap image = lessResolution(imagespath[i],224,224);
-            image = Bitmap.createScaledBitmap(image,224,224,false);
+            Bitmap image = lessResolution(imagespath[i],INPUT_SIZE,INPUT_SIZE);
+            image = Bitmap.createScaledBitmap(image,INPUT_SIZE,INPUT_SIZE,false);
             if (image != null){
-//                if (classifier==null){return;}//TODO:Porque en debug queda cargado y cuando se ejecuta está nulo?
                 final List<Classifier.Recognition> results = classifier.recognizeImage(image);
                 List<wnIdPredictions> wnIdPredictionsList = new ArrayList<>();
                 if (results.size() == 0){
@@ -304,6 +218,7 @@ public class DataManager implements  DataManagerMvp {
 //            result[i] = results.toString() + "->" + randomNum;
             }
         }
+        double[][] g_aff_matrix;
         g_aff_matrix = get_grammatical_affinity(top_predictions);
         DMatrixRMaj cluster_matrix = new DMatrixRMaj(g_aff_matrix);
 
@@ -336,14 +251,10 @@ public class DataManager implements  DataManagerMvp {
                 }
             }
         }
-//        mainActivityPresenter.clustersReady();
-//        obtenerClusters(vImages,vClusters);
         mainActivityPresenter.clustersReady(vImages,vClusters);
     }
 
     public static Bitmap lessResolution (String filePath, int width, int height){
-        int reqHeight = height;
-        int reqWidth = width;
         BitmapFactory.Options options = new BitmapFactory.Options();
 
         //First decode with inJustDecodeBounds = true to check dimensions
@@ -351,7 +262,7 @@ public class DataManager implements  DataManagerMvp {
         BitmapFactory.decodeFile(filePath,options);
 
         //Calculate inSampleSize
-        options.inSampleSize = calculateInSampleSize(options, reqWidth, reqHeight);
+        options.inSampleSize = calculateInSampleSize(options, width, height);
 
         //Decode bitmap with inSampleSize set
         options.inJustDecodeBounds = false;
@@ -453,38 +364,38 @@ public class DataManager implements  DataManagerMvp {
         String img_path;
         List<wnIdPredictions> result;
 
-        public Top_Predictions(String s, List<wnIdPredictions> wnIdPredictions) {
+        private Top_Predictions(String s, List<wnIdPredictions> wnIdPredictions) {
             img_path = s;
             result = wnIdPredictions;
         }
 
 
-        public String getImg_path() {
-            return img_path;
-        }
+//        public String getImg_path() {
+//            return img_path;
+//        }
 
-        public List<wnIdPredictions> getResult() {
+        private List<wnIdPredictions> getResult() {
             return result;
         }
     }
 
-    public class wnIdPredictions{
+    private class wnIdPredictions{
         String wnId;
         float prediction;
-        public wnIdPredictions(String wnId, float prediction){
+        private wnIdPredictions(String wnId, float prediction){
             this.wnId = wnId;
             this.prediction = prediction;
         }
 
-        public String getWnId() {
+        private String getWnId() {
             return wnId;
         }
 
-        public float getPrediction() {
+        private float getPrediction() {
             return prediction;
         }
 
-        public void setPrediction(float prediction) {
+        private void setPrediction(float prediction) {
             this.prediction = prediction;
         }
     }

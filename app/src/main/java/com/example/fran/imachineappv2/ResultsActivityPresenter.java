@@ -9,17 +9,17 @@ import java.util.ArrayList;
 public class ResultsActivityPresenter implements ResultsActivityMvpPresenter {
 
     private ResultsActivityMvpView view;
-    private DataManagerMvp dataManager;
+    private ResultsActivityMvpModel resultsActivityModel;
 
     public ResultsActivityPresenter(ResultsActivityView resultsActivityView) {
         view = resultsActivityView;
-        dataManager = new DataManager(this);
+        resultsActivityModel = new ResultsActivityModel(this);
     }
 
 
     @Override
     public void fillTvResults(ArrayList<String> vImages, ArrayList<Integer> vClusters) {
-        dataManager.showClustersResults(vImages,vClusters);
+        resultsActivityModel.showClustersResults(vImages,vClusters);
     }
 
     @Override
@@ -29,7 +29,7 @@ public class ResultsActivityPresenter implements ResultsActivityMvpPresenter {
 
     @Override
     public void folderGenerator(String pathFolder) {
-        dataManager.folderGenerator(pathFolder);
+        resultsActivityModel.folderGenerator(pathFolder);
     }
 
     @Override

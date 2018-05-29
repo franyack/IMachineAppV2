@@ -64,12 +64,12 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     public void procesarImagenes(View view) {
 
 //        presenter.procesarImagenes();
-        if (!presenter.prepararImagenes(path_chosen.toString(),chAllImages)){
+        if (!presenter.prepararImagenes((String) path_chosen.getText(),chAllImages)){
             Toast.makeText(getApplicationContext(),"Debe seleccionar un directorio a procesar", Toast.LENGTH_SHORT).show();
             return;
         }
 
-        presenter.alertBlackWindow(MainActivityView.this);
+//        presenter.alertBlackWindow(MainActivityView.this);
 
         setContentView(R.layout.working);
 

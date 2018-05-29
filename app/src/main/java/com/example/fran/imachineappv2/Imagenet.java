@@ -12,7 +12,7 @@ import java.util.List;
  * Created by fran on 02/05/18.
  */
 
-public class imagenet {
+public class Imagenet {
 
     public List<wnidWords> wnidWordsList = new ArrayList<>();
 

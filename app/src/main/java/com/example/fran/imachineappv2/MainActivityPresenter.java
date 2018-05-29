@@ -12,11 +12,11 @@ import java.util.ArrayList;
 public class MainActivityPresenter implements MainActivityMvpPresenter {
 
     private MainActivityMvpView view;
-    private DataManagerMvp dataManager;
+    private MainActivityMvpModel dataManager;
 
     public MainActivityPresenter(MainActivityView mainActivityView) {
         view = mainActivityView;
-        dataManager = new DataManager(this);
+        dataManager = new MainActivityModel(this);
     }
 
 
