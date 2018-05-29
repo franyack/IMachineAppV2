@@ -1,4 +1,4 @@
-package com.example.fran.imachineappv2;
+package com.example.fran.imachineappv2.CIEngine;
 
 import android.annotation.SuppressLint;
 import android.content.res.AssetFileDescriptor;
@@ -39,10 +39,10 @@ public class TensorFlowImageClassifier implements Classifier {
 
     }
 
-    static Classifier create(AssetManager assetManager,
-                             String modelPath,
-                             String labelPath,
-                             int inputSize) throws IOException {
+    public static Classifier create(AssetManager assetManager,
+                                    String modelPath,
+                                    String labelPath,
+                                    int inputSize) throws IOException {
 
         TensorFlowImageClassifier classifier = new TensorFlowImageClassifier();
         classifier.interpreter = new Interpreter(classifier.loadModelFile(assetManager, modelPath));

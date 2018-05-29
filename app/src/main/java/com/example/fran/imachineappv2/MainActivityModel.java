@@ -10,6 +10,11 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.CheckBox;
 import com.codekidlabs.storagechooser.StorageChooser;
+import com.example.fran.imachineappv2.CIEngine.Classifier;
+import com.example.fran.imachineappv2.CIEngine.MCLDenseEJML;
+import com.example.fran.imachineappv2.CIEngine.TensorFlowImageClassifier;
+import com.example.fran.imachineappv2.Utils.Imagenet;
+
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.ejml.data.DMatrixRMaj;

@@ -1,4 +1,4 @@
-package com.example.fran.imachineappv2;
+package com.example.fran.imachineappv2.Utils;
 
 import android.content.res.AssetManager;
 

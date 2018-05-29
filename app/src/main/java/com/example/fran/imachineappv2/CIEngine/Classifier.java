@@ -1,4 +1,4 @@
-package com.example.fran.imachineappv2;
+package com.example.fran.imachineappv2.CIEngine;
 
 import android.graphics.Bitmap;
 
