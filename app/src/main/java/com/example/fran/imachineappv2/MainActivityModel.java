@@ -1,6 +1,8 @@
 package com.example.fran.imachineappv2;
 
 import android.app.AlertDialog;
+import android.content.res.AssetFileDescriptor;
+import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
 import android.os.Environment;
@@ -18,8 +20,14 @@ import com.example.fran.imachineappv2.Utils.Imagenet;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.ejml.data.DMatrixRMaj;
+
+import java.io.BufferedReader;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
+import java.nio.ByteBuffer;
+import java.nio.ByteOrder;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -46,6 +54,8 @@ public class MainActivityModel implements MainActivityMvpModel {
     private static final String WORDS_PATH = "words.txt";
     private static final String HIERARCHY_PATH = "wordnet.is_a.txt";
     private static final int INPUT_SIZE = 224;
+    private static final int BATCH_SIZE = 1;
+    private static final int PIXEL_SIZE = 3;
 
     private Classifier classifier;
     private Executor executor = Executors.newSingleThreadExecutor();
@@ -201,8 +211,11 @@ public class MainActivityModel implements MainActivityMvpModel {
         for (int i = 0; i< imagespath.length; i++){
             Bitmap image = lessResolution(imagespath[i],INPUT_SIZE,INPUT_SIZE);
             image = Bitmap.createScaledBitmap(image,INPUT_SIZE,INPUT_SIZE,false);
+            ByteBuffer byteBuffer;
             if (image != null){
-                final List<Classifier.Recognition> results = classifier.recognizeImage(image);
+                byteBuffer = convertBitmapToByteBuffer(image);
+                final List<Classifier.Recognition> results = classifier.recognizeImage(byteBuffer);
+                byteBuffer.clear();
                 List<wnIdPredictions> wnIdPredictionsList = new ArrayList<>();
                 if (results.size() == 0){
                     wnIdPredictions entity = new wnIdPredictions("n00001740",1);
@@ -213,14 +226,12 @@ public class MainActivityModel implements MainActivityMvpModel {
                 top_predictions.add(new Top_Predictions(imagespath[i], wnIdPredictionsList));
 
                 LOGGER.info(imagespath[i]);
-//            for (int j=0;j<wnIdPredictionsList.size();j++){
-//                String word = "";
-//                word = wnid_lookup.get_label_from_wnid(wnIdPredictionsList.get(j).getWnId(),wnid_lookup.wnidWordsList);
-//                LOGGER.info(word+": "+wnIdPredictionsList.get(j).getPrediction());
-//            }
-//            LOGGER.info("                                                                                ");
-//            int randomNum = ThreadLocalRandom.current().nextInt(1,11);
-//            result[i] = results.toString() + "->" + randomNum;
+            for (int j=0;j<wnIdPredictionsList.size();j++){
+                String word;
+                word = wnid_lookup.get_label_from_wnid(wnIdPredictionsList.get(j).getWnId(),wnid_lookup.wnidWordsList);
+                LOGGER.info(word+": "+wnIdPredictionsList.get(j).getPrediction());
+            }
+            LOGGER.info("                                                                                ");
             }
         }
         double[][] g_aff_matrix;
@@ -294,6 +305,23 @@ public class MainActivityModel implements MainActivityMvpModel {
         return inSampleSize;
     }
 
+    private ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BATCH_SIZE * INPUT_SIZE * INPUT_SIZE * PIXEL_SIZE);
+        byteBuffer.order(ByteOrder.nativeOrder());
+        int[] intValues = new int[INPUT_SIZE * INPUT_SIZE];
+        bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
+        int pixel = 0;
+        for (int i = 0; i < INPUT_SIZE; ++i) {
+            for (int j = 0; j < INPUT_SIZE; ++j) {
+                final int val = intValues[pixel++];
+                byteBuffer.put((byte) ((val >> 16) & 0xFF));
+                byteBuffer.put((byte) ((val >> 8) & 0xFF));
+                byteBuffer.put((byte) (val & 0xFF));
+            }
+        }
+        return byteBuffer;
+    }
+
     private List<wnIdPredictions> process_top_predictions(List<Classifier.Recognition> results, int depth, double thresh_prob) {
         List<wnIdPredictions> predictions = new ArrayList<>();
         String wnid;
@@ -343,10 +371,17 @@ public class MainActivityModel implements MainActivityMvpModel {
             @Override
             public void run() {
                 try {
+                    AssetManager assetManager = mainActivityView.getAssets();
+                    BufferedReader reader = new BufferedReader(new InputStreamReader(assetManager.open(LABEL_PATH)));
+                    AssetFileDescriptor fileDescriptor = assetManager.openFd(MODEL_PATH);
+                    FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+                    long startOffset = fileDescriptor.getStartOffset();
+                    long declaredLength = fileDescriptor.getDeclaredLength();
                     classifier = TensorFlowImageClassifier.create(
-                            mainActivityView.getAssets(),
-                            MODEL_PATH,
-                            LABEL_PATH,
+                            reader,
+                            inputStream,
+                            startOffset,
+                            declaredLength,
                             INPUT_SIZE);
                     setParameters();
                 } catch (final Exception e) {

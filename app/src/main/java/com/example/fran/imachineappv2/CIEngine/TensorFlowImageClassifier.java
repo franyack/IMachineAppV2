@@ -1,18 +1,11 @@
 package com.example.fran.imachineappv2.CIEngine;
 
-import android.annotation.SuppressLint;
-import android.content.res.AssetFileDescriptor;
-import android.content.res.AssetManager;
-import android.graphics.Bitmap;
-
 import org.tensorflow.lite.Interpreter;
 
 import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
-import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
-import java.nio.ByteOrder;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
@@ -27,8 +20,6 @@ import java.util.PriorityQueue;
 public class TensorFlowImageClassifier implements Classifier {
 
     private static final int MAX_RESULTS = 5;
-    private static final int BATCH_SIZE = 1;
-    private static final int PIXEL_SIZE = 3;
     private static final float THRESHOLD = 0.05f;
 
     private Interpreter interpreter;
@@ -39,22 +30,22 @@ public class TensorFlowImageClassifier implements Classifier {
 
     }
 
-    public static Classifier create(AssetManager assetManager,
-                                    String modelPath,
-                                    String labelPath,
+    public static Classifier create(BufferedReader reader,
+                                    FileInputStream inputStream,
+                                    long startOffset,
+                                    long declaredLength,
                                     int inputSize) throws IOException {
 
         TensorFlowImageClassifier classifier = new TensorFlowImageClassifier();
-        classifier.interpreter = new Interpreter(classifier.loadModelFile(assetManager, modelPath));
-        classifier.labelList = classifier.loadLabelList(assetManager, labelPath);
+        classifier.interpreter = new Interpreter(classifier.loadModelFile(inputStream, startOffset,declaredLength));
+        classifier.labelList = classifier.loadLabelList(reader);
         classifier.inputSize = inputSize;
 
         return classifier;
     }
 
     @Override
-    public List<Recognition> recognizeImage(Bitmap bitmap) {
-        ByteBuffer byteBuffer = convertBitmapToByteBuffer(bitmap);
+    public List<Recognition> recognizeImage(ByteBuffer byteBuffer) {
         byte[][] result = new byte[1][labelList.size()];
         interpreter.run(byteBuffer, result);
         return getSortedResult(result);
@@ -66,18 +57,13 @@ public class TensorFlowImageClassifier implements Classifier {
         interpreter = null;
     }
 
-    private MappedByteBuffer loadModelFile(AssetManager assetManager, String modelPath) throws IOException {
-        AssetFileDescriptor fileDescriptor = assetManager.openFd(modelPath);
-        FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
+    private MappedByteBuffer loadModelFile(FileInputStream inputStream, long startOffset, long declaredLength) throws IOException {
         FileChannel fileChannel = inputStream.getChannel();
-        long startOffset = fileDescriptor.getStartOffset();
-        long declaredLength = fileDescriptor.getDeclaredLength();
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
 
-    public static List<String> loadLabelList(AssetManager assetManager, String labelPath) throws IOException {
+    public static List<String> loadLabelList(BufferedReader reader) throws IOException {
         List<String> labelList = new ArrayList<>();
-        BufferedReader reader = new BufferedReader(new InputStreamReader(assetManager.open(labelPath)));
         String line;
         while ((line = reader.readLine()) != null) {
             labelList.add(line);
@@ -86,24 +72,8 @@ public class TensorFlowImageClassifier implements Classifier {
         return labelList;
     }
 
-    private ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BATCH_SIZE * inputSize * inputSize * PIXEL_SIZE);
-        byteBuffer.order(ByteOrder.nativeOrder());
-        int[] intValues = new int[inputSize * inputSize];
-        bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
-        int pixel = 0;
-        for (int i = 0; i < inputSize; ++i) {
-            for (int j = 0; j < inputSize; ++j) {
-                final int val = intValues[pixel++];
-                byteBuffer.put((byte) ((val >> 16) & 0xFF));
-                byteBuffer.put((byte) ((val >> 8) & 0xFF));
-                byteBuffer.put((byte) (val & 0xFF));
-            }
-        }
-        return byteBuffer;
-    }
 
-    @SuppressLint("DefaultLocale")
+//    @SuppressLint("DefaultLocale")
     private List<Recognition> getSortedResult(byte[][] labelProbArray) {
 
         PriorityQueue<Recognition> pq =

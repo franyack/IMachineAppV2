@@ -1,7 +1,8 @@
 package com.example.fran.imachineappv2.CIEngine;
 
-import android.graphics.Bitmap;
 
+
+import java.nio.ByteBuffer;
 import java.util.List;
 
 /**
@@ -66,7 +67,7 @@ public interface Classifier {
     }
 
 
-    List<Recognition> recognizeImage(Bitmap bitmap);
+    List<Recognition> recognizeImage(ByteBuffer byteBuffer);
 
     void close();
 }
