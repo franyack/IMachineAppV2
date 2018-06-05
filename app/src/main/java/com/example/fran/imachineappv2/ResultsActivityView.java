@@ -8,6 +8,9 @@ import android.os.Environment;
 import android.view.View;
 import android.widget.TextView;
 
+import com.example.fran.imachineappv2.FilesManager.FilesMainActivity;
+import com.snatik.storage.Storage;
+
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -55,11 +58,8 @@ public class ResultsActivityView extends Activity implements ResultsActivityMvpV
         presenter.folderGenerator(pathFolder);
     }
     public void showFolderAlert(String pathFolder){
-        AlertDialog.Builder alert = new AlertDialog.Builder(ResultsActivityView.this);
-        alert.setTitle("Proceso finalizado!");
-        alert.setMessage("La carpeta fue creada en la siguiente ubicación:\n\n" + pathFolder);
-        alert.setPositiveButton("OK", null);
-        alert.show();
+        Intent i = new Intent(this, FilesMainActivity.class);
+        startActivity(i);
     }
 
     public void volverMainActivity(View view) {

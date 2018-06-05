@@ -225,13 +225,13 @@ public class MainActivityModel implements MainActivityMvpModel {
                 }
                 top_predictions.add(new Top_Predictions(imagespath[i], wnIdPredictionsList));
 
-                LOGGER.info(imagespath[i]);
-            for (int j=0;j<wnIdPredictionsList.size();j++){
-                String word;
-                word = wnid_lookup.get_label_from_wnid(wnIdPredictionsList.get(j).getWnId(),wnid_lookup.wnidWordsList);
-                LOGGER.info(word+": "+wnIdPredictionsList.get(j).getPrediction());
-            }
-            LOGGER.info("                                                                                ");
+//                LOGGER.info(imagespath[i]);
+//            for (int j=0;j<wnIdPredictionsList.size();j++){
+//                String word;
+//                word = wnid_lookup.get_label_from_wnid(wnIdPredictionsList.get(j).getWnId(),wnid_lookup.wnidWordsList);
+//                LOGGER.info(word+": "+wnIdPredictionsList.get(j).getPrediction());
+//            }
+//            LOGGER.info("                                                                                ");
             }
         }
         double[][] g_aff_matrix;
