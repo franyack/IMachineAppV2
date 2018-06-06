@@ -1,4 +1,4 @@
-package com.example.fran.imachineappv2.FilesManager;
+package com.example.fran.imachineappv2.FilesManager.Dialogs;
 
 import android.app.AlertDialog;
 import android.app.Dialog;

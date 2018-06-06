@@ -1,4 +1,4 @@
-package com.example.fran.imachineappv2.FilesManager;
+package com.example.fran.imachineappv2.FilesManager.Dialogs;
 
 import android.app.Activity;
 import android.app.AlertDialog;
@@ -11,7 +11,6 @@ import android.text.TextWatcher;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
-import android.widget.CheckBox;
 import android.widget.EditText;
 
 import com.example.fran.imachineappv2.R;
@@ -20,16 +19,16 @@ import com.example.fran.imachineappv2.R;
  * Based on: https://github.com/sromku/android-storage
  */
 
-public class NewTextFileDialog extends DialogFragment {
+public class NewFolderDialog extends DialogFragment {
 
-    private NewTextFileDialog.DialogListener mListener;
+    private NewFolderDialog.DialogListener mListener;
 
-    public static NewTextFileDialog newInstance() {
-        NewTextFileDialog fragment = new NewTextFileDialog();
+    public static NewFolderDialog newInstance() {
+        NewFolderDialog fragment = new NewFolderDialog();
         return fragment;
     }
 
-    public NewTextFileDialog() {
+    public NewFolderDialog() {
     }
 
     @Override
@@ -38,14 +37,11 @@ public class NewTextFileDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         final View view = LayoutInflater.from(getActivity())
-                .inflate(R.layout.new_file_dialog, (ViewGroup) getView(), false);
+                .inflate(R.layout.new_folder_dialog, (ViewGroup) getView(), false);
 
         // if text is empty, disable the dialog positive button
-        final EditText nameEditText = (EditText) view.findViewById(R.id.name);
-        final EditText contentEditText = (EditText) view.findViewById(R.id.content);
-        final CheckBox encryptCheckbox = (CheckBox) view.findViewById(R.id.checkbox);
-
-        nameEditText.addTextChangedListener(new TextWatcher() {
+        final EditText editText = (EditText) view.findViewById(R.id.name);
+        editText.addTextChangedListener(new TextWatcher() {
             @Override
             public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
             }
@@ -56,31 +52,17 @@ public class NewTextFileDialog extends DialogFragment {
 
             @Override
             public void afterTextChanged(Editable editable) {
-                ((AlertDialog) getDialog()).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(editable.length() > 0 && contentEditText.getText().length() > 0);
+                ((AlertDialog) getDialog()).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(editable != null &&
+                        editable.length() > 0);
             }
         });
 
-        contentEditText.addTextChangedListener(new TextWatcher() {
-            @Override
-            public void beforeTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void onTextChanged(CharSequence charSequence, int i, int i1, int i2) {
-            }
-
-            @Override
-            public void afterTextChanged(Editable editable) {
-                ((AlertDialog) getDialog()).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(editable.length() > 0 && nameEditText.getText().length() > 0);
-            }
-        });
-
-        builder.setTitle(R.string.new_file);
+        builder.setTitle(R.string.new_folder);
         builder.setView(view);
         builder.setPositiveButton(R.string.label_save, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
-                mListener.onNewFile(nameEditText.getText().toString(), contentEditText.getText().toString(), encryptCheckbox.isChecked());
+                mListener.onNewFolder(editText.getText().toString());
             }
         });
 
@@ -96,7 +78,7 @@ public class NewTextFileDialog extends DialogFragment {
     }
 
     public interface DialogListener {
-        void onNewFile(String name, String content, boolean encrypt);
+        void onNewFolder(String name);
     }
 
     @Override

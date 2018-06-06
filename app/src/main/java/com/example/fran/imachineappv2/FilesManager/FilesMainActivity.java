@@ -21,6 +21,12 @@ import android.webkit.MimeTypeMap;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
+import com.example.fran.imachineappv2.FilesManager.Dialogs.AddItemsDialog;
+import com.example.fran.imachineappv2.FilesManager.Dialogs.ConfirmDeleteDialog;
+import com.example.fran.imachineappv2.FilesManager.Dialogs.NewFolderDialog;
+import com.example.fran.imachineappv2.FilesManager.Dialogs.NewTextFileDialog;
+import com.example.fran.imachineappv2.FilesManager.Dialogs.RenameDialog;
+import com.example.fran.imachineappv2.FilesManager.Dialogs.UpdateItemDialog;
 import com.example.fran.imachineappv2.R;
 import com.snatik.storage.EncryptConfiguration;
 import com.snatik.storage.Storage;
