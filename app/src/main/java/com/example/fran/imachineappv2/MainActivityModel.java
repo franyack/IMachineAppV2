@@ -20,6 +20,7 @@ import com.example.fran.imachineappv2.Utils.Imagenet;
 import org.apache.commons.io.FileUtils;
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -32,6 +33,10 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.Executor;
 import java.util.concurrent.Executors;
@@ -49,16 +54,24 @@ public class MainActivityModel implements MainActivityMvpModel {
     private Vector<String> images = new Vector<>();
 
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
-    private static final String MODEL_PATH = "mobilenet_quant_v1_224.tflite";
+    private static final String MODEL_PATH = "mobilenet_v1_224.tflite";
     private static final String LABEL_PATH = "labels2.txt";
     private static final String WORDS_PATH = "words.txt";
     private static final String HIERARCHY_PATH = "wordnet.is_a.txt";
     private static final int INPUT_SIZE = 224;
     private static final int BATCH_SIZE = 1;
     private static final int PIXEL_SIZE = 3;
+    private static final int IMAGE_MEAN = 128;
+    private static final float IMAGE_STD = 128.0f;
+
+    /* Preallocated buffers for storing image data in. */
+    private int[] intValues = new int[INPUT_SIZE * INPUT_SIZE];
+
 
     private Classifier classifier;
     private Executor executor = Executors.newSingleThreadExecutor();
+
+    private double THRESHOLD_PROBABILITY_PREDICTION = 0.65;
 
     private Imagenet wnid_lookup = new Imagenet();
 //    private List<String> label_lookup = new ArrayList<>();
@@ -67,6 +80,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     ArrayList<String> vImages = new ArrayList<>();
     ArrayList<Integer> vClusters = new ArrayList<>();
     private List<Top_Predictions> top_predictions = new ArrayList<>();
+    private List<float[]> embeddings_list = new ArrayList<>();
 
     //Constructor
     MainActivityModel(MainActivityPresenter presenter) {
@@ -162,6 +176,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
     }
 
+    // TODO: deprecate?
     @Override
     public void alertBlackWindow(MainActivityView mainActivityView) {
         AlertDialog.Builder builder = new AlertDialog.Builder(mainActivityView);
@@ -208,14 +223,21 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     //    @Override
     public void processImages() {
+
         for (int i = 0; i< imagespath.length; i++){
+            Map<Integer, Object> outputs = new TreeMap<>();
             Bitmap image = lessResolution(imagespath[i],INPUT_SIZE,INPUT_SIZE);
             image = Bitmap.createScaledBitmap(image,INPUT_SIZE,INPUT_SIZE,false);
             ByteBuffer byteBuffer;
             if (image != null){
                 byteBuffer = convertBitmapToByteBuffer(image);
-                final List<Classifier.Recognition> results = classifier.recognizeImage(byteBuffer);
+
+                classifier.recognize(byteBuffer, outputs);
                 byteBuffer.clear();
+
+                List<Classifier.Recognition> results = (List<Classifier.Recognition>) outputs.get(0);
+                float[][][][] emb = ((float[][][][]) outputs.get(1)).clone();
+
                 List<wnIdPredictions> wnIdPredictionsList = new ArrayList<>();
                 if (results.size() == 0){
                     wnIdPredictions entity = new wnIdPredictions("n00001740",1);
@@ -224,7 +246,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                     wnIdPredictionsList = process_top_predictions(results,4,0.05);
                 }
                 top_predictions.add(new Top_Predictions(imagespath[i], wnIdPredictionsList));
-
+                embeddings_list.add(emb[0][0][0].clone());
 //                LOGGER.info(imagespath[i]);
 //            for (int j=0;j<wnIdPredictionsList.size();j++){
 //                String word;
@@ -234,9 +256,16 @@ public class MainActivityModel implements MainActivityMvpModel {
 //            LOGGER.info("                                                                                ");
             }
         }
-        double[][] g_aff_matrix;
-        g_aff_matrix = get_grammatical_affinity(top_predictions);
-        DMatrixRMaj cluster_matrix = new DMatrixRMaj(g_aff_matrix);
+        double[][] g_aff_matrix, i_aff_matrix;
+        g_aff_matrix = getGrammaticalAffinity(top_predictions);
+
+        i_aff_matrix = getImageAffinity(embeddings_list);
+        DMatrixRMaj g_matrix = new DMatrixRMaj(g_aff_matrix);
+        DMatrixRMaj i_matrix = new DMatrixRMaj(i_aff_matrix);
+
+        DMatrixRMaj cluster_matrix = new DMatrixRMaj(g_matrix.numRows, g_matrix.numCols);
+        CommonOps_DDRM.add(g_matrix, i_matrix, cluster_matrix);
+        CommonOps_DDRM.divide(cluster_matrix, 2.0);
 
         int maxIt = 100;
         int expPow = 2;
@@ -306,17 +335,20 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     private ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
-        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(BATCH_SIZE * INPUT_SIZE * INPUT_SIZE * PIXEL_SIZE);
+        ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * BATCH_SIZE * INPUT_SIZE * INPUT_SIZE * PIXEL_SIZE);
         byteBuffer.order(ByteOrder.nativeOrder());
-        int[] intValues = new int[INPUT_SIZE * INPUT_SIZE];
+        //byteBuffer.rewind();
         bitmap.getPixels(intValues, 0, bitmap.getWidth(), 0, 0, bitmap.getWidth(), bitmap.getHeight());
         int pixel = 0;
         for (int i = 0; i < INPUT_SIZE; ++i) {
             for (int j = 0; j < INPUT_SIZE; ++j) {
                 final int val = intValues[pixel++];
-                byteBuffer.put((byte) ((val >> 16) & 0xFF));
-                byteBuffer.put((byte) ((val >> 8) & 0xFF));
-                byteBuffer.put((byte) (val & 0xFF));
+                //byteBuffer.put((byte) ((val >> 16) & 0xFF));
+                //byteBuffer.put((byte) ((val >> 8) & 0xFF));
+                //byteBuffer.put((byte) (val & 0xFF));
+                byteBuffer.putFloat((((val >> 16) & 0xFF)-IMAGE_MEAN)/IMAGE_STD);
+                byteBuffer.putFloat((((val >> 8) & 0xFF)-IMAGE_MEAN)/IMAGE_STD);
+                byteBuffer.putFloat((((val) & 0xFF)-IMAGE_MEAN)/IMAGE_STD);
             }
         }
         return byteBuffer;
@@ -440,88 +472,119 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
     }
 
-    private double[][] get_grammatical_affinity(List<Top_Predictions> top_predictions) {
+    // TODO: scope: CIEngine
+    private double[][] getGrammaticalAffinity(List<Top_Predictions> top_predictions) {
         double[][] result = new double[top_predictions.size()][top_predictions.size()];
-        List<String> dictionary = new ArrayList<>();
-        boolean add;
-        int d;
-        for (int i=0;i<top_predictions.size();i++){
-            for (int j=0; j<top_predictions.get(i).getResult().size();j++){
-                add=true;
-                if(dictionary.size() == 0){
-                    dictionary.add(top_predictions.get(i).getResult().get(j).getWnId());
-                }else{
-                    d=0;
-                    while (d<dictionary.size()){
-                        if(dictionary.get(d).equals(top_predictions.get(i).getResult().get(j).getWnId())){
-                            add=false;
-                            break;
-                        }
-                        d+=1;
-                    }
-                    if(add){
-                        dictionary.add(top_predictions.get(i).getResult().get(j).getWnId());
-                    }
+        Set<String> dictionary = new TreeSet<>();  // TreeSet guarantees the order of elements when iterated
+        List<wnIdPredictions> predResults;
+        String wnId;
+        Map<String, Float> predDict;
+
+        // Loop for populating dictionary with all the WNIDs that will be handled
+        for (Top_Predictions topPrediction : top_predictions) {
+            predResults = topPrediction.getResult();
+
+            for (wnIdPredictions wnIdPred: predResults) {
+                wnId = wnIdPred.getWnId();
+
+                if (!dictionary.contains(wnId)){
+                    dictionary.add(wnId);
                 }
+
             }
+
         }
 
+        double[] v1, v2;
+        double v, v1_s, v2_s, corr;
+        int d;
 
 
-        double[] aff_row;
-        double[] v1,v2;
-        double v1_s,v2_s;
-        double corr;
-        for(int i =0;i<top_predictions.size();i++){
-            aff_row = new double[top_predictions.size()];
-            corr=0;
+        for (int i=0; i < top_predictions.size(); i++){
+            predResults = top_predictions.get(i).getResult();
+            predDict = new TreeMap<>();
+
+            for (wnIdPredictions wnIdPred: predResults)
+                predDict.put(wnIdPred.getWnId(), wnIdPred.getPrediction());
+
             v1 = new double[dictionary.size()];
-            for(int j=0;j<top_predictions.get(i).getResult().size();j++){
-                d=0;
-                while(d<dictionary.size()){
-                    if(dictionary.get(d).equals(top_predictions.get(i).getResult().get(j).getWnId())){
-                        v1[d]=top_predictions.get(i).getResult().get(j).getPrediction();
-                    }
-                    d+=1;
-                }
+
+            // Get a vector v1 with all predictions for each WNID handled
+            d = 0;
+            for(String wnIdDict : dictionary){
+                v = 0.0;
+                if(predDict.containsKey(wnIdDict))
+                    v = predDict.get(wnIdDict);
+                v1[d++] = v;
             }
+
+            // Normalize values in v1 by the sum of total
             v1_s=0;
-            for (int r=0;r<v1.length;r++){
-                v1_s += v1[r];
-            }
-            for (int r=0;r<v1.length;r++){
-                v1[r] = v1[r]/v1_s;
-            }
-            for(int k=0;k<top_predictions.size();k++){
-                v2= new double[dictionary.size()];
-                for(int j=0;j<top_predictions.get(k).getResult().size();j++){
-                    d=0;
-                    while(d<dictionary.size()){
-                        if(dictionary.get(d).equals(top_predictions.get(k).getResult().get(j).getWnId())){
-                            v2[d]=top_predictions.get(k).getResult().get(j).getPrediction();
-                        }
-                        d+=1;
-                    }
+            for (double v1_r : v1) v1_s += v1_r;
+            for (int r=0;r<v1.length;r++) v1[r] /= v1_s;
+
+            for(int j=0;j<top_predictions.size();j++){
+                predResults = top_predictions.get(j).getResult();
+                predDict = new TreeMap<>();
+
+                for (wnIdPredictions wnIdPred: predResults)
+                    predDict.put(wnIdPred.getWnId(), wnIdPred.getPrediction());
+
+                v2=new double[dictionary.size()];
+
+                d = 0;
+                for(String wnIdDict : dictionary){
+                    v = 0.0;
+                    if(predDict.containsKey(wnIdDict))
+                        v = predDict.get(wnIdDict);
+                    v2[d++] = v;
                 }
+
+                // Normalize values in v2 by the sum of total
                 v2_s=0;
-                for (int r=0;r<v2.length;r++){
-                    v2_s += v2[r];
-                }
-                for (int r=0;r<v2.length;r++){
-                    v2[r] = v2[r]/v2_s;
-                }
+                for (double v2_r : v2) v2_s += v2_r;
+                for (int r=0;r<v2.length;r++) v2[r] /= v2_s;
+
+                // TODO: corr(i,i)==1.0 always so we can save computation
                 corr = new PearsonsCorrelation().correlation(v2,v1);
                 corr = (corr + 1)/2.0; //Normalize output
-                if(corr>0.65){
-                    corr = corr;
-                }else{
-                    corr = 0;
-                }
-                aff_row[k]=corr;
+                if(corr < THRESHOLD_PROBABILITY_PREDICTION) corr = 0.0;
+
+                result[i][j] = corr;
             }
-            for(int j=0;j<top_predictions.size();j++){
-                result[i][j]=aff_row[j];
+
+        }
+        return result;
+    }
+
+    // TODO: scope: CIEngine
+    private double[][] getImageAffinity(List<float[]> embeddings) {
+        double[][] result = new double[embeddings.size()][embeddings.size()];
+        float [] embed;
+        double[] v1, v2;
+        double corr;
+
+        // TODO: loop O(n^2) -> loop O(N*(N-1)/2)
+        for (int i=0; i < embeddings.size(); i++){
+            embed = embeddings.get(i);
+            v1 = new double[embed.length];
+
+            for (int r=0;r<v1.length;r++) v1[r] = (double) embed[r];
+
+            for(int j=0;j<embeddings.size();j++){
+                embed = embeddings.get(j);
+                v2 = new double[embed.length];
+
+                for (int r=0;r<v2.length;r++) v2[r] = (double) embed[r];
+
+                // TODO: corr(i,i)==1.0 always so we can save computation
+                corr = new PearsonsCorrelation().correlation(v2,v1);
+                corr = (corr + 1)/2.0; //Normalize output
+                if(corr < THRESHOLD_PROBABILITY_PREDICTION) corr = 0.0;
+
+                result[i][j] = corr;
             }
+
         }
         return result;
     }

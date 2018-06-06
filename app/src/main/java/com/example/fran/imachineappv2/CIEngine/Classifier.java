@@ -4,6 +4,7 @@ package com.example.fran.imachineappv2.CIEngine;
 
 import java.nio.ByteBuffer;
 import java.util.List;
+import java.util.Map;
 
 /**
  * Based on: https://github.com/amitshekhariitbhu/Android-TensorFlow-Lite-Example
@@ -68,6 +69,7 @@ public interface Classifier {
 
 
     List<Recognition> recognizeImage(ByteBuffer byteBuffer);
+    void recognize(ByteBuffer byteBuffer, Map<Integer, Object> outputs);
 
     void close();
 }
