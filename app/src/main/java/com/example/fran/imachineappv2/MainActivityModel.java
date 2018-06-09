@@ -25,10 +25,13 @@ import org.ejml.dense.row.CommonOps_DDRM;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
+import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -79,6 +82,8 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     ArrayList<String> vImages = new ArrayList<>();
     ArrayList<Integer> vClusters = new ArrayList<>();
+//    Vector<Integer> vClustersResult = new Vector<>();
+    Set<Integer> ClustersResult = new TreeSet<>();  // TreeSet guarantees the order of elements when iterated
     private List<Top_Predictions> top_predictions = new ArrayList<>();
     private List<float[]> embeddings_list = new ArrayList<>();
 
@@ -88,9 +93,8 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     @Override
-    public void deleteClusterResultFolder() {
-        File folder = new File(Environment.getExternalStorageDirectory() +
-                File.separator + "clusterResult");
+    public void deleteClusterResultFolder(String pathFolderResult) {
+        File folder = new File(pathFolderResult);
         if (folder.exists()){
             try {
                 FileUtils.deleteDirectory(folder);
@@ -221,6 +225,51 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
     }
 
+    @Override
+    public void folderGenerator(String pathFolder) {
+        File folder = new File(pathFolder);
+        if (!folder.exists()) {
+            folder.mkdirs();
+        } else {
+            try {
+                FileUtils.cleanDirectory(folder);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        for (int i = 0; i < ClustersResult.size(); i++) {
+            folder = new File(pathFolder + File.separator + "Carpeta " + i);
+            folder.mkdirs();
+            for (int j = 0; j < vClusters.size(); j++) {
+                if (vClusters.get(j) == i) {
+                    File source = new File(vImages.get(j));
+                    File destination = new File(folder.getAbsolutePath() + File.separator + "image" + j + ".jpg");
+                    FileChannel src = null;
+                    FileChannel dst = null;
+                    try {
+                        src = new FileInputStream(source).getChannel();
+                        dst = new FileOutputStream(destination).getChannel();
+                        dst.transferFrom(src, 0, src.size());
+                        src.close();
+                        dst.close();
+                    } catch (FileNotFoundException e) {
+                        e.printStackTrace();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+
+                }
+            }
+        }
+        mainActivityPresenter.showFilesManager(pathFolder);
+    }
+
+    @Override
+    public boolean folderResultsExist(String pathFoldersResult) {
+        File folder = new File(pathFoldersResult);
+        return folder.exists();
+    }
+
     //    @Override
     public void processImages() {
 
@@ -296,7 +345,22 @@ public class MainActivityModel implements MainActivityMvpModel {
                 }
             }
         }
-        mainActivityPresenter.clustersReady(vImages,vClusters);
+
+        fillClustersResult(vClusters);
+
+        mainActivityPresenter.clustersReady();
+    }
+
+    private void fillClustersResult(ArrayList<Integer> vClusters) {
+//        ArrayList<Integer> vClustersCopy = new ArrayList<Integer>(vClusters);
+        if (ClustersResult.size()>0){
+            ClustersResult.clear();
+        }
+        for (Integer cluster: vClusters) {
+            if (!ClustersResult.contains(cluster)){
+                ClustersResult.add(cluster);
+            }
+        }
     }
 
     public static Bitmap lessResolution (String filePath, int width, int height){

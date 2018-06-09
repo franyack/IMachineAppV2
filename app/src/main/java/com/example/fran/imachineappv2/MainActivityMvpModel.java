@@ -2,15 +2,13 @@ package com.example.fran.imachineappv2;
 
 import android.widget.CheckBox;
 
-import java.util.ArrayList;
-
 /**
  * Created by fran on 24/05/18.
  */
 
 public interface MainActivityMvpModel {
 
-    void deleteClusterResultFolder();
+    void deleteClusterResultFolder(String pathFolderResult);
 
     void chooseGallery(MainActivityView view);
 
@@ -23,4 +21,8 @@ public interface MainActivityMvpModel {
     void fillWorkingText();
 
     void startImageProcess(MainActivityView mainActivityView);
+
+    void folderGenerator(String pathFolder);
+
+    boolean folderResultsExist(String pathFoldersResult);
 }

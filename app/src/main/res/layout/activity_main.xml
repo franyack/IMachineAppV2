@@ -57,14 +57,24 @@
         android:id="@+id/btnAceptar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_alignParentBottom="true"
+        android:layout_above="@+id/btnResultadosAnteriores"
         android:layout_alignParentStart="true"
+        android:layout_marginBottom="10dp"
         android:background="@color/colorAccent"
         android:onClick="procesarImagenes"
         android:text="procesar"
         android:textColor="#ffff" />
 
-
+    <Button
+        android:id="@+id/btnResultadosAnteriores"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_alignParentBottom="true"
+        android:layout_alignParentStart="true"
+        android:background="@color/colorAccent"
+        android:onClick="verResultadosAnteriores"
+        android:text="Resultados Anteriores"
+        android:textColor="#ffff" />
 
 
 </RelativeLayout>

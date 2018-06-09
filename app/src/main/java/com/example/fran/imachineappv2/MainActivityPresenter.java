@@ -3,8 +3,6 @@ package com.example.fran.imachineappv2;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 
-import java.util.ArrayList;
-
 /**
  * Created by fran on 24/05/18.
  */
@@ -21,8 +19,8 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
 
 
     @Override
-    public void deleteClusterResultFolder() {
-        dataManager.deleteClusterResultFolder();
+    public void deleteClusterResultFolder(String pathFolderResult) {
+        dataManager.deleteClusterResultFolder(pathFolderResult);
     }
 
     @Override
@@ -83,8 +81,23 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     }
 
     @Override
-    public void clustersReady(ArrayList<String> vImages, ArrayList<Integer> vClusters) {
-        view.clusterReady(vImages,vClusters);
+    public void clustersReady() {
+        view.clusterReady();
+    }
+
+    @Override
+    public void folderGenerator(String pathFolder) {
+        dataManager.folderGenerator(pathFolder);
+    }
+
+    @Override
+    public void showFilesManager(String pathFolder) {
+        view.showFilesManagerActivity(pathFolder);
+    }
+
+    @Override
+    public boolean folderResultsExists(String pathFoldersResult) {
+        return dataManager.folderResultsExist(pathFoldersResult);
     }
 
 

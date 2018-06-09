@@ -74,7 +74,7 @@ public class RenameDialog extends DialogFragment {
             }
         });
 
-        builder.setTitle(R.string.rename);
+        builder.setTitle(R.string.label_rename);
         builder.setView(view);
         builder.setPositiveButton(R.string.label_save, new DialogInterface.OnClickListener() {
             @Override

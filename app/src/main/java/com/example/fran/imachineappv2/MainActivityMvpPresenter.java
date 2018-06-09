@@ -3,15 +3,13 @@ package com.example.fran.imachineappv2;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 
-import java.util.ArrayList;
-
 /**
  * Created by fran on 24/05/18.
  */
 
 public interface MainActivityMvpPresenter {
 
-    void deleteClusterResultFolder();
+    void deleteClusterResultFolder(String pathFolderResult);
 
     void chooseGallery(MainActivityView view);
 
@@ -33,5 +31,11 @@ public interface MainActivityMvpPresenter {
 
     void procesarImagenes(MainActivityView mainActivityView);
 
-    void clustersReady(ArrayList<String> vImages, ArrayList<Integer> vClusters);
+    void clustersReady();
+
+    void folderGenerator(String pathFolder);
+
+    void showFilesManager(String pathFolder);
+
+    boolean folderResultsExists(String pathFoldersResult);
 }

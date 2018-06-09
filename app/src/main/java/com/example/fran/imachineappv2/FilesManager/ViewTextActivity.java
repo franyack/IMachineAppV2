@@ -57,29 +57,22 @@ public class ViewTextActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onCreateOptionsMenu(Menu menu) {
-        MenuInflater inflater = getMenuInflater();
-        inflater.inflate(R.menu.text_menu, menu);
-        return true;
-    }
-
-    @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         switch (item.getItemId()) {
             case android.R.id.home:
                 onBackPressed();
                 return true;
-            case R.id.decrypt:
-                mStorage.setEncryptConfiguration(new EncryptConfiguration.Builder()
-                        .setEncryptContent(IVX, SECRET_KEY, SALT)
-                        .build());
-                byte[] bytes = mStorage.readFile(mPath);
-                if (bytes != null) {
-                    mContentView.setText(new String(bytes));
-                } else {
-                    Helper.showSnackbar("Failed to decrypt", mContentView);
-                }
-                break;
+//            case R.id.decrypt:
+//                mStorage.setEncryptConfiguration(new EncryptConfiguration.Builder()
+//                        .setEncryptContent(IVX, SECRET_KEY, SALT)
+//                        .build());
+//                byte[] bytes = mStorage.readFile(mPath);
+//                if (bytes != null) {
+//                    mContentView.setText(new String(bytes));
+//                } else {
+//                    Helper.showSnackbar("Failed to decrypt", mContentView);
+//                }
+//                break;
         }
 
         return super.onOptionsItemSelected(item);

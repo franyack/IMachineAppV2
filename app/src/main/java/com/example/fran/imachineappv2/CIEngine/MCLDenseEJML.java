@@ -147,8 +147,8 @@ public class MCLDenseEJML {
 
             double delta = this.deltaAbs(M,  Mprev);
 
-            LOGGER.info(String.format("Iteration %d took %f ms", i, tIteration));
-            LOGGER.info(String.format("Delta: %f", delta));
+//            LOGGER.info(String.format("Iteration %d took %f ms", i, tIteration));
+//            LOGGER.info(String.format("Delta: %f", delta));
 
             //M.print();
 
@@ -161,7 +161,7 @@ public class MCLDenseEJML {
 
         double tLoop = (System.nanoTime() - startLoop) / 1e9;
 
-        LOGGER.info(String.format("Total process took %f seconds", tLoop));
+//        LOGGER.info(String.format("Total process took %f seconds", tLoop));
 
         return M;
 

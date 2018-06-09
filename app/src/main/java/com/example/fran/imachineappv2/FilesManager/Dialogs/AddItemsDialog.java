@@ -46,13 +46,6 @@ public class AddItemsDialog extends DialogFragment {
             }
         });
 
-        view.findViewById(R.id.new_file).setOnClickListener(new View.OnClickListener() {
-            @Override
-            public void onClick(View view) {
-                dialog.dismiss();
-                mListener.onOptionClick(R.id.new_file, null);
-            }
-        });
 
         // control dialog width on different devices
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {

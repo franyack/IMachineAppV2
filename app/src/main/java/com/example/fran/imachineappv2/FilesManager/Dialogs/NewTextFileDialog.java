@@ -38,7 +38,7 @@ public class NewTextFileDialog extends DialogFragment {
         AlertDialog.Builder builder = new AlertDialog.Builder(getActivity());
 
         final View view = LayoutInflater.from(getActivity())
-                .inflate(R.layout.new_file_dialog, (ViewGroup) getView(), false);
+                .inflate(R.layout.new_folder_dialog, (ViewGroup) getView(), false);
 
         // if text is empty, disable the dialog positive button
         final EditText nameEditText = (EditText) view.findViewById(R.id.name);
@@ -74,8 +74,6 @@ public class NewTextFileDialog extends DialogFragment {
                 ((AlertDialog) getDialog()).getButton(AlertDialog.BUTTON_POSITIVE).setEnabled(editable.length() > 0 && nameEditText.getText().length() > 0);
             }
         });
-
-        builder.setTitle(R.string.new_file);
         builder.setView(view);
         builder.setPositiveButton(R.string.label_save, new DialogInterface.OnClickListener() {
             @Override

@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <string name="app_name">IMachineApp</string>
+
+    <string name="processing_toast">Procesando las imagenes, aguarde por favor...</string>
+
+    <string name="title_activity_main">MainActivity</string>
+    <string name="new_folder">Nueva carpeta</string>
+    <string name="add_new_folder">Agregar nueva carpeta</string>
+    <string name="label_save">Guardar</string>
+    <string name="label_content">Contenido</string>
+    <string name="label_name">Nombre</string>
+    <string name="label_copy">Copiar</string>
+    <string name="label_cancel">Cancelar</string>
+    <string name="label_delete">Borrar</string>
+    <string name="label_move">Mover</string>
+    <string name="label_rename">Renombrar</string>
+    <string name="new_name">Nuevo nombre</string>
+    <string name="current_name">Nombre actual</string>
+    <string name="drop_here">DEJAR AQUI</string>
+    <string name="decline">RECHAZAR</string>
+    <string name="folder_options">Opciones de carpeta</string>
+    <string name="file_options">Opciones de archivo</string>
+    <string name="moving_file">Moviendo: %1$s</string>
+    <string name="copy_file">Copiando: %1$s</string>
+    <string name="switch_to_internal">Cambiar a internos</string>
+    <string name="order_by">Ordenar por...</string>
+    <string name="filter">Filtrar</string>
+    <string name="copied">Copiado!</string>
+    <string name="moved">Movido!</string>
+    <string name="fileDeleted">El archivo fue borrado!</string>
+    <string name="folderDeleted">La carpeta fue borrada!</string>
+    <string name="file_already_here">Este archivo ya se encuentra aquí!</string>
+    <string name="new_folder_created">Nueva carpeta creada:</string>
+    <string name="new_folder_created_fail">Falló la creación de la nueva carpeta:</string>
+    <string name="file_too_big">El archivo es demasiado grande.</string>
+    <string name="renamed">Renombrada</string>
+    <string name="label_folder_options">Opciones de carpeta</string>
+    <string name="deletethefile">Está a punto de eliminar el archivo</string>
+    <string name="deletethefolder">Está a punto de eliminar la carpeta con todo su contenido</string>
+</resources>

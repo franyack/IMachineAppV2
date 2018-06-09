@@ -48,11 +48,9 @@ public class FilesMainActivity extends AppCompatActivity implements
         AddItemsDialog.DialogListener,
         UpdateItemDialog.DialogListener,
         NewFolderDialog.DialogListener,
-        NewTextFileDialog.DialogListener,
         ConfirmDeleteDialog.ConfirmListener,
         RenameDialog.DialogListener {
 
-    private static final int PERMISSION_REQUEST_CODE = 1000;
     private RecyclerView mRecyclerView;
     private FilesAdapter mFilesAdapter;
     private Storage mStorage;
@@ -61,17 +59,18 @@ public class FilesMainActivity extends AppCompatActivity implements
     private boolean mCopy;
     private View mMovingLayout;
     private int mTreeSteps = 0;
-    private final static String IVX = "abcdefghijklmnop";
-    private final static String SECRET_KEY = "secret1234567890";
-    private final static byte[] SALT = "0000111100001111".getBytes();
     private String mMovingPath;
     private boolean mInternal = false;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-
+        String pathFolder;
+        pathFolder = (String) getIntent().getStringExtra("pathFolder");
         mStorage = new Storage(getApplicationContext());
+
+
 
         setContentView(R.layout.filemanager_main);
         Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
@@ -81,6 +80,8 @@ public class FilesMainActivity extends AppCompatActivity implements
         mPathView = (TextView) findViewById(R.id.path);
         mMovingLayout = findViewById(R.id.moving_layout);
         mMovingText = (TextView) mMovingLayout.findViewById(R.id.moving_file_name);
+
+
 
         mMovingLayout.findViewById(R.id.accept_move).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -92,16 +93,16 @@ public class FilesMainActivity extends AppCompatActivity implements
                         String toPath = getCurrentPath() + File.separator + mStorage.getFile(mMovingPath).getName();
                         if (!mMovingPath.equals(toPath)) {
                             mStorage.move(mMovingPath, toPath);
-                            Helper.showSnackbar("Moved", mRecyclerView);
+                            Helper.showSnackbar(getString(R.string.moved), mRecyclerView);
                             showFiles(getCurrentPath());
                         } else {
-                            Helper.showSnackbar("The file is already here", mRecyclerView);
+                            Helper.showSnackbar(getString(R.string.file_already_here), mRecyclerView);
                         }
                     } else {
                         String toPath = getCurrentPath() + File.separator + "copy " + mStorage.getFile(mMovingPath)
                                 .getName();
                         mStorage.copy(mMovingPath, toPath);
-                        Helper.showSnackbar("Copied", mRecyclerView);
+                        Helper.showSnackbar(getString(R.string.copied), mRecyclerView);
                         showFiles(getCurrentPath());
                     }
                     mMovingPath = null;
@@ -139,7 +140,9 @@ public class FilesMainActivity extends AppCompatActivity implements
 
         // load files
 //        showFiles(mStorage.getExternalStorageDirectory());
-        showFiles("/storage/emulated/0/clusterResult");
+//        showFiles("/storage/emulated/0/clusterResult");
+        showFiles(pathFolder);
+
 //        checkPermission();
     }
 
@@ -208,7 +211,7 @@ public class FilesMainActivity extends AppCompatActivity implements
                 startActivity(intent);
             } catch (ActivityNotFoundException e) {
                 if (mStorage.getSize(file, SizeUnit.KB) > 500) {
-                    Helper.showSnackbar("The file is too big for preview", mRecyclerView);
+                    Helper.showSnackbar(getString(R.string.file_too_big), mRecyclerView);
                     return;
                 }
                 Intent intent = new Intent(this, ViewTextActivity.class);
@@ -232,6 +235,11 @@ public class FilesMainActivity extends AppCompatActivity implements
             mTreeSteps--;
             showFiles(path);
             return;
+        }else{
+            Intent i = getBaseContext().getPackageManager()
+                    .getLaunchIntentForPackage(getBaseContext().getPackageName());
+            i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+            startActivity(i);
         }
         super.onBackPressed();
     }
@@ -253,9 +261,6 @@ public class FilesMainActivity extends AppCompatActivity implements
     @Override
     public void onOptionClick(int which, String path) {
         switch (which) {
-            case R.id.new_file:
-                NewTextFileDialog.newInstance().show(getFragmentManager(), "new_file_dialog");
-                break;
             case R.id.new_folder:
                 NewFolderDialog.newInstance().show(getFragmentManager(), "new_folder_dialog");
                 break;
@@ -287,34 +292,20 @@ public class FilesMainActivity extends AppCompatActivity implements
         boolean created = mStorage.createDirectory(folderPath);
         if (created) {
             showFiles(currentPath);
-            Helper.showSnackbar("New folder created: " + name, mRecyclerView);
+            Helper.showSnackbar(getString(R.string.new_folder_created) + name, mRecyclerView);
         } else {
-            Helper.showSnackbar("Failed create folder: " + name, mRecyclerView);
+            Helper.showSnackbar(getString(R.string.new_folder_created_fail) + name, mRecyclerView);
         }
-    }
-
-    @Override
-    public void onNewFile(String name, String content, boolean encrypted) {
-        String currentPath = getCurrentPath();
-        String folderPath = currentPath + File.separator + name;
-        if (encrypted) {
-            mStorage.setEncryptConfiguration(new EncryptConfiguration.Builder()
-                    .setEncryptContent(IVX, SECRET_KEY, SALT)
-                    .build());
-        }
-        mStorage.createFile(folderPath, content);
-        showFiles(currentPath);
-        Helper.showSnackbar("New file created: " + name, mRecyclerView);
     }
 
     @Override
     public void onConfirmDelete(String path) {
         if (mStorage.getFile(path).isDirectory()) {
             mStorage.deleteDirectory(path);
-            Helper.showSnackbar("Folder was deleted", mRecyclerView);
+            Helper.showSnackbar(getString(R.string.folderDeleted), mRecyclerView);
         } else {
             mStorage.deleteFile(path);
-            Helper.showSnackbar("File was deleted", mRecyclerView);
+            Helper.showSnackbar(getString(R.string.fileDeleted), mRecyclerView);
         }
         showFiles(getCurrentPath());
     }
@@ -323,44 +314,7 @@ public class FilesMainActivity extends AppCompatActivity implements
     public void onRename(String fromPath, String toPath) {
         mStorage.rename(fromPath, toPath);
         showFiles(getCurrentPath());
-        Helper.showSnackbar("Renamed", mRecyclerView);
+        Helper.showSnackbar(getString(R.string.renamed), mRecyclerView);
     }
 
-//    @Override
-//    public boolean onCreateOptionsMenu(Menu menu) {
-//        MenuInflater inflater = getMenuInflater();
-//        inflater.inflate(R.menu.main_menu, menu);
-//        return true;
-//    }
-//
-//    @Override
-//    public boolean onOptionsItemSelected(MenuItem item) {
-//        switch (item.getItemId()) {
-//            case R.id.order:
-//                break;
-//            case R.id.filter:
-//                break;
-//        }
-//
-//        return super.onOptionsItemSelected(item);
-//    }
-
-    private void checkPermission() {
-        if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) != PackageManager
-                .PERMISSION_GRANTED) {
-            ActivityCompat.requestPermissions(this,
-                    new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},
-                    PERMISSION_REQUEST_CODE);
-        }
-    }
-
-    @Override
-    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[]
-            grantResults) {
-        if (grantResults.length > 0 && grantResults[0] == PackageManager.PERMISSION_GRANTED) {
-            showFiles(mStorage.getExternalStorageDirectory());
-        } else {
-            finish();
-        }
-    }
 }

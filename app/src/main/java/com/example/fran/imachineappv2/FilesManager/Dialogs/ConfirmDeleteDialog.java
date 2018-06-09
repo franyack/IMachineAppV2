@@ -37,9 +37,9 @@ public class ConfirmDeleteDialog extends DialogFragment {
         Storage storage = new Storage(getActivity());
         File file = storage.getFile(path);
         if (file.isDirectory()) {
-            msg = "You are about to delete the folder with all it's content for real.";
+            msg = getString(R.string.deletethefolder);
         } else {
-            msg = "You are about to delete the file";
+            msg = getString(R.string.deletethefile);
         }
         builder.setMessage(msg);
         builder.setPositiveButton(R.string.label_delete, new DialogInterface.OnClickListener() {

@@ -1,21 +1,21 @@
 <resources>
     <string name="app_name">IMachineApp</string>
 
-    <string name="processing_toast">Procesando las imagenes, aguarde por favor…</string>
+    <string name="processing_toast">Processing images, wait please…</string>
 
     <string name="title_activity_main">MainActivity</string>
     <string name="new_folder">New Folder</string>
+    <string name="add_new_folder">Add new folder</string>
     <string name="label_save">Save</string>
-    <string name="new_file">New File</string>
-    <string name="encrypt_the_content">Encrypt the content</string>
     <string name="label_content">Content</string>
     <string name="label_name">Name</string>
-    <string name="label_decrypt">Decrypt</string>
+    <string name="label_copy">Copy</string>
     <string name="label_cancel">Cancel</string>
     <string name="label_delete">Delete</string>
+    <string name="label_move">Move</string>
     <string name="new_name">New name</string>
     <string name="current_name">Current name</string>
-    <string name="rename">Rename</string>
+    <string name="label_rename">Rename</string>
     <string name="drop_here">DROP HERE</string>
     <string name="decline">DECLINE</string>
     <string name="folder_options">Folder options</string>
@@ -25,4 +25,19 @@
     <string name="switch_to_internal">Switch to internal</string>
     <string name="order_by">Order by ...</string>
     <string name="filter">Filter</string>
+    <string name="copied">Copied!</string>
+    <string name="moved">Moved!</string>
+    <string name="fileDeleted">File was deletedo!</string>
+    <string name="folderDeleted">Folder was deleted!</string>
+    <string name="file_already_here">The file is already here!</string>
+    <string name="new_folder_created">New folder created:</string>
+    <string name="new_folder_created_fail">Failed create folder:</string>
+    <string name="file_too_big">The file is too big for preview</string>
+    <string name="renamed">Renamed</string>
+    <string name="label_folder_options">Folder options</string>
+    <string name="deletethefile">You are about to delete the file</string>
+    <string name="deletethefolder">You are about to delete the folder with all its content for real</string>
+
+
+
 </resources>

@@ -13,7 +13,7 @@
         android:layout_marginLeft="16dp"
         android:layout_marginRight="16dp"
         android:gravity="center_vertical"
-        android:text="Folder options"
+        android:text="@string/folder_options"
         android:textColor="#8a000000"/>
 
     <LinearLayout
@@ -41,7 +41,7 @@
             android:layout_marginLeft="32dp"
             android:layout_marginRight="16dp"
             android:layout_marginStart="32dp"
-            android:text="Delete"
+            android:text="@string/label_delete"
             android:textColor="#8a000000"/>
     </LinearLayout>
 
@@ -70,7 +70,7 @@
             android:layout_marginLeft="32dp"
             android:layout_marginRight="16dp"
             android:layout_marginStart="32dp"
-            android:text="Rename"
+            android:text="@string/label_rename"
             android:textColor="#8a000000"/>
     </LinearLayout>
 
@@ -99,7 +99,7 @@
             android:layout_marginLeft="32dp"
             android:layout_marginRight="16dp"
             android:layout_marginStart="32dp"
-            android:text="Move"
+            android:text="@string/label_move"
             android:textColor="#8a000000"/>
     </LinearLayout>
 
@@ -128,7 +128,7 @@
             android:layout_marginLeft="32dp"
             android:layout_marginRight="16dp"
             android:layout_marginStart="32dp"
-            android:text="Copy"
+            android:text="@string/label_copy"
             android:textColor="#8a000000"/>
     </LinearLayout>
 

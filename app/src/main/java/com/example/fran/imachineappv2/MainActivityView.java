@@ -3,6 +3,7 @@ package com.example.fran.imachineappv2;
 import android.Manifest;
 import android.content.Intent;
 import android.os.Build;
+import android.os.Environment;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -12,7 +13,12 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import com.example.fran.imachineappv2.CIEngine.MCLDenseEJML;
+import com.example.fran.imachineappv2.FilesManager.FilesMainActivity;
+
+import java.io.File;
 import java.util.ArrayList;
+import java.util.logging.Logger;
 
 public class MainActivityView extends AppCompatActivity implements MainActivityMvpView {
 
@@ -23,6 +29,8 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     Button btnChooseGallery;
     TextView workingText;
     ProgressBar progressBarWorking;
+    String pathFoldersResult;
+    private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
 
     private static final String[] INITIAL_PERMS = new String[]{
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -40,16 +48,14 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(INITIAL_PERMS, INITIAL_REQUEST);
         }
-
-        deleteClusterResultFolder();
-
+        pathFoldersResult = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppResultados";
         path_chosen = (TextView) findViewById(R.id.path_chosen);
         chAllImages = (CheckBox) findViewById(R.id.checkTodasLasImagenes);
         btnChooseGallery = (Button) findViewById(R.id.btnCarpetaProcesar);
         progressBarWorking = (ProgressBar) findViewById(R.id.pb_working);
     }
 
-    private void deleteClusterResultFolder() {presenter.deleteClusterResultFolder();}
+    private void deleteClusterResultFolder(String pathFoldersResult) {presenter.deleteClusterResultFolder(pathFoldersResult);}
 
     public void chooseGallery(View view) {presenter.chooseGallery(MainActivityView.this);}
 
@@ -63,13 +69,12 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
     public void procesarImagenes(View view) {
 
-//        presenter.procesarImagenes();
+        deleteClusterResultFolder(pathFoldersResult);
+
         if (!presenter.prepararImagenes((String) path_chosen.getText(),chAllImages)){
             Toast.makeText(getApplicationContext(),"Debe seleccionar un directorio a procesar", Toast.LENGTH_SHORT).show();
             return;
         }
-
-//        presenter.alertBlackWindow(MainActivityView.this);
 
         setContentView(R.layout.working);
 
@@ -77,19 +82,33 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
         presenter.fillWorkingText();
 
+        long startLoop = System.nanoTime();
         presenter.procesarImagenes(MainActivityView.this);
+        double tLoop = (System.nanoTime() - startLoop) / 1e9;
 
+        LOGGER.info(String.format("Total process took %f seconds", tLoop));
     }
 
     @Override
-    public void clusterReady(ArrayList<String> vImages, ArrayList<Integer> vClusters) {
-        Intent i = new Intent(this, ResultsActivityView.class);
-        i.putExtra("vImages",vImages);
-        i.putExtra("vClusters", vClusters);
+    public void clusterReady() {
+        presenter.folderGenerator(pathFoldersResult);
+    }
+
+    public void showFilesManagerActivity(String pathFolder){
+        Intent i = new Intent(this, FilesMainActivity.class);
+        i.putExtra("pathFolder",pathFolder);
         startActivity(i);
     }
 
+    public void verResultadosAnteriores(View view) {
 
+        if(!presenter.folderResultsExists(pathFoldersResult)){
+            Toast.makeText(getApplicationContext(),"¡No existen resultados anteriores!", Toast.LENGTH_SHORT).show();
+            return;
+        }
 
-
+        Intent i = new Intent(this, FilesMainActivity.class);
+        i.putExtra("pathFolder",pathFoldersResult);
+        startActivity(i);
+    }
 }
