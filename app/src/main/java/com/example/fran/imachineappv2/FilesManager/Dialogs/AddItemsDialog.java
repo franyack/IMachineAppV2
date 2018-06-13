@@ -4,13 +4,16 @@ import android.app.Activity;
 import android.app.Dialog;
 import android.app.DialogFragment;
 import android.content.DialogInterface;
+import android.content.Intent;
 import android.os.Bundle;
 import android.support.design.widget.BottomSheetDialog;
 import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 
+import com.example.fran.imachineappv2.FilesManager.FilesMainActivity;
 import com.example.fran.imachineappv2.R;
+import com.example.fran.imachineappv2.ResultsActivityView;
 
 /**
  * Based on: https://github.com/sromku/android-storage
@@ -46,6 +49,13 @@ public class AddItemsDialog extends DialogFragment {
             }
         });
 
+        view.findViewById(R.id.confirmResults).setOnClickListener(new View.OnClickListener(){
+            @Override
+            public void onClick(View view) {
+                dialog.dismiss();
+                mListener.onOptionClick(R.id.confirmResults,null);
+            }
+        });
 
         // control dialog width on different devices
         dialog.setOnShowListener(new DialogInterface.OnShowListener() {

@@ -48,11 +48,31 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             requestPermissions(INITIAL_PERMS, INITIAL_REQUEST);
         }
-        pathFoldersResult = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppResultados";
+        pathFoldersResult = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppTemporaryResults";
         path_chosen = (TextView) findViewById(R.id.path_chosen);
         chAllImages = (CheckBox) findViewById(R.id.checkTodasLasImagenes);
         btnChooseGallery = (Button) findViewById(R.id.btnCarpetaProcesar);
         progressBarWorking = (ProgressBar) findViewById(R.id.pb_working);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+    }
+
+    @Override
+    public void onPause() {
+        super.onPause();
+    }
+
+    @Override
+    public void onStop() {
+        super.onStop();
+    }
+
+    @Override
+    public void onDestroy() {
+        super.onDestroy();
     }
 
     private void deleteClusterResultFolder(String pathFoldersResult) {presenter.deleteClusterResultFolder(pathFoldersResult);}
@@ -72,6 +92,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         deleteClusterResultFolder(pathFoldersResult);
 
         if (!presenter.prepararImagenes((String) path_chosen.getText(),chAllImages)){
+            //TODO: Strings para los toast
             Toast.makeText(getApplicationContext(),"Debe seleccionar un directorio a procesar", Toast.LENGTH_SHORT).show();
             return;
         }
@@ -82,11 +103,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
         presenter.fillWorkingText();
 
-        long startLoop = System.nanoTime();
         presenter.procesarImagenes(MainActivityView.this);
-        double tLoop = (System.nanoTime() - startLoop) / 1e9;
-
-        LOGGER.info(String.format("Total process took %f seconds", tLoop));
     }
 
     @Override
@@ -111,4 +128,5 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         i.putExtra("pathFolder",pathFoldersResult);
         startActivity(i);
     }
+
 }

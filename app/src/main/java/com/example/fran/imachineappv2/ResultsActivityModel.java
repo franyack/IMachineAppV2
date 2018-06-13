@@ -2,6 +2,8 @@ package com.example.fran.imachineappv2;
 
 import android.os.Environment;
 
+import com.codekidlabs.storagechooser.utils.FileUtil;
+
 import org.apache.commons.io.FileUtils;
 
 import java.io.File;
@@ -60,7 +62,6 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
         }
 
 
-        presenter.showClustersResult(resu);
     }
 
     @Override
@@ -101,5 +102,35 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
             }
         }
         presenter.showFolderAlert(pathFolder);
+    }
+
+    @Override
+    public void deleteResults(String pathFolderResult) {
+        File folder = new File(pathFolderResult);
+        if (folder.exists()){
+            try {
+                FileUtils.deleteDirectory(folder);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        presenter.backToMainActivity("");
+    }
+
+    @Override
+    public void confirmResults(String pathFolderTemporary) {
+        int i = 1;
+        File srcFolder = new File(pathFolderTemporary);
+        File dstFolder = new File(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppResult" + i);
+        while(dstFolder.exists()){
+            dstFolder = new File(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppResult" + ++i);
+        }
+        try {
+            FileUtils.copyDirectory(srcFolder,dstFolder);
+            FileUtils.deleteDirectory(srcFolder);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        presenter.backToMainActivity(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppResult" + i);
     }
 }

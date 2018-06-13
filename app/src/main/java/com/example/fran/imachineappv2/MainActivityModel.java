@@ -87,6 +87,9 @@ public class MainActivityModel implements MainActivityMvpModel {
     private List<Top_Predictions> top_predictions = new ArrayList<>();
     private List<float[]> embeddings_list = new ArrayList<>();
 
+    private long startLoop;
+
+
     //Constructor
     MainActivityModel(MainActivityPresenter presenter) {
         this.mainActivityPresenter = presenter;
@@ -139,7 +142,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     @Override
     public boolean prepararImagenes(String path_chosen, CheckBox chAllImages) {
         File curDir;
-        if (path_chosen == null && !chAllImages.isChecked()){
+        if (path_chosen.equals("") && !chAllImages.isChecked()){
             return false;
         }
         if (chAllImages.isChecked()){
@@ -166,7 +169,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 getAllFiles(f);
             }else {
                 if(f.isFile()){
-                    if (images.size()>=100){
+                    if (images.size()>=10){
                         break;
                     }
                     //TODO: lower path
@@ -216,6 +219,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     @Override
     public void startImageProcess(MainActivityView mainActivityView) {
         try {
+            startLoop = System.nanoTime();
             wnid_lookup.wnidWordsList = wnid_lookup.loadWnIDWords(mainActivityView.getAssets(),WORDS_PATH);
 //            label_lookup = TensorFlowImageClassifier.loadLabelList(mainActivityView.getAssets(),LABEL_PATH);
             wnid_lookup.hierarchyLookupList = wnid_lookup.loadHierarchy_lookup(mainActivityView.getAssets(),HIERARCHY_PATH);
@@ -347,6 +351,9 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
 
         fillClustersResult(vClusters);
+        double tLoop = (System.nanoTime() - startLoop) / 1e9;
+
+        LOGGER.info(String.format("Total process took %f seconds", tLoop));
 
         mainActivityPresenter.clustersReady();
     }

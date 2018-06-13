@@ -37,7 +37,6 @@
     <string name="label_folder_options">Folder options</string>
     <string name="deletethefile">You are about to delete the file</string>
     <string name="deletethefolder">You are about to delete the folder with all its content for real</string>
-
-
+    <string name="confirm_results">CONFIRM RESULTS</string>
 
 </resources>

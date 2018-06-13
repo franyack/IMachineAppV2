@@ -22,10 +22,6 @@ public class ResultsActivityPresenter implements ResultsActivityMvpPresenter {
         resultsActivityModel.showClustersResults(vImages,vClusters);
     }
 
-    @Override
-    public void showClustersResult(String resu) {
-        view.showClustersResult(resu);
-    }
 
     @Override
     public void folderGenerator(String pathFolder) {
@@ -35,5 +31,20 @@ public class ResultsActivityPresenter implements ResultsActivityMvpPresenter {
     @Override
     public void showFolderAlert(String pathFolder) {
         view.showFolderAlert(pathFolder);
+    }
+
+    @Override
+    public void confirmResults(String pathFolder) {
+        resultsActivityModel.confirmResults(pathFolder);
+    }
+
+    @Override
+    public void deleteResults(String pathFolder) {
+        resultsActivityModel.deleteResults(pathFolder);
+    }
+
+    @Override
+    public void backToMainActivity(String dstFolder) {
+        view.backToMainActivity(dstFolder);
     }
 }

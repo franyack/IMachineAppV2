@@ -1,57 +1,36 @@
 package com.example.fran.imachineappv2;
 
 import android.app.Activity;
-import android.app.AlertDialog;
 import android.content.Intent;
 import android.os.Bundle;
 import android.os.Environment;
 import android.view.View;
-import android.widget.TextView;
+import android.widget.Button;
+import android.widget.Toast;
 
 import com.example.fran.imachineappv2.FilesManager.FilesMainActivity;
-import com.snatik.storage.Storage;
-
-import org.apache.commons.io.FileUtils;
 
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Vector;
-import java.util.logging.Logger;
 
-/**
- * Created by fran on 02/04/18.
- */
 
 public class ResultsActivityView extends Activity implements ResultsActivityMvpView {
 
-    private static final Logger LOGGER = Logger.getLogger(ResultsActivityView.class.getName());
-
     private ResultsActivityMvpPresenter presenter;
 
-    TextView tvResults;
+    Button confirmResults,deleteResults,backToEditions;
+    String pathFolder;
 
-    ArrayList<String> vImages = new ArrayList<>();
-    ArrayList<Integer> vClusters = new ArrayList<>();
-    Vector<Integer> vClustersResult = new Vector<>();
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        LOGGER.info("Hello World!");
+        pathFolder = (String) getIntent().getStringExtra("pathFolder");
         presenter = new ResultsActivityPresenter(this);
-
-        vImages = (ArrayList<String>) getIntent().getSerializableExtra("vImages");
-        vClusters = (ArrayList<Integer>) getIntent().getSerializableExtra("vClusters");
         setContentView(R.layout.results);
-        tvResults = (TextView) findViewById(R.id.resultados);
-        presenter.fillTvResults(vImages,vClusters);
+//        confirmResults = (Button) findViewById(R.id.btnConfirmResults);
+//        deleteResults = (Button) findViewById(R.id.btnDeleteResults);
+//        backToEditions = (Button) findViewById(R.id.btnBackToEditions);
     }
 
-    public void showClustersResult(String result){tvResults.setText(result);}
 
     public void generarCarpetas(View view) {
         String pathFolder = Environment.getExternalStorageDirectory() + File.separator + "clusterResult";
@@ -62,10 +41,30 @@ public class ResultsActivityView extends Activity implements ResultsActivityMvpV
         startActivity(i);
     }
 
-    public void volverMainActivity(View view) {
+    public void backToMainActivity(String dstFolder) {
+        if(dstFolder.equals("")) {
+            Toast.makeText(getApplicationContext(), "¡El resultado se ha descartado correctamente!", Toast.LENGTH_SHORT).show();
+        }else{
+            Toast.makeText(getApplicationContext(),"El resultado se ha guardado correctamente en el directorio: " + dstFolder, Toast.LENGTH_SHORT).show();
+        }
         Intent i = getBaseContext().getPackageManager()
                 .getLaunchIntentForPackage(getBaseContext().getPackageName());
         i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(i);
+    }
+
+    public void confirmResults(View view) {
+        //TODO: darle al usuario la posibilidad de elegir el path final?
+        presenter.confirmResults(pathFolder);
+    }
+
+    public void deleteResults(View view) {
+        presenter.deleteResults(pathFolder);
+    }
+
+    public void backToEditions(View view) {
+        Intent i = new Intent(this, FilesMainActivity.class);
+        i.putExtra("pathFolder",pathFolder);
         startActivity(i);
     }
 }

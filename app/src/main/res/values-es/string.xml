@@ -39,4 +39,5 @@
     <string name="label_folder_options">Opciones de carpeta</string>
     <string name="deletethefile">Está a punto de eliminar el archivo</string>
     <string name="deletethefolder">Está a punto de eliminar la carpeta con todo su contenido</string>
+    <string name="confirm_results">CONFIRMAR RESULTADOS</string>
 </resources>

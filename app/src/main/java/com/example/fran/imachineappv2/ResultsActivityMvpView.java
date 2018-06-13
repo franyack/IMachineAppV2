@@ -5,7 +5,8 @@ package com.example.fran.imachineappv2;
  */
 
 public interface ResultsActivityMvpView {
-    void showClustersResult(String resu);
 
     void showFolderAlert(String pathFolder);
+
+    void backToMainActivity(String action);
 }

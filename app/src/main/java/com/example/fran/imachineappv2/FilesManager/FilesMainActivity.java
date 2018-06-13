@@ -28,6 +28,7 @@ import com.example.fran.imachineappv2.FilesManager.Dialogs.NewTextFileDialog;
 import com.example.fran.imachineappv2.FilesManager.Dialogs.RenameDialog;
 import com.example.fran.imachineappv2.FilesManager.Dialogs.UpdateItemDialog;
 import com.example.fran.imachineappv2.R;
+import com.example.fran.imachineappv2.ResultsActivityView;
 import com.snatik.storage.EncryptConfiguration;
 import com.snatik.storage.Storage;
 import com.snatik.storage.helpers.OrderType;
@@ -61,12 +62,11 @@ public class FilesMainActivity extends AppCompatActivity implements
     private int mTreeSteps = 0;
     private String mMovingPath;
     private boolean mInternal = false;
-
+    String pathFolder;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
-        String pathFolder;
         pathFolder = (String) getIntent().getStringExtra("pathFolder");
         mStorage = new Storage(getApplicationContext());
 
@@ -282,6 +282,10 @@ public class FilesMainActivity extends AppCompatActivity implements
                 mCopy = true;
                 mMovingLayout.setVisibility(View.VISIBLE);
                 break;
+            case R.id.confirmResults:
+                Intent i = new Intent(this, ResultsActivityView.class);
+                i.putExtra("pathFolder",pathFolder);
+                startActivity(i);
         }
     }
 
