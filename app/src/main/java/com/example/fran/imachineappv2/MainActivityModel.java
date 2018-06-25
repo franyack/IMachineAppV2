@@ -169,7 +169,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 getAllFiles(f);
             }else {
                 if(f.isFile()){
-                    if (images.size()>=10){
+                    if (images.size()>=300){
                         break;
                     }
                     //TODO: lower path
@@ -406,6 +406,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     private ByteBuffer convertBitmapToByteBuffer(Bitmap bitmap) {
+        //4 por el uso de flotantes, 4 bytes -> 1 float de 32 bits
         ByteBuffer byteBuffer = ByteBuffer.allocateDirect(4 * BATCH_SIZE * INPUT_SIZE * INPUT_SIZE * PIXEL_SIZE);
         byteBuffer.order(ByteOrder.nativeOrder());
         //byteBuffer.rewind();

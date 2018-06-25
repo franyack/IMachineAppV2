@@ -66,6 +66,8 @@ public class FilesMainActivity extends AppCompatActivity implements
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+        //TODO: wizard sobre diferentes opciones de administracion?
         super.onCreate(savedInstanceState);
         pathFolder = (String) getIntent().getStringExtra("pathFolder");
         mStorage = new Storage(getApplicationContext());
