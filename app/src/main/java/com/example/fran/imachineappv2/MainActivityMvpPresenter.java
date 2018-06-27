@@ -38,4 +38,6 @@ public interface MainActivityMvpPresenter {
     void showFilesManager(String pathFolder);
 
     boolean folderResultsExists(String pathFoldersResult);
+
+    void growProgress();
 }

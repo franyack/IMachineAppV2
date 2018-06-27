@@ -30,6 +30,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     TextView workingText;
     ProgressBar progressBarWorking;
     String pathFoldersResult;
+    int progress=0;
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
 
     private static final String[] INITIAL_PERMS = new String[]{
@@ -52,7 +53,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         path_chosen = (TextView) findViewById(R.id.path_chosen);
         chAllImages = (CheckBox) findViewById(R.id.checkTodasLasImagenes);
         btnChooseGallery = (Button) findViewById(R.id.btnCarpetaProcesar);
-        progressBarWorking = (ProgressBar) findViewById(R.id.pb_working);
+
     }
 
     @Override
@@ -115,6 +116,16 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFolder);
         startActivity(i);
+    }
+
+    @Override
+    public void growProgress() {
+        progress+=1;
+        if(progress>=100){
+            progress=95;
+        }
+        progressBarWorking = (ProgressBar) findViewById(R.id.progressBar);
+        progressBarWorking.setProgress(progress);
     }
 
     public void verResultadosAnteriores(View view) {
