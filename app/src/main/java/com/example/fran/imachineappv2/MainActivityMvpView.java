@@ -16,4 +16,6 @@ public interface MainActivityMvpView {
     void clusterReady();
 
     void showFilesManagerActivity(String pathFolder);
+
+    void growProgress();
 }

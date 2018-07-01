@@ -276,8 +276,20 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     //    @Override
     public void processImages() {
-
+        int percent = (int) (imagespath.length * .01);
+        percent*=6;
+        if(percent < 1){
+            percent=1;
+        }
+        int cantidadImgProcesadas = 0;
         for (int i = 0; i< imagespath.length; i++){
+            if(cantidadImgProcesadas==percent){
+                mainActivityPresenter.growProgress();
+                cantidadImgProcesadas=0;
+                LOGGER.info("processImages");
+            }else {
+                cantidadImgProcesadas+=1;
+            }
             Map<Integer, Object> outputs = new TreeMap<>();
             Bitmap image = lessResolution(imagespath[i],INPUT_SIZE,INPUT_SIZE);
             image = Bitmap.createScaledBitmap(image,INPUT_SIZE,INPUT_SIZE,false);
@@ -330,7 +342,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
         MCLDenseEJML mcl = new MCLDenseEJML(maxIt, expPow, infPow, epsConvergence, threshPrune);
 
-
+//        mainActivityPresenter.growProgress();
 //        LOGGER.info("                                                                           ");
 //        LOGGER.info("Rows: "+cluster_matrix.getNumRows());
 //        LOGGER.info("Rows: "+cluster_matrix.getNumCols());
@@ -349,7 +361,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 }
             }
         }
-
+//        mainActivityPresenter.growProgress();
         fillClustersResult(vClusters);
         double tLoop = (System.nanoTime() - startLoop) / 1e9;
 
@@ -566,13 +578,24 @@ public class MainActivityModel implements MainActivityMvpModel {
             }
 
         }
-
+        int percent = (int) (imagespath.length/(imagespath.length*.25));
+        if(percent < 1){
+            percent=1;
+        }
+        int cantidadImgProcesadas = 0;
         double[] v1, v2;
         double v, v1_s, v2_s, corr;
         int d;
 
 
         for (int i=0; i < top_predictions.size(); i++){
+            if(cantidadImgProcesadas==percent){
+                mainActivityPresenter.growProgress();
+                cantidadImgProcesadas=0;
+                LOGGER.info("getGrammaticalAffinity");
+            }else {
+                cantidadImgProcesadas+=1;
+            }
             predResults = top_predictions.get(i).getResult();
             predDict = new TreeMap<>();
 
@@ -635,9 +658,20 @@ public class MainActivityModel implements MainActivityMvpModel {
         float [] embed;
         double[] v1, v2;
         double corr;
-
+        int percent = (int) (imagespath.length/(imagespath.length*.25));
+        if(percent < 1){
+            percent=1;
+        }
+        int cantidadImgProcesadas = 0;
         // TODO: loop O(n^2) -> loop O(N*(N-1)/2)
         for (int i=0; i < embeddings.size(); i++){
+            if(cantidadImgProcesadas==percent){
+                mainActivityPresenter.growProgress();
+                cantidadImgProcesadas=0;
+                LOGGER.info("getImageAffinity");
+            }else {
+                cantidadImgProcesadas+=1;
+            }
             embed = embeddings.get(i);
             v1 = new double[embed.length];
 

@@ -100,5 +100,10 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
         return dataManager.folderResultsExist(pathFoldersResult);
     }
 
+    @Override
+    public void growProgress() {
+        view.growProgress();
+    }
+
 
 }
