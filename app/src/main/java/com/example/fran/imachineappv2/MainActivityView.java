@@ -13,11 +13,10 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.fran.imachineappv2.CIEngine.MCLDenseEJML;
+import com.daimajia.numberprogressbar.NumberProgressBar;
 import com.example.fran.imachineappv2.FilesManager.FilesMainActivity;
 
 import java.io.File;
-import java.util.ArrayList;
 import java.util.logging.Logger;
 
 public class MainActivityView extends AppCompatActivity implements MainActivityMvpView {
@@ -30,6 +29,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     TextView workingText;
     ProgressBar progressBarWorking;
     String pathFoldersResult;
+    NumberProgressBar numberProgressBar;
     int progress=0;
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
 
@@ -53,6 +53,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         path_chosen = (TextView) findViewById(R.id.path_chosen);
         chAllImages = (CheckBox) findViewById(R.id.checkTodasLasImagenes);
         btnChooseGallery = (Button) findViewById(R.id.btnCarpetaProcesar);
+
 
     }
 
@@ -120,12 +121,17 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
     @Override
     public void growProgress() {
-        progress+=1;
+        progress+=2.5;
         if(progress>=100){
             progress=95;
         }
-        progressBarWorking = (ProgressBar) findViewById(R.id.progressBar);
-        progressBarWorking.setProgress(progress);
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                numberProgressBar = (NumberProgressBar) findViewById(R.id.number_progress_bar);
+                numberProgressBar.setProgress(progress);
+            }
+        });
     }
 
     public void verResultadosAnteriores(View view) {

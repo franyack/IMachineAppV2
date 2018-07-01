@@ -39,6 +39,7 @@ import com.snatik.storage.helpers.SizeUnit;
 
 import java.io.File;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -207,12 +208,16 @@ public class FilesMainActivity extends AppCompatActivity implements
 
             try {
                 ArrayList<String> images = new ArrayList<>();
-                for(final File files : file.getParentFile().listFiles()){
-                    if(!files.isDirectory()){
-                        if ((files.getAbsolutePath().contains(".jpg") || files.getAbsolutePath().contains(".gif") || files.getAbsolutePath().contains(".bmp")
-                                || files.getAbsolutePath().contains(".jpeg") || files.getAbsolutePath().contains(".tif") || files.getAbsolutePath().contains(".tiff")
-                                || files.getAbsolutePath().contains(".png"))){
-                            images.add(files.getAbsolutePath());
+                File[] files = file.getParentFile().listFiles();
+                if (files != null) {
+                    Collections.sort(Arrays.asList(files), OrderType.NAME.getComparator());
+                }
+                for(final File imageFile : files){
+                    if(!imageFile.isDirectory()){
+                        if ((imageFile.getAbsolutePath().contains(".jpg") || imageFile.getAbsolutePath().contains(".gif") || imageFile.getAbsolutePath().contains(".bmp")
+                                || imageFile.getAbsolutePath().contains(".jpeg") || imageFile.getAbsolutePath().contains(".tif") || imageFile.getAbsolutePath().contains(".tiff")
+                                || imageFile.getAbsolutePath().contains(".png"))){
+                            images.add(imageFile.getAbsolutePath());
                         }
                     }
                 }

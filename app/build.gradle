@@ -37,4 +37,5 @@ dependencies {
     compile 'org.ejml:ejml-all:0.33'
     compile 'com.snatik:storage:2.1.0'
     compile 'com.github.mzelzoghbi:zgallery:0.3'
+    compile 'com.daimajia.numberprogressbar:library:1.4@aar'
 }

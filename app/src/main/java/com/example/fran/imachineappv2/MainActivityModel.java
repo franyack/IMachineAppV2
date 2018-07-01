@@ -212,7 +212,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     @Override
     public void fillWorkingText() {
-        String setearTexto = "Procesando " + images.size() +  " imagenes, aguarde por favor…";
+        String setearTexto = "Procesando " + images.size() +  " imagenes";
         mainActivityPresenter.showWorkingText(setearTexto);
     }
 
@@ -276,8 +276,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     //    @Override
     public void processImages() {
-        int percent = (int) (imagespath.length * .01);
-        percent*=6;
+        int percent = (int) (imagespath.length / 30);
         if(percent < 1){
             percent=1;
         }
@@ -578,7 +577,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             }
 
         }
-        int percent = (int) (imagespath.length/(imagespath.length*.25));
+        int percent = (int) (imagespath.length/10);
         if(percent < 1){
             percent=1;
         }
@@ -658,7 +657,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         float [] embed;
         double[] v1, v2;
         double corr;
-        int percent = (int) (imagespath.length/(imagespath.length*.25));
+        int percent = (int) (imagespath.length/10);
         if(percent < 1){
             percent=1;
         }

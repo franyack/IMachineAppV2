@@ -35,15 +35,36 @@
         android:textSize="20dp"
         />
 
-    <ProgressBar
-        android:id="@+id/progressBar"
-        style="?android:attr/progressBarStyleHorizontal"
+    <!--<ProgressBar-->
+        <!--android:id="@+id/progressBar"-->
+        <!--style="?android:attr/progressBarStyleHorizontal"-->
+        <!--android:layout_width="wrap_content"-->
+        <!--android:layout_height="wrap_content"-->
+        <!--android:layout_alignEnd="@+id/workingTitulo"-->
+        <!--android:layout_alignStart="@+id/workingTitulo"-->
+        <!--android:layout_below="@+id/workingTexto"-->
+        <!--android:layout_marginTop="50dp"-->
+        <!--android:max="100"/>-->
+
+    <com.daimajia.numberprogressbar.NumberProgressBar
+        xmlns:app="http://schemas.android.com/apk/res-auto"
+        android:id="@+id/number_progress_bar"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_alignEnd="@+id/workingTitulo"
-        android:layout_alignStart="@+id/workingTitulo"
+        android:layout_alignParentStart="true"
         android:layout_below="@+id/workingTexto"
-        android:layout_marginTop="50dp"
-        android:max="100"/>
+
+        android:layout_marginTop="139dp"
+        app:progress_max="100"
+
+        app:progress_reached_bar_height="5dp"
+        app:progress_reached_color="@color/colorPrimaryDark"
+        app:progress_text_color="@color/colorPrimary"
+        app:progress_text_offset="1dp"
+
+        app:progress_text_size="25sp"
+        app:progress_text_visibility="visible"
+        app:progress_unreached_bar_height="5dp"
+        app:progress_unreached_color="#CCCCCC" />
 
 </RelativeLayout>
