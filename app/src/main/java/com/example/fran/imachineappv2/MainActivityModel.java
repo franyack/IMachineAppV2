@@ -12,6 +12,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.CheckBox;
 import com.codekidlabs.storagechooser.StorageChooser;
+import com.codekidlabs.storagechooser.utils.FileUtil;
 import com.example.fran.imachineappv2.CIEngine.Classifier;
 import com.example.fran.imachineappv2.CIEngine.MCLDenseEJML;
 import com.example.fran.imachineappv2.CIEngine.TensorFlowImageClassifier;
@@ -241,23 +242,25 @@ public class MainActivityModel implements MainActivityMvpModel {
                 e.printStackTrace();
             }
         }
+        String number;
         for (int i = 0; i < ClustersResult.size(); i++) {
-            folder = new File(pathFolder + File.separator + "Carpeta " + i);
+            mainActivityPresenter.growProgress();
+            number = String.valueOf(i+1);
+            if(number.length()==1){
+                number = "00"+number;
+            }else{
+                if(number.length()==2){
+                    number = "0"+number;
+                }
+            }
+            folder = new File(pathFolder + File.separator + "Carpeta" + number);
             folder.mkdirs();
             for (int j = 0; j < vClusters.size(); j++) {
                 if (vClusters.get(j) == i) {
                     File source = new File(vImages.get(j));
-                    File destination = new File(folder.getAbsolutePath() + File.separator + "image" + j + ".jpg");
-                    FileChannel src = null;
-                    FileChannel dst = null;
+                    File destination = new File(folder.getAbsolutePath() + File.separator);
                     try {
-                        src = new FileInputStream(source).getChannel();
-                        dst = new FileOutputStream(destination).getChannel();
-                        dst.transferFrom(src, 0, src.size());
-                        src.close();
-                        dst.close();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+                        FileUtils.copyFileToDirectory(source,destination);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -285,7 +288,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-                LOGGER.info("processImages");
+//                LOGGER.info("processImages");
             }else {
                 cantidadImgProcesadas+=1;
             }
@@ -591,7 +594,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-                LOGGER.info("getGrammaticalAffinity");
+//                LOGGER.info("getGrammaticalAffinity");
             }else {
                 cantidadImgProcesadas+=1;
             }
@@ -667,7 +670,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-                LOGGER.info("getImageAffinity");
+//                LOGGER.info("getImageAffinity");
             }else {
                 cantidadImgProcesadas+=1;
             }

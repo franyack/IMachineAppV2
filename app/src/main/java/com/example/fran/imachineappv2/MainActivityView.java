@@ -117,6 +117,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFolder);
         startActivity(i);
+
     }
 
     @Override
@@ -140,7 +141,9 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
             Toast.makeText(getApplicationContext(),"¡No existen resultados anteriores!", Toast.LENGTH_SHORT).show();
             return;
         }
-
+        String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
+        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult);
+        a.Metrics();
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFoldersResult);
         startActivity(i);
