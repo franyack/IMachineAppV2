@@ -68,6 +68,15 @@ public class MainActivityModel implements MainActivityMvpModel {
     private static final int IMAGE_MEAN = 128;
     private static final float IMAGE_STD = 128.0f;
 
+    //MCL
+    int maxIt = 100;
+    int expPow = 2;
+    int infPow = 2;
+    double epsConvergence = 1e-3;
+    double threshPrune = 0.01;
+    int n = 100;
+    int seed = 1234;
+
     /* Preallocated buffers for storing image data in. */
     private int[] intValues = new int[INPUT_SIZE * INPUT_SIZE];
 
@@ -277,6 +286,15 @@ public class MainActivityModel implements MainActivityMvpModel {
         return folder.exists();
     }
 
+    @Override
+    public List<String> getMclParameters() {
+        List<String> mclParameters = new ArrayList<>();
+        mclParameters.add(""+maxIt);
+        mclParameters.add(""+expPow);
+        mclParameters.add(""+infPow);
+        return  mclParameters;
+    }
+
     //    @Override
     public void processImages() {
         int percent = (int) (imagespath.length / 30);
@@ -334,13 +352,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         CommonOps_DDRM.add(g_matrix, i_matrix, cluster_matrix);
         CommonOps_DDRM.divide(cluster_matrix, 2.0);
 
-        int maxIt = 100;
-        int expPow = 2;
-        int infPow = 2;
-        double epsConvergence = 1e-3;
-        double threshPrune = 0.01;
-        int n = 100;
-        int seed = 1234;
+
 
         MCLDenseEJML mcl = new MCLDenseEJML(maxIt, expPow, infPow, epsConvergence, threshPrune);
 

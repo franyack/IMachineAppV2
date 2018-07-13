@@ -17,6 +17,7 @@ import com.daimajia.numberprogressbar.NumberProgressBar;
 import com.example.fran.imachineappv2.FilesManager.FilesMainActivity;
 
 import java.io.File;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class MainActivityView extends AppCompatActivity implements MainActivityMvpView {
@@ -141,8 +142,9 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
             Toast.makeText(getApplicationContext(),"¡No existen resultados anteriores!", Toast.LENGTH_SHORT).show();
             return;
         }
+        List<String> mclParameters = presenter.getMclParameters();
         String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
-        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult);
+        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
         a.Metrics();
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFoldersResult);

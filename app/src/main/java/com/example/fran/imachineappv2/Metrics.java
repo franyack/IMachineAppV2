@@ -1,5 +1,7 @@
 package com.example.fran.imachineappv2;
 
+import android.util.Log;
+
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
@@ -16,15 +18,22 @@ public class Metrics {
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
     String pathFoldersModel;
     String pathFoldersResult;
+    List<String> mclParameters = new ArrayList<>();
 
-    public Metrics(String pathFoldersModel,String pathFoldersResult){
+    public Metrics(String pathFoldersModel,String pathFoldersResult, List<String> mclParameters){
         this.pathFoldersModel = pathFoldersModel;
         this.pathFoldersResult = pathFoldersResult;
+        this.mclParameters = mclParameters;
     }
 
     //The function need that the 3 first characters of the model-folder names are the same 3 first characters of
     //the images inside them.
     public void Metrics(){
+        LOGGER.info("-");
+        LOGGER.info("MCL maxIt: " + mclParameters.get(0));
+        LOGGER.info("MCL expPow: " + mclParameters.get(1));
+        LOGGER.info("MCL infPow: " + mclParameters.get(2));
+        LOGGER.info("-");
         float qs = 0;
         File foldersModel = new File(pathFoldersModel);
         File [] foldersModelList = foldersModel.listFiles();

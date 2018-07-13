@@ -2,6 +2,8 @@ package com.example.fran.imachineappv2;
 
 import android.widget.CheckBox;
 
+import java.util.List;
+
 /**
  * Created by fran on 24/05/18.
  */
@@ -25,4 +27,6 @@ public interface MainActivityMvpModel {
     void folderGenerator(String pathFolder);
 
     boolean folderResultsExist(String pathFoldersResult);
+
+    List<String> getMclParameters();
 }
