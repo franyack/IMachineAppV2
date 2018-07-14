@@ -10,11 +10,11 @@ public interface ResultsActivityMvpPresenter {
 
     void fillTvResults(ArrayList<String> vImages, ArrayList<Integer> vClusters);
 
-    void folderGenerator(String pathFolder);
+//    void folderGenerator(String pathFolder);
 
     void showFolderAlert(String pathFolder);
 
-    void confirmResults(String pathFolder);
+    void confirmResults(String pathFolder, String[] imagesPath, ResultsActivityView resultsActivityView);
 
     void deleteResults(String pathFolder);
 

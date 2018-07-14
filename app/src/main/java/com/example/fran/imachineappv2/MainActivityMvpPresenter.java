@@ -33,7 +33,7 @@ public interface MainActivityMvpPresenter {
 
     void procesarImagenes(MainActivityView mainActivityView);
 
-    void clustersReady();
+    void clustersReady(String[] imagespath);
 
     void folderGenerator(String pathFolder);
 

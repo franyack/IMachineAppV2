@@ -19,11 +19,13 @@ public class ResultsActivityView extends Activity implements ResultsActivityMvpV
 
     Button confirmResults,deleteResults,backToEditions;
     String pathFolder;
+    String[] imagesPath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         pathFolder = (String) getIntent().getStringExtra("pathFolder");
+        imagesPath = getIntent().getStringArrayExtra("imagesPath");
         presenter = new ResultsActivityPresenter(this);
         setContentView(R.layout.results);
 //        confirmResults = (Button) findViewById(R.id.btnConfirmResults);
@@ -32,10 +34,10 @@ public class ResultsActivityView extends Activity implements ResultsActivityMvpV
     }
 
 
-    public void generarCarpetas(View view) {
-        String pathFolder = Environment.getExternalStorageDirectory() + File.separator + "clusterResult";
-        presenter.folderGenerator(pathFolder);
-    }
+//    public void generarCarpetas(View view) {
+//        String pathFolder = Environment.getExternalStorageDirectory() + File.separator + "clusterResult";
+//        presenter.folderGenerator(pathFolder);
+//    }
     public void showFolderAlert(String pathFolder){
         Intent i = new Intent(this, FilesMainActivity.class);
         startActivity(i);
@@ -55,7 +57,7 @@ public class ResultsActivityView extends Activity implements ResultsActivityMvpV
 
     public void confirmResults(View view) {
         //TODO: darle al usuario la posibilidad de elegir el path final?
-        presenter.confirmResults(pathFolder);
+        presenter.confirmResults(pathFolder, imagesPath, ResultsActivityView.this);
     }
 
     public void deleteResults(View view) {

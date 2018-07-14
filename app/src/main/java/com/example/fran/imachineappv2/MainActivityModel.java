@@ -381,7 +381,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
         LOGGER.info(String.format("Total process took %f seconds", tLoop));
 
-        mainActivityPresenter.clustersReady();
+        mainActivityPresenter.clustersReady(imagespath);
     }
 
     private void fillClustersResult(ArrayList<Integer> vClusters) {

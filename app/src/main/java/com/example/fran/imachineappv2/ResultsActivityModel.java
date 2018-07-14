@@ -1,8 +1,8 @@
 package com.example.fran.imachineappv2;
 
+import android.app.AlertDialog;
+import android.content.DialogInterface;
 import android.os.Environment;
-
-import com.codekidlabs.storagechooser.utils.FileUtil;
 
 import org.apache.commons.io.FileUtils;
 
@@ -64,45 +64,45 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
 
     }
 
-    @Override
-    public void folderGenerator(String pathFolder) {
-        File folder = new File(pathFolder);
-        if (!folder.exists()) {
-            folder.mkdirs();
-        } else {
-            try {
-                FileUtils.cleanDirectory(folder);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }
-        for (int i = 0; i < vClustersResult.size(); i++) {
-            folder = new File(Environment.getExternalStorageDirectory() +
-                    File.separator + "clusterResult" + File.separator + "Cluster" + i);
-            folder.mkdirs();
-            for (int j = 0; j < vClusters.size(); j++) {
-                if (vClusters.get(j) == i) {
-                    File source = new File(vImages.get(j));
-                    File destination = new File(folder.getAbsolutePath() + File.separator + "image" + j + ".jpg");
-                    FileChannel src = null;
-                    FileChannel dst = null;
-                    try {
-                        src = new FileInputStream(source).getChannel();
-                        dst = new FileOutputStream(destination).getChannel();
-                        dst.transferFrom(src, 0, src.size());
-                        src.close();
-                        dst.close();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                }
-            }
-        }
-        presenter.showFolderAlert(pathFolder);
-    }
+//    @Override
+//    public void folderGenerator(String pathFolder) {
+//        File folder = new File(pathFolder);
+//        if (!folder.exists()) {
+//            folder.mkdirs();
+//        } else {
+//            try {
+//                FileUtils.cleanDirectory(folder);
+//            } catch (IOException e) {
+//                e.printStackTrace();
+//            }
+//        }
+//        for (int i = 0; i < vClustersResult.size(); i++) {
+//            folder = new File(Environment.getExternalStorageDirectory() +
+//                    File.separator + "clusterResult" + File.separator + "Cluster" + i);
+//            folder.mkdirs();
+//            for (int j = 0; j < vClusters.size(); j++) {
+//                if (vClusters.get(j) == i) {
+//                    File source = new File(vImages.get(j));
+//                    File destination = new File(folder.getAbsolutePath() + File.separator + "image" + j + ".jpg");
+//                    FileChannel src = null;
+//                    FileChannel dst = null;
+//                    try {
+//                        src = new FileInputStream(source).getChannel();
+//                        dst = new FileOutputStream(destination).getChannel();
+//                        dst.transferFrom(src, 0, src.size());
+//                        src.close();
+//                        dst.close();
+//                    } catch (FileNotFoundException e) {
+//                        e.printStackTrace();
+//                    } catch (IOException e) {
+//                        e.printStackTrace();
+//                    }
+//
+//                }
+//            }
+//        }
+//        presenter.showFolderAlert(pathFolder);
+//    }
 
     @Override
     public void deleteResults(String pathFolderResult) {
@@ -118,7 +118,44 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
     }
 
     @Override
-    public void confirmResults(String pathFolderTemporary) {
+    public void confirmResults(final String pathFolderTemporary, final String[] imagesPath, ResultsActivityView resultsActivityView) {
+        final AlertDialog.Builder builder = new AlertDialog.Builder(resultsActivityView);
+        builder.setTitle("Atención");
+        builder.setMessage("¿Desea copiar o mover de manera permanente el resultado final?");
+        builder.setPositiveButton("Copiar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                generateNewResultFolder(pathFolderTemporary);
+            }
+        });
+        builder.setNeutralButton("Cancelar", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+
+            }
+        });
+        builder.setNegativeButton("Mover", new DialogInterface.OnClickListener() {
+            @Override
+            public void onClick(DialogInterface dialogInterface, int i) {
+                File file;
+                for(int j=0;j<imagesPath.length;j++){
+                    file = new File(imagesPath[j]);
+                    try {
+                        FileUtils.forceDelete(file);
+                        if(file.getParentFile().listFiles().length==0){
+                          FileUtils.deleteDirectory(file.getParentFile());
+                        }
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+                generateNewResultFolder(pathFolderTemporary);
+            }
+        });
+        final AlertDialog dialog=builder.create();
+        dialog.show();
+    }
+    public void generateNewResultFolder(String pathFolderTemporary){
         int i = 1;
         File srcFolder = new File(pathFolderTemporary);
         File dstFolder = new File(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppResult" + i);

@@ -32,6 +32,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     String pathFoldersResult;
     NumberProgressBar numberProgressBar;
     int progress=0;
+    String[] imagesPath;
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
 
     private static final String[] INITIAL_PERMS = new String[]{
@@ -110,15 +111,17 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     }
 
     @Override
-    public void clusterReady() {
+    public void clusterReady(String[] imagesPath) {
+//        this.imagesPath=new String[imagespath.length];
+        this.imagesPath=imagesPath;
         presenter.folderGenerator(pathFoldersResult);
     }
 
     public void showFilesManagerActivity(String pathFolder){
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFolder);
+        i.putExtra("imagesPath", imagesPath);
         startActivity(i);
-
     }
 
     @Override

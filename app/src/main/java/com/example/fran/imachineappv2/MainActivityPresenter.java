@@ -83,8 +83,8 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     }
 
     @Override
-    public void clustersReady() {
-        view.clusterReady();
+    public void clustersReady(String[] imagespath) {
+        view.clusterReady(imagespath);
     }
 
     @Override
