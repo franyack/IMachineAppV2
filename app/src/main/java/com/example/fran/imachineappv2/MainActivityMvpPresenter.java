@@ -3,6 +3,8 @@ package com.example.fran.imachineappv2;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 
+import java.util.List;
+
 /**
  * Created by fran on 24/05/18.
  */
@@ -40,4 +42,6 @@ public interface MainActivityMvpPresenter {
     boolean folderResultsExists(String pathFoldersResult);
 
     void growProgress();
+
+    List<String> getMclParameters();
 }

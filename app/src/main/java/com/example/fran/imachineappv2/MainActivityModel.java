@@ -12,6 +12,7 @@ import android.view.Window;
 import android.view.WindowManager;
 import android.widget.CheckBox;
 import com.codekidlabs.storagechooser.StorageChooser;
+import com.codekidlabs.storagechooser.utils.FileUtil;
 import com.example.fran.imachineappv2.CIEngine.Classifier;
 import com.example.fran.imachineappv2.CIEngine.MCLDenseEJML;
 import com.example.fran.imachineappv2.CIEngine.TensorFlowImageClassifier;
@@ -66,6 +67,15 @@ public class MainActivityModel implements MainActivityMvpModel {
     private static final int PIXEL_SIZE = 3;
     private static final int IMAGE_MEAN = 128;
     private static final float IMAGE_STD = 128.0f;
+
+    //MCL
+    int maxIt = 100;
+    int expPow = 2;
+    int infPow = 2;
+    double epsConvergence = 1e-3;
+    double threshPrune = 0.01;
+    int n = 100;
+    int seed = 1234;
 
     /* Preallocated buffers for storing image data in. */
     private int[] intValues = new int[INPUT_SIZE * INPUT_SIZE];
@@ -241,23 +251,25 @@ public class MainActivityModel implements MainActivityMvpModel {
                 e.printStackTrace();
             }
         }
+        String number;
         for (int i = 0; i < ClustersResult.size(); i++) {
-            folder = new File(pathFolder + File.separator + "Carpeta " + i);
+            mainActivityPresenter.growProgress();
+            number = String.valueOf(i+1);
+            if(number.length()==1){
+                number = "00"+number;
+            }else{
+                if(number.length()==2){
+                    number = "0"+number;
+                }
+            }
+            folder = new File(pathFolder + File.separator + "Carpeta" + number);
             folder.mkdirs();
             for (int j = 0; j < vClusters.size(); j++) {
                 if (vClusters.get(j) == i) {
                     File source = new File(vImages.get(j));
-                    File destination = new File(folder.getAbsolutePath() + File.separator + "image" + j + ".jpg");
-                    FileChannel src = null;
-                    FileChannel dst = null;
+                    File destination = new File(folder.getAbsolutePath() + File.separator);
                     try {
-                        src = new FileInputStream(source).getChannel();
-                        dst = new FileOutputStream(destination).getChannel();
-                        dst.transferFrom(src, 0, src.size());
-                        src.close();
-                        dst.close();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+                        FileUtils.copyFileToDirectory(source,destination);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -274,6 +286,15 @@ public class MainActivityModel implements MainActivityMvpModel {
         return folder.exists();
     }
 
+    @Override
+    public List<String> getMclParameters() {
+        List<String> mclParameters = new ArrayList<>();
+        mclParameters.add(""+maxIt);
+        mclParameters.add(""+expPow);
+        mclParameters.add(""+infPow);
+        return  mclParameters;
+    }
+
     //    @Override
     public void processImages() {
         int percent = (int) (imagespath.length / 30);
@@ -285,7 +306,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-                LOGGER.info("processImages");
+//                LOGGER.info("processImages");
             }else {
                 cantidadImgProcesadas+=1;
             }
@@ -331,13 +352,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         CommonOps_DDRM.add(g_matrix, i_matrix, cluster_matrix);
         CommonOps_DDRM.divide(cluster_matrix, 2.0);
 
-        int maxIt = 100;
-        int expPow = 2;
-        int infPow = 2;
-        double epsConvergence = 1e-3;
-        double threshPrune = 0.01;
-        int n = 100;
-        int seed = 1234;
+
 
         MCLDenseEJML mcl = new MCLDenseEJML(maxIt, expPow, infPow, epsConvergence, threshPrune);
 
@@ -591,7 +606,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-                LOGGER.info("getGrammaticalAffinity");
+//                LOGGER.info("getGrammaticalAffinity");
             }else {
                 cantidadImgProcesadas+=1;
             }
@@ -667,7 +682,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-                LOGGER.info("getImageAffinity");
+//                LOGGER.info("getImageAffinity");
             }else {
                 cantidadImgProcesadas+=1;
             }

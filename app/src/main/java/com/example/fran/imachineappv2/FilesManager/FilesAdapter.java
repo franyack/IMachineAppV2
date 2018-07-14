@@ -59,9 +59,9 @@ public class FilesAdapter extends RecyclerView.Adapter<RecyclerView.ViewHolder> 
             fileViewHolder.mIcon.setImageResource(R.drawable.ic_folder_primary_24dp);
         }else{
             BitmapFactory.Options bmOptions = new BitmapFactory.Options();
-            Bitmap image = BitmapFactory.decodeFile(file.getAbsolutePath(),bmOptions);
-//            Bitmap image = lessResolution(file.getAbsolutePath(),60,60);
-            image = Bitmap.createScaledBitmap(image, 60,60,false);
+//            Bitmap image = BitmapFactory.decodeFile(file.getAbsolutePath(),bmOptions);
+            Bitmap image = lessResolution(file.getAbsolutePath(),60,60);
+//            image = Bitmap.createScaledBitmap(image, 60,60,false);
             fileViewHolder.mIcon.setImageBitmap(image);
         }
 //        fileViewHolder.mIcon.setImageResource(file.isDirectory() ? R.drawable.ic_folder_primary_24dp : R.drawable
