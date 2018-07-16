@@ -48,7 +48,9 @@ public class Metrics {
         Map.Entry<String, Integer> maxValue;
         for(File folderModel: foldersModelList){
             modelsFolderSize.put(folderModel.getName().substring(0,3).toUpperCase(),folderModel.listFiles().length);
+            LOGGER.info("Length of " + folderModel.getName().toUpperCase() +" (" + folderModel.getName().substring(0,3).toUpperCase()+") folder: " + folderModel.listFiles().length);
         }
+        LOGGER.info("-");
         for(File folderResult: foldersResultList){
             for(File folderModel: foldersModelList){
                 models.put(folderModel.getName().substring(0,3).toUpperCase(), 0);
