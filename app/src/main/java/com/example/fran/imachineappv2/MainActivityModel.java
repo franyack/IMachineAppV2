@@ -5,14 +5,12 @@ import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Environment;
 import android.os.Handler;
 import android.view.Gravity;
 import android.view.Window;
 import android.view.WindowManager;
 import android.widget.CheckBox;
 import com.codekidlabs.storagechooser.StorageChooser;
-import com.codekidlabs.storagechooser.utils.FileUtil;
 import com.example.fran.imachineappv2.CIEngine.Classifier;
 import com.example.fran.imachineappv2.CIEngine.MCLDenseEJML;
 import com.example.fran.imachineappv2.CIEngine.TensorFlowImageClassifier;
@@ -26,13 +24,10 @@ import org.ejml.dense.row.CommonOps_DDRM;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -150,10 +145,10 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     @Override
-    public boolean prepararImagenes(String path_chosen, CheckBox chAllImages) {
+    public int prepararImagenes(String path_chosen, CheckBox chAllImages) {
         File curDir;
         if (path_chosen.equals("") && !chAllImages.isChecked()){
-            return false;
+            return 0;
         }
         if (chAllImages.isChecked()){
             curDir = new File("/storage/emulated/0");
@@ -169,7 +164,12 @@ public class MainActivityModel implements MainActivityMvpModel {
         for (int i = 0; i<images.size(); i++){
             imagespath[i] = images.get(i);
         }
-        return true;
+
+        if(imagespath.length==0){
+            return 1;
+        }
+
+        return 2;
     }
 
     private void getAllFiles(File curDir){

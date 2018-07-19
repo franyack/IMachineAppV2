@@ -95,10 +95,15 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
         deleteClusterResultFolder(pathFoldersResult);
 
-        if (!presenter.prepararImagenes((String) path_chosen.getText(),chAllImages)){
+        if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages) == 0){
             //TODO: Strings para los toast
             Toast.makeText(getApplicationContext(),"Debe seleccionar un directorio a procesar", Toast.LENGTH_SHORT).show();
             return;
+        }else{
+            if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages) == 1){
+                Toast.makeText(getApplicationContext(),"La carpeta a procesar está vacía o no contiene ninguna imágen", Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
 
         setContentView(R.layout.working);

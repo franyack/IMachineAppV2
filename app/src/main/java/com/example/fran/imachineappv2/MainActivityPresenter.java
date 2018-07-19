@@ -51,7 +51,7 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     }
 
     @Override
-    public boolean prepararImagenes(String path_chosen, CheckBox chAllImages) {
+    public int prepararImagenes(String path_chosen, CheckBox chAllImages) {
         return dataManager.prepararImagenes(path_chosen, chAllImages);
     }
 
