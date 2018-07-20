@@ -21,7 +21,7 @@ public interface MainActivityMvpPresenter {
 
     void buttonChooseGalleryEnable(boolean b);
 
-    boolean prepararImagenes(String s, CheckBox chAllImages);
+    int prepararImagenes(String s, CheckBox chAllImages);
 
     void alertBlackWindow(MainActivityView mainActivityView);
 
@@ -33,7 +33,7 @@ public interface MainActivityMvpPresenter {
 
     void procesarImagenes(MainActivityView mainActivityView);
 
-    void clustersReady();
+    void clustersReady(String[] imagespath);
 
     void folderGenerator(String pathFolder);
 

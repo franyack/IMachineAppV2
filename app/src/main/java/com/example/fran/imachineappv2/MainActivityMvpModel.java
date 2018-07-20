@@ -16,7 +16,7 @@ public interface MainActivityMvpModel {
 
     void checkBoxClick(CheckBox chAllImages);
 
-    boolean prepararImagenes(String path_chosen, CheckBox chAllImages);
+    int prepararImagenes(String path_chosen, CheckBox chAllImages);
 
     void alertBlackWindow(MainActivityView mainActivityView);
 

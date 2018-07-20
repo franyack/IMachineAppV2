@@ -9,9 +9,9 @@ import java.util.ArrayList;
 public interface ResultsActivityMvpModel {
     void showClustersResults(ArrayList<String> vImages, ArrayList<Integer> vClusters);
 
-    void folderGenerator(String pathFolder);
+//    void folderGenerator(String pathFolder);
 
     void deleteResults(String pathFolderResult);
 
-    void confirmResults(String pathFolderTemporary);
+    void confirmResults(String pathFolderTemporary, String[] imagesPath, ResultsActivityView resultsActivityView);
 }

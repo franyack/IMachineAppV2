@@ -23,10 +23,10 @@ public class ResultsActivityPresenter implements ResultsActivityMvpPresenter {
     }
 
 
-    @Override
-    public void folderGenerator(String pathFolder) {
-        resultsActivityModel.folderGenerator(pathFolder);
-    }
+//    @Override
+//    public void folderGenerator(String pathFolder) {
+//        resultsActivityModel.folderGenerator(pathFolder);
+//    }
 
     @Override
     public void showFolderAlert(String pathFolder) {
@@ -34,8 +34,8 @@ public class ResultsActivityPresenter implements ResultsActivityMvpPresenter {
     }
 
     @Override
-    public void confirmResults(String pathFolder) {
-        resultsActivityModel.confirmResults(pathFolder);
+    public void confirmResults(String pathFolder, String[] imagesPath, ResultsActivityView resultsActivityView) {
+        resultsActivityModel.confirmResults(pathFolder, imagesPath,resultsActivityView);
     }
 
     @Override

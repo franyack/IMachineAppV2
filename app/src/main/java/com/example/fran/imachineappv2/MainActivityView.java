@@ -32,6 +32,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     String pathFoldersResult;
     NumberProgressBar numberProgressBar;
     int progress=0;
+    String[] imagesPath;
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
 
     private static final String[] INITIAL_PERMS = new String[]{
@@ -94,10 +95,15 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
         deleteClusterResultFolder(pathFoldersResult);
 
-        if (!presenter.prepararImagenes((String) path_chosen.getText(),chAllImages)){
+        if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages) == 0){
             //TODO: Strings para los toast
             Toast.makeText(getApplicationContext(),"Debe seleccionar un directorio a procesar", Toast.LENGTH_SHORT).show();
             return;
+        }else{
+            if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages) == 1){
+                Toast.makeText(getApplicationContext(),"La carpeta a procesar está vacía o no contiene ninguna imágen", Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
 
         setContentView(R.layout.working);
@@ -110,15 +116,17 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     }
 
     @Override
-    public void clusterReady() {
+    public void clusterReady(String[] imagesPath) {
+//        this.imagesPath=new String[imagespath.length];
+        this.imagesPath=imagesPath;
         presenter.folderGenerator(pathFoldersResult);
     }
 
     public void showFilesManagerActivity(String pathFolder){
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFolder);
+        i.putExtra("imagesPath", imagesPath);
         startActivity(i);
-
     }
 
     @Override
