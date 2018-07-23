@@ -1,14 +1,11 @@
 package com.example.fran.imachineappv2;
 
-import android.app.AlertDialog;
+import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Handler;
-import android.view.Gravity;
-import android.view.Window;
-import android.view.WindowManager;
+import android.util.Log;
 import android.widget.CheckBox;
 import com.codekidlabs.storagechooser.StorageChooser;
 import com.example.fran.imachineappv2.CIEngine.Classifier;
@@ -26,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
 import java.util.ArrayList;
@@ -145,7 +143,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     @Override
-    public int prepararImagenes(String path_chosen, CheckBox chAllImages) {
+    public int prepararImagenes(String path_chosen, CheckBox chAllImages, Context applicationContext) {
         File curDir;
         if (path_chosen.equals("") && !chAllImages.isChecked()){
             return 0;
@@ -169,7 +167,27 @@ public class MainActivityModel implements MainActivityMvpModel {
             return 1;
         }
 
+        writeToFile(imagespath, applicationContext);
+
         return 2;
+    }
+
+    private void writeToFile(String[] data, Context context) {
+        try {
+            File imagesPathFile = context.getFileStreamPath("imagespath.txt");
+            if(imagesPathFile.exists()){
+                FileUtils.forceDelete(imagesPathFile);
+            }
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("imagespath.txt", Context.MODE_PRIVATE));
+            for(String d:data){
+                outputStreamWriter.write(d);
+                outputStreamWriter.write("\n");
+            }
+            outputStreamWriter.close();
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
     }
 
     private void getAllFiles(File curDir){
@@ -193,37 +211,9 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
     }
 
-    // TODO: deprecate?
-    @Override
-    public void alertBlackWindow(MainActivityView mainActivityView) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mainActivityView);
-        builder.setTitle("Atención!");
-        builder.setIcon(R.drawable.warning_black);
-        builder.setMessage("Este proceso puede ocasionar que la pantalla se ponga en negro durante unos segundos.\n\nAguarde por favor.");
-        final AlertDialog dialog = builder.create();
-        dialog.show();
-        Window window = dialog.getWindow();
-        WindowManager.LayoutParams wlp = window.getAttributes();
-        wlp.gravity = Gravity.BOTTOM;
-        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-        window.setAttributes(wlp);
-        // Hide after some seconds
-        final Handler handler  = new Handler();
-        final Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                if (dialog.isShowing()) {
-                    dialog.dismiss();
-                }
-            }
-        };
-        handler.postDelayed(runnable, 5000);
-    }
-
     @Override
     public void fillWorkingText() {
-        String setearTexto = "Procesando " + images.size() +  " imagenes";
-        mainActivityPresenter.showWorkingText(setearTexto);
+        mainActivityPresenter.showWorkingText(""+images.size());
     }
 
     @Override
@@ -381,7 +371,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
         LOGGER.info(String.format("Total process took %f seconds", tLoop));
 
-        mainActivityPresenter.clustersReady(imagespath);
+        mainActivityPresenter.clustersReady();
     }
 
     private void fillClustersResult(ArrayList<Integer> vClusters) {

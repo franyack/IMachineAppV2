@@ -1,5 +1,6 @@
 package com.example.fran.imachineappv2;
 
+import android.content.Context;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 
@@ -51,13 +52,8 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     }
 
     @Override
-    public int prepararImagenes(String path_chosen, CheckBox chAllImages) {
-        return dataManager.prepararImagenes(path_chosen, chAllImages);
-    }
-
-    @Override
-    public void alertBlackWindow(MainActivityView mainActivityView) {
-        dataManager.alertBlackWindow(mainActivityView);
+    public int prepararImagenes(String path_chosen, CheckBox chAllImages, Context applicationContext) {
+        return dataManager.prepararImagenes(path_chosen, chAllImages, applicationContext);
     }
 
     @Override
@@ -83,8 +79,8 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     }
 
     @Override
-    public void clustersReady(String[] imagespath) {
-        view.clusterReady(imagespath);
+    public void clustersReady() {
+        view.clusterReady();
     }
 
     @Override

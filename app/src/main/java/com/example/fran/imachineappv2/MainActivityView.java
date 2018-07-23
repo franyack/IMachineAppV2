@@ -32,7 +32,6 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     String pathFoldersResult;
     NumberProgressBar numberProgressBar;
     int progress=0;
-    String[] imagesPath;
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
 
     private static final String[] INITIAL_PERMS = new String[]{
@@ -89,19 +88,21 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
     public void checkBoxClick(View view) {presenter.checkBoxClick(chAllImages);}
 
-    public void showWorkingText(String result){workingText.setText(result);}
+    public void showWorkingText(String result){
+        String text = getString(R.string.processing) + " " + result + " " + getString(R.string.images);
+        workingText.setText(text);
+    }
 
     public void procesarImagenes(View view) {
 
         deleteClusterResultFolder(pathFoldersResult);
 
-        if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages) == 0){
-            //TODO: Strings para los toast
-            Toast.makeText(getApplicationContext(),"Debe seleccionar un directorio a procesar", Toast.LENGTH_SHORT).show();
+        if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 0){
+            Toast.makeText(getApplicationContext(),getString(R.string.noneselected), Toast.LENGTH_SHORT).show();
             return;
         }else{
-            if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages) == 1){
-                Toast.makeText(getApplicationContext(),"La carpeta a procesar está vacía o no contiene ninguna imágen", Toast.LENGTH_SHORT).show();
+            if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 1){
+                Toast.makeText(getApplicationContext(),getString(R.string.thefolderisempty), Toast.LENGTH_SHORT).show();
                 return;
             }
         }
@@ -112,20 +113,19 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
         presenter.fillWorkingText();
 
+
         presenter.procesarImagenes(MainActivityView.this);
     }
 
     @Override
-    public void clusterReady(String[] imagesPath) {
+    public void clusterReady() {
 //        this.imagesPath=new String[imagespath.length];
-        this.imagesPath=imagesPath;
         presenter.folderGenerator(pathFoldersResult);
     }
 
     public void showFilesManagerActivity(String pathFolder){
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFolder);
-        i.putExtra("imagesPath", imagesPath);
         startActivity(i);
     }
 
@@ -147,13 +147,13 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     public void verResultadosAnteriores(View view) {
 
         if(!presenter.folderResultsExists(pathFoldersResult)){
-            Toast.makeText(getApplicationContext(),"¡No existen resultados anteriores!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(),getString(R.string.previousresultsnotexists), Toast.LENGTH_SHORT).show();
             return;
         }
         List<String> mclParameters = presenter.getMclParameters();
         String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
-        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
-        a.Metrics();
+//        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
+//        a.Metrics();
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFoldersResult);
         startActivity(i);

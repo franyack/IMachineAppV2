@@ -11,7 +11,7 @@ public interface MainActivityMvpView {
 
     void showWorkingText(String result);
 
-    void clusterReady(String[] imagespath);
+    void clusterReady();
 
     void showFilesManagerActivity(String pathFolder);
 

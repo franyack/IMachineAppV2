@@ -6,7 +6,5 @@ package com.example.fran.imachineappv2;
 
 public interface ResultsActivityMvpView {
 
-    void showFolderAlert(String pathFolder);
-
     void backToMainActivity(String action);
 }
