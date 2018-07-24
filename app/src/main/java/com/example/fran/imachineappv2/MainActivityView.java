@@ -13,11 +13,11 @@ import android.widget.ProgressBar;
 import android.widget.TextView;
 import android.widget.Toast;
 
-import com.example.fran.imachineappv2.CIEngine.MCLDenseEJML;
+import com.daimajia.numberprogressbar.NumberProgressBar;
 import com.example.fran.imachineappv2.FilesManager.FilesMainActivity;
 
 import java.io.File;
-import java.util.ArrayList;
+import java.util.List;
 import java.util.logging.Logger;
 
 public class MainActivityView extends AppCompatActivity implements MainActivityMvpView {
@@ -30,6 +30,8 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     TextView workingText;
     ProgressBar progressBarWorking;
     String pathFoldersResult;
+    NumberProgressBar numberProgressBar;
+    int progress=0;
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
 
     private static final String[] INITIAL_PERMS = new String[]{
@@ -52,7 +54,8 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         path_chosen = (TextView) findViewById(R.id.path_chosen);
         chAllImages = (CheckBox) findViewById(R.id.checkTodasLasImagenes);
         btnChooseGallery = (Button) findViewById(R.id.btnCarpetaProcesar);
-        progressBarWorking = (ProgressBar) findViewById(R.id.pb_working);
+
+
     }
 
     @Override
@@ -85,16 +88,23 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
     public void checkBoxClick(View view) {presenter.checkBoxClick(chAllImages);}
 
-    public void showWorkingText(String result){workingText.setText(result);}
+    public void showWorkingText(String result){
+        String text = getString(R.string.processing) + " " + result + " " + getString(R.string.images);
+        workingText.setText(text);
+    }
 
     public void procesarImagenes(View view) {
 
         deleteClusterResultFolder(pathFoldersResult);
 
-        if (!presenter.prepararImagenes((String) path_chosen.getText(),chAllImages)){
-            //TODO: Strings para los toast
-            Toast.makeText(getApplicationContext(),"Debe seleccionar un directorio a procesar", Toast.LENGTH_SHORT).show();
+        if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 0){
+            Toast.makeText(getApplicationContext(),getString(R.string.noneselected), Toast.LENGTH_SHORT).show();
             return;
+        }else{
+            if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 1){
+                Toast.makeText(getApplicationContext(),getString(R.string.thefolderisempty), Toast.LENGTH_SHORT).show();
+                return;
+            }
         }
 
         setContentView(R.layout.working);
@@ -103,11 +113,13 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
         presenter.fillWorkingText();
 
+
         presenter.procesarImagenes(MainActivityView.this);
     }
 
     @Override
     public void clusterReady() {
+//        this.imagesPath=new String[imagespath.length];
         presenter.folderGenerator(pathFoldersResult);
     }
 
@@ -117,13 +129,31 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         startActivity(i);
     }
 
+    @Override
+    public void growProgress() {
+        progress+=2.5;
+        if(progress>=100){
+            progress=95;
+        }
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                numberProgressBar = (NumberProgressBar) findViewById(R.id.number_progress_bar);
+                numberProgressBar.setProgress(progress);
+            }
+        });
+    }
+
     public void verResultadosAnteriores(View view) {
 
         if(!presenter.folderResultsExists(pathFoldersResult)){
-            Toast.makeText(getApplicationContext(),"¡No existen resultados anteriores!", Toast.LENGTH_SHORT).show();
+            Toast.makeText(getApplicationContext(),getString(R.string.previousresultsnotexists), Toast.LENGTH_SHORT).show();
             return;
         }
-
+        List<String> mclParameters = presenter.getMclParameters();
+        String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
+//        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
+//        a.Metrics();
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFoldersResult);
         startActivity(i);

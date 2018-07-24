@@ -1,15 +1,11 @@
 package com.example.fran.imachineappv2;
 
-import android.app.AlertDialog;
+import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
-import android.os.Environment;
-import android.os.Handler;
-import android.view.Gravity;
-import android.view.Window;
-import android.view.WindowManager;
+import android.util.Log;
 import android.widget.CheckBox;
 import com.codekidlabs.storagechooser.StorageChooser;
 import com.example.fran.imachineappv2.CIEngine.Classifier;
@@ -25,13 +21,11 @@ import org.ejml.dense.row.CommonOps_DDRM;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
-import java.nio.channels.FileChannel;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
@@ -66,6 +60,15 @@ public class MainActivityModel implements MainActivityMvpModel {
     private static final int PIXEL_SIZE = 3;
     private static final int IMAGE_MEAN = 128;
     private static final float IMAGE_STD = 128.0f;
+
+    //MCL
+    int maxIt = 100;
+    int expPow = 2;
+    int infPow = 2;
+    double epsConvergence = 1e-3;
+    double threshPrune = 0.01;
+    int n = 100;
+    int seed = 1234;
 
     /* Preallocated buffers for storing image data in. */
     private int[] intValues = new int[INPUT_SIZE * INPUT_SIZE];
@@ -140,10 +143,10 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     @Override
-    public boolean prepararImagenes(String path_chosen, CheckBox chAllImages) {
+    public int prepararImagenes(String path_chosen, CheckBox chAllImages, Context applicationContext) {
         File curDir;
         if (path_chosen.equals("") && !chAllImages.isChecked()){
-            return false;
+            return 0;
         }
         if (chAllImages.isChecked()){
             curDir = new File("/storage/emulated/0");
@@ -159,7 +162,32 @@ public class MainActivityModel implements MainActivityMvpModel {
         for (int i = 0; i<images.size(); i++){
             imagespath[i] = images.get(i);
         }
-        return true;
+
+        if(imagespath.length==0){
+            return 1;
+        }
+
+        writeToFile(imagespath, applicationContext);
+
+        return 2;
+    }
+
+    private void writeToFile(String[] data, Context context) {
+        try {
+            File imagesPathFile = context.getFileStreamPath("imagespath.txt");
+            if(imagesPathFile.exists()){
+                FileUtils.forceDelete(imagesPathFile);
+            }
+            OutputStreamWriter outputStreamWriter = new OutputStreamWriter(context.openFileOutput("imagespath.txt", Context.MODE_PRIVATE));
+            for(String d:data){
+                outputStreamWriter.write(d);
+                outputStreamWriter.write("\n");
+            }
+            outputStreamWriter.close();
+        }
+        catch (IOException e) {
+            Log.e("Exception", "File write failed: " + e.toString());
+        }
     }
 
     private void getAllFiles(File curDir){
@@ -183,37 +211,9 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
     }
 
-    // TODO: deprecate?
-    @Override
-    public void alertBlackWindow(MainActivityView mainActivityView) {
-        AlertDialog.Builder builder = new AlertDialog.Builder(mainActivityView);
-        builder.setTitle("Atención!");
-        builder.setIcon(R.drawable.warning_black);
-        builder.setMessage("Este proceso puede ocasionar que la pantalla se ponga en negro durante unos segundos.\n\nAguarde por favor.");
-        final AlertDialog dialog = builder.create();
-        dialog.show();
-        Window window = dialog.getWindow();
-        WindowManager.LayoutParams wlp = window.getAttributes();
-        wlp.gravity = Gravity.BOTTOM;
-        wlp.flags &= ~WindowManager.LayoutParams.FLAG_DIM_BEHIND;
-        window.setAttributes(wlp);
-        // Hide after some seconds
-        final Handler handler  = new Handler();
-        final Runnable runnable = new Runnable() {
-            @Override
-            public void run() {
-                if (dialog.isShowing()) {
-                    dialog.dismiss();
-                }
-            }
-        };
-        handler.postDelayed(runnable, 5000);
-    }
-
     @Override
     public void fillWorkingText() {
-        String setearTexto = "Procesando " + images.size() +  " imagenes, aguarde por favor…";
-        mainActivityPresenter.showWorkingText(setearTexto);
+        mainActivityPresenter.showWorkingText(""+images.size());
     }
 
     @Override
@@ -241,23 +241,25 @@ public class MainActivityModel implements MainActivityMvpModel {
                 e.printStackTrace();
             }
         }
+        String number;
         for (int i = 0; i < ClustersResult.size(); i++) {
-            folder = new File(pathFolder + File.separator + "Carpeta " + i);
+            mainActivityPresenter.growProgress();
+            number = String.valueOf(i+1);
+            if(number.length()==1){
+                number = "00"+number;
+            }else{
+                if(number.length()==2){
+                    number = "0"+number;
+                }
+            }
+            folder = new File(pathFolder + File.separator + "Carpeta" + number);
             folder.mkdirs();
             for (int j = 0; j < vClusters.size(); j++) {
                 if (vClusters.get(j) == i) {
                     File source = new File(vImages.get(j));
-                    File destination = new File(folder.getAbsolutePath() + File.separator + "image" + j + ".jpg");
-                    FileChannel src = null;
-                    FileChannel dst = null;
+                    File destination = new File(folder.getAbsolutePath() + File.separator);
                     try {
-                        src = new FileInputStream(source).getChannel();
-                        dst = new FileOutputStream(destination).getChannel();
-                        dst.transferFrom(src, 0, src.size());
-                        src.close();
-                        dst.close();
-                    } catch (FileNotFoundException e) {
-                        e.printStackTrace();
+                        FileUtils.copyFileToDirectory(source,destination);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -274,10 +276,30 @@ public class MainActivityModel implements MainActivityMvpModel {
         return folder.exists();
     }
 
+    @Override
+    public List<String> getMclParameters() {
+        List<String> mclParameters = new ArrayList<>();
+        mclParameters.add(""+maxIt);
+        mclParameters.add(""+expPow);
+        mclParameters.add(""+infPow);
+        return  mclParameters;
+    }
+
     //    @Override
     public void processImages() {
-
+        int percent = (int) (imagespath.length / 30);
+        if(percent < 1){
+            percent=1;
+        }
+        int cantidadImgProcesadas = 0;
         for (int i = 0; i< imagespath.length; i++){
+            if(cantidadImgProcesadas==percent){
+                mainActivityPresenter.growProgress();
+                cantidadImgProcesadas=0;
+//                LOGGER.info("processImages");
+            }else {
+                cantidadImgProcesadas+=1;
+            }
             Map<Integer, Object> outputs = new TreeMap<>();
             Bitmap image = lessResolution(imagespath[i],INPUT_SIZE,INPUT_SIZE);
             image = Bitmap.createScaledBitmap(image,INPUT_SIZE,INPUT_SIZE,false);
@@ -320,17 +342,11 @@ public class MainActivityModel implements MainActivityMvpModel {
         CommonOps_DDRM.add(g_matrix, i_matrix, cluster_matrix);
         CommonOps_DDRM.divide(cluster_matrix, 2.0);
 
-        int maxIt = 100;
-        int expPow = 2;
-        int infPow = 2;
-        double epsConvergence = 1e-3;
-        double threshPrune = 0.01;
-        int n = 100;
-        int seed = 1234;
+
 
         MCLDenseEJML mcl = new MCLDenseEJML(maxIt, expPow, infPow, epsConvergence, threshPrune);
 
-
+//        mainActivityPresenter.growProgress();
 //        LOGGER.info("                                                                           ");
 //        LOGGER.info("Rows: "+cluster_matrix.getNumRows());
 //        LOGGER.info("Rows: "+cluster_matrix.getNumCols());
@@ -349,7 +365,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 }
             }
         }
-
+//        mainActivityPresenter.growProgress();
         fillClustersResult(vClusters);
         double tLoop = (System.nanoTime() - startLoop) / 1e9;
 
@@ -566,13 +582,24 @@ public class MainActivityModel implements MainActivityMvpModel {
             }
 
         }
-
+        int percent = (int) (imagespath.length/10);
+        if(percent < 1){
+            percent=1;
+        }
+        int cantidadImgProcesadas = 0;
         double[] v1, v2;
         double v, v1_s, v2_s, corr;
         int d;
 
 
         for (int i=0; i < top_predictions.size(); i++){
+            if(cantidadImgProcesadas==percent){
+                mainActivityPresenter.growProgress();
+                cantidadImgProcesadas=0;
+//                LOGGER.info("getGrammaticalAffinity");
+            }else {
+                cantidadImgProcesadas+=1;
+            }
             predResults = top_predictions.get(i).getResult();
             predDict = new TreeMap<>();
 
@@ -635,9 +662,20 @@ public class MainActivityModel implements MainActivityMvpModel {
         float [] embed;
         double[] v1, v2;
         double corr;
-
+        int percent = (int) (imagespath.length/10);
+        if(percent < 1){
+            percent=1;
+        }
+        int cantidadImgProcesadas = 0;
         // TODO: loop O(n^2) -> loop O(N*(N-1)/2)
         for (int i=0; i < embeddings.size(); i++){
+            if(cantidadImgProcesadas==percent){
+                mainActivityPresenter.growProgress();
+                cantidadImgProcesadas=0;
+//                LOGGER.info("getImageAffinity");
+            }else {
+                cantidadImgProcesadas+=1;
+            }
             embed = embeddings.get(i);
             v1 = new double[embed.length];
 

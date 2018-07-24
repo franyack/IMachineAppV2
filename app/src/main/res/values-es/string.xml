@@ -40,4 +40,22 @@
     <string name="deletethefile">Está a punto de eliminar el archivo</string>
     <string name="deletethefolder">Está a punto de eliminar la carpeta con todo su contenido</string>
     <string name="confirm_results">SALIR DE LA EDICIÓN</string>
+    <string name="noneselected">Debe seleccionar un directorio a procesar</string>
+    <string name="thefolderisempty">La carpeta a procesar está vacía o no contiene ninguna imagen</string>
+    <string name="previousresultsnotexists">¡No existen resultados anteriores!</string>
+    <string name="choosefolder">Elegir carpeta</string>
+    <string name="allimages">Todas las imágenes</string>
+    <string name="process">Procesar</string>
+    <string name="previouslyresults">Resultados Anteriores</string>
+    <string name="working">TRABAJANDO</string>
+    <string name="theeditionhasfinalized">FIN DE LA EDICIÓN</string>
+    <string name="confirmresults">Confirmar resultado final</string>
+    <string name="discardresults">Descartar resultado final</string>
+    <string name="gobackedition">Volver a la edición</string>
+    <string name="processing">Procesando</string>
+    <string name="images">imágenes</string>
+    <string name="resultdescardedToast">¡El resultado se ha descartado correctamente!</string>
+    <string name="resultsavedToast">El resultado se ha guardado correctamente en el directorio: </string>
+    <string name="attention">Atención!</string>
+    <string name="wishcopyormove">¿Desea copiar o mover de manera permanente el resultado final?</string>
 </resources>

@@ -1,7 +1,10 @@
 package com.example.fran.imachineappv2;
 
+import android.content.Context;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
+
+import java.util.List;
 
 /**
  * Created by fran on 24/05/18.
@@ -19,9 +22,7 @@ public interface MainActivityMvpPresenter {
 
     void buttonChooseGalleryEnable(boolean b);
 
-    boolean prepararImagenes(String s, CheckBox chAllImages);
-
-    void alertBlackWindow(MainActivityView mainActivityView);
+    int prepararImagenes(String s, CheckBox chAllImages, Context applicationContext);
 
     void fillWorkingText();
 
@@ -38,4 +39,8 @@ public interface MainActivityMvpPresenter {
     void showFilesManager(String pathFolder);
 
     boolean folderResultsExists(String pathFoldersResult);
+
+    void growProgress();
+
+    List<String> getMclParameters();
 }

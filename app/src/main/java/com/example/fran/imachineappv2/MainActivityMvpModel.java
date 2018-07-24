@@ -1,6 +1,9 @@
 package com.example.fran.imachineappv2;
 
+import android.content.Context;
 import android.widget.CheckBox;
+
+import java.util.List;
 
 /**
  * Created by fran on 24/05/18.
@@ -14,9 +17,7 @@ public interface MainActivityMvpModel {
 
     void checkBoxClick(CheckBox chAllImages);
 
-    boolean prepararImagenes(String path_chosen, CheckBox chAllImages);
-
-    void alertBlackWindow(MainActivityView mainActivityView);
+    int prepararImagenes(String path_chosen, CheckBox chAllImages, Context applicationContext);
 
     void fillWorkingText();
 
@@ -25,4 +26,6 @@ public interface MainActivityMvpModel {
     void folderGenerator(String pathFolder);
 
     boolean folderResultsExist(String pathFoldersResult);
+
+    List<String> getMclParameters();
 }

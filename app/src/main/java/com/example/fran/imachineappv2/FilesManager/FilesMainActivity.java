@@ -18,6 +18,7 @@ import android.view.MenuInflater;
 import android.view.MenuItem;
 import android.view.View;
 import android.webkit.MimeTypeMap;
+import android.widget.ImageView;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
@@ -29,12 +30,16 @@ import com.example.fran.imachineappv2.FilesManager.Dialogs.RenameDialog;
 import com.example.fran.imachineappv2.FilesManager.Dialogs.UpdateItemDialog;
 import com.example.fran.imachineappv2.R;
 import com.example.fran.imachineappv2.ResultsActivityView;
+import com.mzelzoghbi.zgallery.ZGallery;
+import com.mzelzoghbi.zgallery.entities.ZColor;
 import com.snatik.storage.EncryptConfiguration;
 import com.snatik.storage.Storage;
 import com.snatik.storage.helpers.OrderType;
 import com.snatik.storage.helpers.SizeUnit;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
@@ -202,15 +207,43 @@ public class FilesMainActivity extends AppCompatActivity implements
         } else {
 
             try {
-                Intent intent = new Intent(Intent.ACTION_VIEW);
-                String mimeType =  MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExt(file.getAbsolutePath()));
-                Uri apkURI = FileProvider.getUriForFile(
-                        this,
-                        getApplicationContext()
-                                .getPackageName() + ".provider", file);
-                intent.setDataAndType(apkURI, mimeType);
-                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
-                startActivity(intent);
+                ArrayList<String> images = new ArrayList<>();
+                File[] files = file.getParentFile().listFiles();
+                if (files != null) {
+                    Collections.sort(Arrays.asList(files), OrderType.NAME.getComparator());
+                }
+                for(final File imageFile : files){
+                    if(!imageFile.isDirectory()){
+                        if ((imageFile.getAbsolutePath().contains(".jpg") || imageFile.getAbsolutePath().contains(".gif") || imageFile.getAbsolutePath().contains(".bmp")
+                                || imageFile.getAbsolutePath().contains(".jpeg") || imageFile.getAbsolutePath().contains(".tif") || imageFile.getAbsolutePath().contains(".tiff")
+                                || imageFile.getAbsolutePath().contains(".png"))){
+                            images.add(imageFile.getAbsolutePath());
+                        }
+                    }
+                }
+                int position=0;
+                for(int i=0;i<images.size();i++){
+                    if(images.get(i).equals(file.getAbsolutePath())){
+                        position = i;
+                        break;
+                    }
+                }
+                ZGallery.with(this, images)
+                        .setToolbarTitleColor(ZColor.WHITE) // toolbar title color
+                        .setSelectedImgPosition(position)
+                        .setGalleryBackgroundColor(ZColor.WHITE) // activity background color
+                        .setToolbarColorResId(R.color.colorPrimary) // toolbar color
+                        .setTitle(file.getParentFile().getName()) // toolbar title
+                        .show();
+//                Intent intent = new Intent(Intent.ACTION_VIEW);
+//                String mimeType =  MimeTypeMap.getSingleton().getMimeTypeFromExtension(fileExt(file.getAbsolutePath()));
+//                Uri apkURI = FileProvider.getUriForFile(
+//                        this,
+//                        getApplicationContext()
+//                                .getPackageName() + ".provider", file);
+//                intent.setDataAndType(apkURI, mimeType);
+//                intent.addFlags(Intent.FLAG_GRANT_READ_URI_PERMISSION);
+//                startActivity(intent);
             } catch (ActivityNotFoundException e) {
                 if (mStorage.getSize(file, SizeUnit.KB) > 500) {
                     Helper.showSnackbar(getString(R.string.file_too_big), mRecyclerView);

@@ -31,10 +31,11 @@ dependencies {
     androidTestImplementation 'com.android.support.test:runner:1.0.2'
     androidTestImplementation 'com.android.support.test.espresso:espresso-core:3.0.2'
     compile 'com.github.codekidX:storage-chooser:2.0.3'
-    compile 'org.tensorflow:tensorflow-lite:0.1'
+    compile 'org.tensorflow:tensorflow-lite:0.1.7'
     compile 'org.apache.commons:commons-math3:3.6.1'
     compile 'commons-io:commons-io:2.4'
     compile 'org.ejml:ejml-all:0.33'
     compile 'com.snatik:storage:2.1.0'
-
+    compile 'com.github.mzelzoghbi:zgallery:0.3'
+    compile 'com.daimajia.numberprogressbar:library:1.4@aar'
 }

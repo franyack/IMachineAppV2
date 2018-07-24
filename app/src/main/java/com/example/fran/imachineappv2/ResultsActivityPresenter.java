@@ -16,26 +16,9 @@ public class ResultsActivityPresenter implements ResultsActivityMvpPresenter {
         resultsActivityModel = new ResultsActivityModel(this);
     }
 
-
     @Override
-    public void fillTvResults(ArrayList<String> vImages, ArrayList<Integer> vClusters) {
-        resultsActivityModel.showClustersResults(vImages,vClusters);
-    }
-
-
-    @Override
-    public void folderGenerator(String pathFolder) {
-        resultsActivityModel.folderGenerator(pathFolder);
-    }
-
-    @Override
-    public void showFolderAlert(String pathFolder) {
-        view.showFolderAlert(pathFolder);
-    }
-
-    @Override
-    public void confirmResults(String pathFolder) {
-        resultsActivityModel.confirmResults(pathFolder);
+    public void confirmResults(String pathFolder, ResultsActivityView resultsActivityView) {
+        resultsActivityModel.confirmResults(pathFolder,resultsActivityView);
     }
 
     @Override

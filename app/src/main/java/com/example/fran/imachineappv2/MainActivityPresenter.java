@@ -1,7 +1,10 @@
 package com.example.fran.imachineappv2;
 
+import android.content.Context;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
+
+import java.util.List;
 
 /**
  * Created by fran on 24/05/18.
@@ -49,13 +52,8 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     }
 
     @Override
-    public boolean prepararImagenes(String path_chosen, CheckBox chAllImages) {
-        return dataManager.prepararImagenes(path_chosen, chAllImages);
-    }
-
-    @Override
-    public void alertBlackWindow(MainActivityView mainActivityView) {
-        dataManager.alertBlackWindow(mainActivityView);
+    public int prepararImagenes(String path_chosen, CheckBox chAllImages, Context applicationContext) {
+        return dataManager.prepararImagenes(path_chosen, chAllImages, applicationContext);
     }
 
     @Override
@@ -98,6 +96,16 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     @Override
     public boolean folderResultsExists(String pathFoldersResult) {
         return dataManager.folderResultsExist(pathFoldersResult);
+    }
+
+    @Override
+    public void growProgress() {
+        view.growProgress();
+    }
+
+    @Override
+    public List<String> getMclParameters() {
+        return dataManager.getMclParameters();
     }
 
 
