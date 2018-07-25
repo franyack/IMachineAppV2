@@ -120,7 +120,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     @Override
     public void clusterReady() {
 //        this.imagesPath=new String[imagespath.length];
-        presenter.folderGenerator(pathFoldersResult);
+        presenter.folderGenerator(pathFoldersResult, getApplicationContext());
     }
 
     public void showFilesManagerActivity(String pathFolder){
@@ -152,8 +152,8 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         }
         List<String> mclParameters = presenter.getMclParameters();
         String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
-//        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
-//        a.Metrics();
+        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
+        a.Metrics();
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFoldersResult);
         startActivity(i);

@@ -34,7 +34,7 @@ public interface MainActivityMvpPresenter {
 
     void clustersReady();
 
-    void folderGenerator(String pathFolder);
+    void folderGenerator(String pathFolder, Context applicationContext);
 
     void showFilesManager(String pathFolder);
 

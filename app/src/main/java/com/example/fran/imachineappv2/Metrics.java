@@ -16,17 +16,17 @@ import java.util.logging.Logger;
 
 public class Metrics {
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
-    String pathFoldersModel;
-    String pathFoldersResult;
-    List<String> mclParameters = new ArrayList<>();
+    private String pathActual;
+    private String pathPredicted;
+    private List<String> mclParameters = new ArrayList<>();
 
-    public Metrics(String pathFoldersModel,String pathFoldersResult, List<String> mclParameters){
-        this.pathFoldersModel = pathFoldersModel;
-        this.pathFoldersResult = pathFoldersResult;
+    public Metrics(String pathActual,String pathPredicted, List<String> mclParameters){
+        this.pathActual = pathActual;
+        this.pathPredicted = pathPredicted;
         this.mclParameters = mclParameters;
     }
 
-    //The function need that the 3 first characters of the model-folder names are the same 3 first characters of
+    //The function need the 3 first characters of the actual-folder names are the same 3 first characters of
     //the images inside them.
     public void Metrics(){
         LOGGER.info("-");
@@ -35,118 +35,148 @@ public class Metrics {
         LOGGER.info("MCL infPow: " + mclParameters.get(2));
         LOGGER.info("-");
         float qs = 0;
-        File foldersModel = new File(pathFoldersModel);
-        File [] foldersModelList = foldersModel.listFiles();
-        Map<String, Integer> modelsFolderSize = new TreeMap<>();
-        Map<String, Integer> models = new TreeMap<>();
-        File foldersResult = new File(pathFoldersResult);
-        File [] foldersResultList = foldersResult.listFiles();
-        Map<String, Map<String, Float>> results = new TreeMap<>();
-        Map<String, Map<String, Map<Integer, Integer>>> results2 = new TreeMap<>();
-        Map<String, Integer> intersection = new TreeMap<>();
-        Map<String, Integer> totalSizeFolder = new TreeMap<>();
-        Map.Entry<String, Integer> maxValue;
-        for(File folderModel: foldersModelList){
-            modelsFolderSize.put(folderModel.getName().substring(0,3).toUpperCase(),folderModel.listFiles().length);
-            LOGGER.info("Length of " + folderModel.getName().toUpperCase() +" (" + folderModel.getName().substring(0,3).toUpperCase()+") folder: " + folderModel.listFiles().length);
+
+        File actualFolders = new File(pathActual);
+        File [] actualFoldersList = actualFolders.listFiles();
+        Map<String, Integer> actualFoldersSize = new TreeMap<>();
+
+
+        File filePathPredicted = new File(pathPredicted);
+        File [] foldersPredictedList = filePathPredicted.listFiles();
+
+        Map<String, Integer> predictedFoldersMap = new TreeMap<>();
+
+        //----------------Used only for extra-information------------------------------------
+        Map<String, Map<String, Float>> predictFolders = new TreeMap<>();
+        Map<String, Map<String, Map<Integer, Integer>>> predictFolders2 = new TreeMap<>();
+        //-----------------------------------------------------------------------------------
+
+        Map<String, Integer> truePositivesGroupedFolders = new TreeMap<>();
+        Map<String, Integer> totalSizeGroupedFolders = new TreeMap<>();
+
+        Map.Entry<String, Integer> winningClass;
+        //----------------------------------Getting size by each actual folder in actualFoldersSize---------------------------
+        for(File actualFolder: actualFoldersList){
+            actualFoldersSize.put(actualFolder.getName().substring(0,3).toUpperCase(), actualFolder.listFiles().length);
+            LOGGER.info("Length of " + actualFolder.getName().toUpperCase() +" (" + actualFolder.getName().substring(0,3).toUpperCase()+") folder: " + actualFolder.listFiles().length);
         }
+        //--------------------------------------------------------------------------------------------------------------------
         LOGGER.info("-");
-        for(File folderResult: foldersResultList){
-            for(File folderModel: foldersModelList){
-                models.put(folderModel.getName().substring(0,3).toUpperCase(), 0);
+        for(File folderPredicted: foldersPredictedList){
+            //--------------------Seeking the winning class for each folder predicted------------------------------
+            for(File actualFolder: actualFoldersList){
+                predictedFoldersMap.put(actualFolder.getName().substring(0,3).toUpperCase(), 0);
             }
-            for(File file: folderResult.listFiles()){
-                models.put(file.getName().substring(0,3).toUpperCase(), models.get(file.getName().substring(0,3).toUpperCase())+1);
+            for(File image: folderPredicted.listFiles()){
+                predictedFoldersMap.put(image.getName().substring(0,3).toUpperCase(), predictedFoldersMap.get(image.getName().substring(0,3).toUpperCase())+1);
             }
-            maxValue = null;
-            for(Map.Entry<String, Integer> model: models.entrySet()){
-                if(maxValue == null || model.getValue().compareTo(maxValue.getValue())>0){
-                    maxValue = model;
+            winningClass = null;
+            for(Map.Entry<String, Integer> predictedMap: predictedFoldersMap.entrySet()){
+                if(winningClass == null || predictedMap.getValue().compareTo(winningClass.getValue())>0){
+                    winningClass = predictedMap;
                 }
             }
-//          FolderName -> <ModelWinnerName, SorensenDice>
-            qs = (float) (2.0 * maxValue.getValue() / (modelsFolderSize.get(maxValue.getKey()) + folderResult.listFiles().length));
+            //------------------------------------------------------------------------------------------------------
+
+            //-----------------------FolderName -> <ActualNameWinner, SorensenDice>---------------------------------
+            qs = (float) (2.0 * winningClass.getValue() / (actualFoldersSize.get(winningClass.getKey()) + folderPredicted.listFiles().length));
             Map<String, Float> res = new TreeMap<>();
-            res.put(maxValue.getKey(),qs);
-            results.put(folderResult.getName(),res); //just for verify...
+            res.put(winningClass.getKey(),qs);
+            predictFolders.put(folderPredicted.getName(),res); //just for verify...
+            //------------------------------------------------------------------------------------------------------
 
-//          FolderName -> ModelWinnerName -> Intersection, SizeFolderResult
+            //----------------FolderName -> ActualNameWinner -> Intersection, SizeFolderResult----------------------
             Map<Integer, Integer> interTotal = new TreeMap<>();
-            interTotal.put(maxValue.getValue(), folderResult.listFiles().length);
+            interTotal.put(winningClass.getValue(), folderPredicted.listFiles().length);
             Map<String, Map<Integer,Integer>> winnerInterTotal = new TreeMap<>();
-            winnerInterTotal.put(maxValue.getKey(), interTotal);
-            results2.put(folderResult.getName(),winnerInterTotal); //just for more details...
+            winnerInterTotal.put(winningClass.getKey(), interTotal);
+            predictFolders2.put(folderPredicted.getName(),winnerInterTotal); //just for more details...
+            //------------------------------------------------------------------------------------------------------
 
-            if(intersection.containsKey(maxValue.getKey())){
-                intersection.put(maxValue.getKey(), intersection.get(maxValue.getKey())+maxValue.getValue());
+            //-----------Looking for true positives, grouping in one folder by group, for each predicted folder-----
+            if(truePositivesGroupedFolders.containsKey(winningClass.getKey())){
+                truePositivesGroupedFolders.put(winningClass.getKey(), truePositivesGroupedFolders.get(winningClass.getKey())+winningClass.getValue());
             }else{
-                intersection.put(maxValue.getKey(), maxValue.getValue());
+                truePositivesGroupedFolders.put(winningClass.getKey(), winningClass.getValue());
             }
-            if(totalSizeFolder.containsKey(maxValue.getKey())){
-                totalSizeFolder.put(maxValue.getKey(), totalSizeFolder.get(maxValue.getKey()) + folderResult.listFiles().length);
+            //-------------------------------------------------------------------------------------------------------
+
+            //--------------Getting total size, grouping in one folder by group, for each predicted folder-----------
+            if(totalSizeGroupedFolders.containsKey(winningClass.getKey())){
+                totalSizeGroupedFolders.put(winningClass.getKey(), totalSizeGroupedFolders.get(winningClass.getKey()) + folderPredicted.listFiles().length);
             }else{
-                totalSizeFolder.put(maxValue.getKey(), folderResult.listFiles().length);
+                totalSizeGroupedFolders.put(winningClass.getKey(), folderPredicted.listFiles().length);
             }
+            //--------------------------------------------------------------------------------------------------------
 
-            models.clear();
+            predictedFoldersMap.clear();
 
         }
 
-        Map<String, Float> sorensenDiceMap = new TreeMap<>();
-        Map<String, Float> precisionMap = new TreeMap<>();
-        Map<String, Float> recallMap = new TreeMap<>();
-        Map<String, Float> f1Score = new TreeMap<>();
-        for(File folderModel: foldersModelList){
-            sorensenDiceMap.put(folderModel.getName().substring(0,3).toUpperCase(),(float) 0);
-            precisionMap.put(folderModel.getName().substring(0,3).toUpperCase(),(float) 0);
-            recallMap.put(folderModel.getName().substring(0,3).toUpperCase(),(float) 0);
-            f1Score.put(folderModel.getName().substring(0,3).toUpperCase(),(float) 0);
+        Map<String, Float> sorensenDiceGrouped = new TreeMap<>();
+        Map<String, Float> precisionGrouped = new TreeMap<>();
+        Map<String, Float> recallGrouped = new TreeMap<>();
+        Map<String, Float> f1ScoreGrouped = new TreeMap<>();
+        for(File actualFolder: actualFoldersList){
+            sorensenDiceGrouped.put(actualFolder.getName().substring(0,3).toUpperCase(),(float) 0);
+            precisionGrouped.put(actualFolder.getName().substring(0,3).toUpperCase(),(float) 0);
+            recallGrouped.put(actualFolder.getName().substring(0,3).toUpperCase(),(float) 0);
+            f1ScoreGrouped.put(actualFolder.getName().substring(0,3).toUpperCase(),(float) 0);
         }
-
-        for(Map.Entry<String, Integer> modelClass:intersection.entrySet()){
-            sorensenDiceMap.put(modelClass.getKey(), (float) (2.0*modelClass.getValue())/(modelsFolderSize.get(modelClass.getKey())+totalSizeFolder.get(modelClass.getKey())));
-            precisionMap.put(modelClass.getKey(), (float) modelClass.getValue()/totalSizeFolder.get(modelClass.getKey()));
-            recallMap.put(modelClass.getKey(), (float) modelClass.getValue()/modelsFolderSize.get(modelClass.getKey()));
-            f1Score.put(modelClass.getKey(), (2*precisionMap.get(modelClass.getKey())*recallMap.get(modelClass.getKey()))/(precisionMap.get(modelClass.getKey())+recallMap.get(modelClass.getKey())));
+        //-----------------------Getting metrics for each grouped folders----------------------------------------------
+        for(Map.Entry<String, Integer> truePositivesGroup:truePositivesGroupedFolders.entrySet()){
+            sorensenDiceGrouped.put(truePositivesGroup.getKey(), (float) (2.0*truePositivesGroup.getValue())/(actualFoldersSize.get(truePositivesGroup.getKey())+totalSizeGroupedFolders.get(truePositivesGroup.getKey())));
+            precisionGrouped.put(truePositivesGroup.getKey(), (float) truePositivesGroup.getValue()/totalSizeGroupedFolders.get(truePositivesGroup.getKey()));
+            recallGrouped.put(truePositivesGroup.getKey(), (float) truePositivesGroup.getValue()/actualFoldersSize.get(truePositivesGroup.getKey()));
+            f1ScoreGrouped.put(truePositivesGroup.getKey(), (2*precisionGrouped.get(truePositivesGroup.getKey())*recallGrouped.get(truePositivesGroup.getKey()))/(precisionGrouped.get(truePositivesGroup.getKey())+recallGrouped.get(truePositivesGroup.getKey())));
         }
+        //--------------------------------------------------------------------------------------------------------------
 
+        //---------------------Getting average Sorencen-Dice coefficient------------------------------------------------
         float sorensenAverge = 0;
-        for(Map.Entry<String, Float> sorensen:sorensenDiceMap.entrySet()){
+        for(Map.Entry<String, Float> sorensen:sorensenDiceGrouped.entrySet()){
             sorensenAverge+=sorensen.getValue();
         }
-        sorensenAverge/=sorensenDiceMap.size();
+        sorensenAverge/=sorensenDiceGrouped.size();
+        //---------------------------------------------------------------------------------------------------------------
 
+        //----------------------------------------Getting Total Accuracy-------------------------------------------------
         int truePositives = 0;
-        for(Map.Entry<String,Integer> inter:intersection.entrySet()){
-            truePositives+=inter.getValue();
+        for(Map.Entry<String,Integer> truePositiveGroup:truePositivesGroupedFolders.entrySet()){
+            truePositives+=truePositiveGroup.getValue();
         }
         int totalImages = 0;
-        for(Map.Entry<String, Integer> tot:totalSizeFolder.entrySet()){
+        for(Map.Entry<String, Integer> tot:totalSizeGroupedFolders.entrySet()){
             totalImages+=tot.getValue();
         }
 
         float accuracy = (float) truePositives/totalImages;
+        //----------------------------------------------------------------------------------------------------------------
 
         LOGGER.info("-");
         LOGGER.info("Sorensen-Dice Average: " + sorensenAverge);
         LOGGER.info("-");
         LOGGER.info("Accuracy: " + accuracy);
         LOGGER.info("-");
+
+        //-------------------------------------Getting macro-averaging metrics---------------------------------------------
         float macroAveraginPrecision = 0;
         float macroAveraginRecall = 0;
         float macroAveraginF1Score = 0;
-        for(Map.Entry<String, Float> precision:precisionMap.entrySet()){
+        for(Map.Entry<String, Float> precision:precisionGrouped.entrySet()){
             LOGGER.info("Precision for " + precision.getKey() + ": "+precision.getValue());
-            LOGGER.info("Recall for " + precision.getKey() + ": "+recallMap.get(precision.getKey()));
-            LOGGER.info("F1-Score for " + precision.getKey() + ": "+f1Score.get(precision.getKey()));
+            LOGGER.info("Recall for " + precision.getKey() + ": "+recallGrouped.get(precision.getKey()));
+            LOGGER.info("F1-Score for " + precision.getKey() + ": "+f1ScoreGrouped.get(precision.getKey()));
             LOGGER.info("-");
             macroAveraginPrecision+=precision.getValue();
-            macroAveraginRecall+=recallMap.get(precision.getKey());
-            macroAveraginF1Score+=f1Score.get(precision.getKey());
+            macroAveraginRecall+=recallGrouped.get(precision.getKey());
+            macroAveraginF1Score+=f1ScoreGrouped.get(precision.getKey());
         }
-        macroAveraginPrecision/=precisionMap.size();
-        macroAveraginRecall/=recallMap.size();
-        macroAveraginF1Score/=f1Score.size();
+        macroAveraginPrecision/=precisionGrouped.size();
+        macroAveraginRecall/=recallGrouped.size();
+        macroAveraginF1Score/=f1ScoreGrouped.size();
+        //-------------------------------------------------------------------------------------------------------------------
+
         LOGGER.info("Precision Macro-Averaging: "+ macroAveraginPrecision);
         LOGGER.info("Recall Macro-Averaging: "+ macroAveraginRecall);
         LOGGER.info("F1-Score Macro-Averaging: "+ macroAveraginF1Score);

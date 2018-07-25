@@ -23,7 +23,7 @@ public interface MainActivityMvpModel {
 
     void startImageProcess(MainActivityView mainActivityView);
 
-    void folderGenerator(String pathFolder);
+    void folderGenerator(String pathFolder, Context applicationContext);
 
     boolean folderResultsExist(String pathFoldersResult);
 

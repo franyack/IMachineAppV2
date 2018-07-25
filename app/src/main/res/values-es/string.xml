@@ -58,4 +58,6 @@
     <string name="resultsavedToast">El resultado se ha guardado correctamente en el directorio: </string>
     <string name="attention">Atención!</string>
     <string name="wishcopyormove">¿Desea copiar o mover de manera permanente el resultado final?</string>
+    <string name="folder">Carpeta</string>
+    <string name="noclusterfound">ImagenesSinAgrupar</string>
 </resources>
