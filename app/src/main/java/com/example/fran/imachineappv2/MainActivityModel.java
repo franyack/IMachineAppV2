@@ -245,25 +245,17 @@ public class MainActivityModel implements MainActivityMvpModel {
         String number;
         int numberFolder=1;
         for (Integer cluster:ClustersResult) {
-            if(numberFolder==ClustersResult.size()){
-                number= applicationContext.getString(R.string.noclusterfound) ;
+            //TODO: remember change when the size of images processed grow up
+            number = String.valueOf(numberFolder);
+            if(number.length()==1){
+                number = "00"+number;
             }else{
-                //TODO: remember change when the size of images processed grow up
-                number = String.valueOf(numberFolder);
-                if(number.length()==1){
-                    number = "00"+number;
-                }else{
-                    if(number.length()==2){
-                        number = "0"+number;
-                    }
+                if(number.length()==2){
+                    number = "0"+number;
                 }
             }
             mainActivityPresenter.growProgress();
-            if(numberFolder==ClustersResult.size()){
-                folder = new File(pathFolder + File.separator + number);
-            }else{
-                folder = new File(pathFolder + File.separator + applicationContext.getString(R.string.folder) + number);
-            }
+            folder = new File(pathFolder + File.separator + applicationContext.getString(R.string.folder) + number);
             folder.mkdirs();
             for (int j = 0; j < vClusters.size(); j++) {
                 if (Objects.equals(cluster, vClusters.get(j))) {
@@ -377,7 +369,22 @@ public class MainActivityModel implements MainActivityMvpModel {
                 }
             }
         }
-//        ArrayList<Integer> aux = (ArrayList<Integer>) vClusters.clone();
+        postCluster();
+
+        fillClustersResult(vClusters);
+
+        //TODO: here
+//        postProcess();
+
+        double tLoop = (System.nanoTime() - startLoop) / 1e9;
+
+        LOGGER.info(String.format("Total process took %f seconds", tLoop));
+
+        mainActivityPresenter.clustersReady();
+    }
+
+    private void postCluster() {
+        List<String> imagesNotClustered = new ArrayList<>();
         for(int i=0;i<vClusters.size();i++){
             int size=0;
             for(int j=0; j<vClusters.size();j++){
@@ -386,21 +393,45 @@ public class MainActivityModel implements MainActivityMvpModel {
                 }
             }
             if(size==1){
-                vClusters.set(i,999);
+                imagesNotClustered.add(vImages.get(i));
             }
         }
-//        mainActivityPresenter.growProgress();
-        fillClustersResult(vClusters);
+        int imagePosition, newClusterPosition;
+        String imageWithMaxAffinity;
+        for(String image:imagesNotClustered){
+            imageWithMaxAffinity=getImageWithMaxAffinity(image);
+            imagePosition=0;
+            newClusterPosition=0;
+            while(!vImages.get(imagePosition).equals(image)){
+                imagePosition++;
+            }
+            if(imageWithMaxAffinity.equals("")){
+                vClusters.set(imagePosition,999);
+            }else{
+                while(!vImages.get(newClusterPosition).equals(imageWithMaxAffinity)){
+                    newClusterPosition++;
+                }
+                vClusters.set(imagePosition,vClusters.get(newClusterPosition));
+            }
+        }
+    }
 
-        //TODO: here
-//        postProcess();
-
-
-        double tLoop = (System.nanoTime() - startLoop) / 1e9;
-
-        LOGGER.info(String.format("Total process took %f seconds", tLoop));
-
-        mainActivityPresenter.clustersReady();
+    private String getImageWithMaxAffinity(String image) {
+        int i=0;
+        while(!vImages.get(i).equals(image)){
+            i++;
+        }
+        double maxAffinity=0;
+        String maxAffinityImage="";
+        for(int j=0;j<affinityMatrix.numCols;j++){
+            if(i!=j){
+                if(affinityMatrix.get(i,j)>maxAffinity){
+                    maxAffinity=affinityMatrix.get(i,j);
+                    maxAffinityImage=vImages.get(j);
+                }
+            }
+        }
+        return maxAffinityImage;
     }
 
     private void postProcess() {
