@@ -18,8 +18,8 @@
         android:layout_alignParentTop="true"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="53dp"
-        android:text="TRABAJANDO..."
-        android:textSize="20dp"
+        android:text="@string/working"
+        android:textSize="20sp"
         tools:layout_editor_absoluteX="148dp"
         tools:layout_editor_absoluteY="40dp"
         />
@@ -32,7 +32,7 @@
         android:layout_marginTop="30dp"
         android:layout_below="@+id/workingTitulo"
         android:text=""
-        android:textSize="20dp"
+        android:textSize="20sp"
         />
 
     <!--<ProgressBar-->

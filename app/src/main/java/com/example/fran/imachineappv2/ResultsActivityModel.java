@@ -1,18 +1,24 @@
 package com.example.fran.imachineappv2;
 
 import android.app.AlertDialog;
+import android.content.Context;
 import android.content.DialogInterface;
 import android.os.Environment;
+import android.util.Log;
 
 import org.apache.commons.io.FileUtils;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
+import java.io.InputStreamReader;
 import java.nio.channels.FileChannel;
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Vector;
 
 /**
@@ -64,46 +70,6 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
 
     }
 
-//    @Override
-//    public void folderGenerator(String pathFolder) {
-//        File folder = new File(pathFolder);
-//        if (!folder.exists()) {
-//            folder.mkdirs();
-//        } else {
-//            try {
-//                FileUtils.cleanDirectory(folder);
-//            } catch (IOException e) {
-//                e.printStackTrace();
-//            }
-//        }
-//        for (int i = 0; i < vClustersResult.size(); i++) {
-//            folder = new File(Environment.getExternalStorageDirectory() +
-//                    File.separator + "clusterResult" + File.separator + "Cluster" + i);
-//            folder.mkdirs();
-//            for (int j = 0; j < vClusters.size(); j++) {
-//                if (vClusters.get(j) == i) {
-//                    File source = new File(vImages.get(j));
-//                    File destination = new File(folder.getAbsolutePath() + File.separator + "image" + j + ".jpg");
-//                    FileChannel src = null;
-//                    FileChannel dst = null;
-//                    try {
-//                        src = new FileInputStream(source).getChannel();
-//                        dst = new FileOutputStream(destination).getChannel();
-//                        dst.transferFrom(src, 0, src.size());
-//                        src.close();
-//                        dst.close();
-//                    } catch (FileNotFoundException e) {
-//                        e.printStackTrace();
-//                    } catch (IOException e) {
-//                        e.printStackTrace();
-//                    }
-//
-//                }
-//            }
-//        }
-//        presenter.showFolderAlert(pathFolder);
-//    }
-
     @Override
     public void deleteResults(String pathFolderResult) {
         File folder = new File(pathFolderResult);
@@ -118,33 +84,32 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
     }
 
     @Override
-    public void confirmResults(final String pathFolderTemporary, final String[] imagesPath, ResultsActivityView resultsActivityView) {
+    public void confirmResults(final String pathFolderTemporary, final ResultsActivityView resultsActivityView) {
         final AlertDialog.Builder builder = new AlertDialog.Builder(resultsActivityView);
-        builder.setTitle("Atención");
-        builder.setMessage("¿Desea copiar o mover de manera permanente el resultado final?");
-        builder.setPositiveButton("Copiar", new DialogInterface.OnClickListener() {
+        builder.setTitle(R.string.attention);
+        builder.setMessage(R.string.wishcopyormove);
+        builder.setPositiveButton(R.string.label_copy, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 generateNewResultFolder(pathFolderTemporary);
             }
         });
-        builder.setNeutralButton("Cancelar", new DialogInterface.OnClickListener() {
+        builder.setNeutralButton(R.string.label_cancel, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
 
             }
         });
-        builder.setNegativeButton("Mover", new DialogInterface.OnClickListener() {
+        builder.setNegativeButton(R.string.label_move, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
                 File file;
-                for(int j=0;j<imagesPath.length;j++){
-                    file = new File(imagesPath[j]);
+                List<String> imagesPath;
+                imagesPath = readFromFile(resultsActivityView.getApplicationContext());
+                for(int j=0;j<imagesPath.size();j++){
+                    file = new File(imagesPath.get(j));
                     try {
                         FileUtils.forceDelete(file);
-                        if(file.getParentFile().listFiles().length==0){
-                          FileUtils.deleteDirectory(file.getParentFile());
-                        }
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
@@ -155,6 +120,33 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
         final AlertDialog dialog=builder.create();
         dialog.show();
     }
+
+    private List<String> readFromFile(Context context) {
+        List<String> imagesPath = new ArrayList<>();
+        try {
+            InputStream inputStream = context.openFileInput("imagespath.txt");
+
+            if ( inputStream != null ) {
+                InputStreamReader inputStreamReader = new InputStreamReader(inputStream);
+                BufferedReader bufferedReader = new BufferedReader(inputStreamReader);
+                String receiveString;
+                while ( (receiveString = bufferedReader.readLine()) != null ) {
+                    imagesPath.add(receiveString);
+                }
+
+                inputStream.close();
+                FileUtils.forceDelete(context.getFileStreamPath("imagespath.txt"));
+            }
+        }
+        catch (FileNotFoundException e) {
+            Log.e("login activity", "File not found: " + e.toString());
+        } catch (IOException e) {
+            Log.e("login activity", "Can not read file: " + e.toString());
+        }
+
+        return imagesPath;
+    }
+
     public void generateNewResultFolder(String pathFolderTemporary){
         int i = 1;
         File srcFolder = new File(pathFolderTemporary);

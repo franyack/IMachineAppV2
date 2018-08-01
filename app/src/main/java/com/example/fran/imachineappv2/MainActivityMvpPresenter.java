@@ -1,5 +1,6 @@
 package com.example.fran.imachineappv2;
 
+import android.content.Context;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 
@@ -21,9 +22,7 @@ public interface MainActivityMvpPresenter {
 
     void buttonChooseGalleryEnable(boolean b);
 
-    int prepararImagenes(String s, CheckBox chAllImages);
-
-    void alertBlackWindow(MainActivityView mainActivityView);
+    int prepararImagenes(String s, CheckBox chAllImages, Context applicationContext);
 
     void fillWorkingText();
 
@@ -33,9 +32,9 @@ public interface MainActivityMvpPresenter {
 
     void procesarImagenes(MainActivityView mainActivityView);
 
-    void clustersReady(String[] imagespath);
+    void clustersReady();
 
-    void folderGenerator(String pathFolder);
+    void folderGenerator(String pathFolder, Context applicationContext);
 
     void showFilesManager(String pathFolder);
 

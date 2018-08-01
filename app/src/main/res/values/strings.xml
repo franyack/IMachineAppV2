@@ -38,5 +38,26 @@
     <string name="deletethefile">You are about to delete the file</string>
     <string name="deletethefolder">You are about to delete the folder with all its content for real</string>
     <string name="confirm_results">EXIT EDITING</string>
+    <string name="noneselected">You must select one directory to process</string>
+    <string name="thefolderisempty">The directory selected is empty or does not contain images</string>
+    <string name="previousresultsnotexists">Previous results does not exists!</string>
+    <string name="choosefolder">Choose folder</string>
+    <string name="allimages">All images</string>
+    <string name="process">Process</string>
+    <string name="previouslyresults">Previously results</string>
+    <string name="working">WORKING</string>
+    <string name="theeditionhasfinalized">THE EDITION HAS FINALIZED</string>
+    <string name="confirmresults">Confirm results</string>
+    <string name="discardresults">Discard results</string>
+    <string name="gobackedition">Go back to the edition</string>
+    <string name="processing">Processing</string>
+    <string name="images">images</string>
+    <string name="resultdescardedToast">The result was discarded correctly!</string>
+    <string name="resultsavedToast">The result was saved correctly in the follow directory: </string>
+    <string name="attention">Attention!</string>
+    <string name="wishcopyormove">Do you wish copy or move permanently the final result?</string>
+    <string name="folder">Folder</string>
+    <string name="noclusterfound">ImagesWithoutGroup</string>
+
 
 </resources>

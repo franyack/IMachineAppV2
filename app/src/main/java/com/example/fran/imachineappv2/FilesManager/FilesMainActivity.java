@@ -68,7 +68,6 @@ public class FilesMainActivity extends AppCompatActivity implements
     private String mMovingPath;
     private boolean mInternal = false;
     String pathFolder;
-    String[] imagesPath;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -76,7 +75,6 @@ public class FilesMainActivity extends AppCompatActivity implements
         //TODO: wizard sobre diferentes opciones de administracion?
         super.onCreate(savedInstanceState);
         pathFolder = (String) getIntent().getStringExtra("pathFolder");
-        imagesPath = getIntent().getStringArrayExtra("imagesPath");
         mStorage = new Storage(getApplicationContext());
 
 
@@ -322,7 +320,6 @@ public class FilesMainActivity extends AppCompatActivity implements
             case R.id.confirmResults:
                 Intent i = new Intent(this, ResultsActivityView.class);
                 i.putExtra("pathFolder",pathFolder);
-                i.putExtra("imagesPath", imagesPath);
                 startActivity(i);
         }
     }
