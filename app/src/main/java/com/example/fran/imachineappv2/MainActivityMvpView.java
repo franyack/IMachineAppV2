@@ -16,4 +16,6 @@ public interface MainActivityMvpView {
     void showFilesManagerActivity(String pathFolder);
 
     void growProgress();
+
+    void callErrorToast(String s);
 }

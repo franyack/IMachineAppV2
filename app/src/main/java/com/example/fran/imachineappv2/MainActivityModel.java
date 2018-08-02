@@ -257,10 +257,10 @@ public class MainActivityModel implements MainActivityMvpModel {
             mainActivityPresenter.growProgress();
             folder = new File(pathFolder + File.separator + applicationContext.getString(R.string.folder) + number);
             folder.mkdirs();
+            File destination = new File(folder.getAbsolutePath() + File.separator);
             for (int j = 0; j < vClusters.size(); j++) {
                 if (Objects.equals(cluster, vClusters.get(j))) {
                     File source = new File(vImages.get(j));
-                    File destination = new File(folder.getAbsolutePath() + File.separator);
                     try {
                         FileUtils.copyFileToDirectory(source,destination);
                     } catch (IOException e) {
@@ -524,8 +524,8 @@ public class MainActivityModel implements MainActivityMvpModel {
         for(int i = 0; i< images.size(); i++){
             if(i+1<images.size()){
                 average+=getAffinity(images.get(i), images.get(i+1));
-                LOGGER.info("Afinidad entre " + images.get(i) + " y " + images.get(i+1) + " = " + getAffinity(images.get(i), images.get(i+1)));
-                LOGGER.info(" - ");
+//                LOGGER.info("Afinidad entre " + images.get(i) + " y " + images.get(i+1) + " = " + getAffinity(images.get(i), images.get(i+1)));
+//                LOGGER.info(" - ");
             }
         }
         return average;
@@ -679,7 +679,13 @@ public class MainActivityModel implements MainActivityMvpModel {
                             INPUT_SIZE);
                     setParameters();
                 } catch (final Exception e) {
-                    throw new RuntimeException("Error initializing TensorFlow!", e);
+//                    mainActivityView.runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            mainActivityPresenter.callErrorToast(e.toString());
+//                        }
+//                    });
+                    throw new RuntimeException("Error!", e);
                 }
             }
         });

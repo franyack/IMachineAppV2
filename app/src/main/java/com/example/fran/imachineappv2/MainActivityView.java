@@ -144,6 +144,15 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         });
     }
 
+    @Override
+    public void callErrorToast(String s) {
+        Toast.makeText(getApplicationContext(),s, Toast.LENGTH_SHORT).show();
+        Intent i = getBaseContext().getPackageManager()
+                .getLaunchIntentForPackage(getBaseContext().getPackageName());
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(i);
+    }
+
     public void verResultadosAnteriores(View view) {
 
         if(!presenter.folderResultsExists(pathFoldersResult)){

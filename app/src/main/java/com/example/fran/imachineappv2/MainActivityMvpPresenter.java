@@ -43,4 +43,6 @@ public interface MainActivityMvpPresenter {
     void growProgress();
 
     List<String> getMclParameters();
+
+    void callErrorToast(String s);
 }
