@@ -15,6 +15,7 @@ import java.util.logging.Logger;
  */
 
 public class Metrics {
+    //TODO: buscar manera de reportar hora, paquete, etc
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
     private String pathActual;
     private String pathPredicted;
@@ -30,6 +31,7 @@ public class Metrics {
     //the images inside them.
     public void Metrics(){
         LOGGER.info("-");
+        //TODO:PRUNNING y epsConvergence
         LOGGER.info("MCL maxIt: " + mclParameters.get(0));
         LOGGER.info("MCL expPow: " + mclParameters.get(1));
         LOGGER.info("MCL infPow: " + mclParameters.get(2));

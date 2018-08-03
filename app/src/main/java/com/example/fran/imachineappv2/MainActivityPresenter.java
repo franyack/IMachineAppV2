@@ -108,5 +108,10 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
         return dataManager.getMclParameters();
     }
 
+    @Override
+    public void callErrorToast(String s) {
+        view.callErrorToast(s);
+    }
+
 
 }

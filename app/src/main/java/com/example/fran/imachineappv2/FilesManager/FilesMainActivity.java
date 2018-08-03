@@ -1,6 +1,7 @@
 package com.example.fran.imachineappv2.FilesManager;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -130,6 +131,7 @@ public class FilesMainActivity extends AppCompatActivity implements
         mFilesAdapter = new FilesAdapter(getApplicationContext());
         mFilesAdapter.setListener(this);
         mRecyclerView.setAdapter(mFilesAdapter);
+//        layoutManager.scrollToPosition(0);
 
         findViewById(R.id.fab).setOnClickListener(new View.OnClickListener() {
             @Override
@@ -195,6 +197,8 @@ public class FilesMainActivity extends AppCompatActivity implements
         }
         mFilesAdapter.setFiles(files);
         mFilesAdapter.notifyDataSetChanged();
+        mRecyclerView.getLayoutManager().scrollToPosition(2);
+        
     }
 
 
