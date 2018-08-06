@@ -380,6 +380,9 @@ public class MainActivityModel implements MainActivityMvpModel {
 
         LOGGER.info(String.format("Total process took %f seconds", tLoop));
 
+        Metrics a = new Metrics(affinityMatrix,vImages,vClusters);
+        a.Silhouette();
+
         mainActivityPresenter.clustersReady();
     }
 

@@ -1,5 +1,7 @@
 package com.example.fran.imachineappv2;
 
+import org.ejml.data.DMatrixRMaj;
+
 /**
  * Created by fran on 24/05/18.
  */
