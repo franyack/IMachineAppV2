@@ -5,6 +5,7 @@ import org.ejml.data.DMatrixRMaj;
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -15,14 +16,15 @@ import java.util.logging.Logger;
  */
 
 public class Metrics {
-    //TODO: buscar manera de reportar hora, paquete, etc
+    // TODO: buscar manera de reportar hora, paquete, etc
+    // --> check this: https://www.logicbig.com/tutorials/core-java-tutorial/logging/customizing-default-format.html
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
     private String pathActual;
     private String pathPredicted;
     private List<String> mclParameters = new ArrayList<>();
-    DMatrixRMaj affinityMatrix;
-    ArrayList<String> vImages;
-    ArrayList<Integer> vClusters;
+    private DMatrixRMaj affinityMatrix;
+    private ArrayList<String> vImages;
+    private ArrayList<Integer> vClusters;
 
     public Metrics(String pathActual,String pathPredicted, List<String> mclParameters){
         this.pathActual = pathActual;
@@ -36,8 +38,17 @@ public class Metrics {
         this.vClusters = vClusters;
     }
 
+    public String getShortName(String s){
+        /*
+          Get a short name for those folders that are going to be processed in this class
+         */
+        int endIdx = Math.min(3, s.length());
+        return s.substring(0, endIdx).toUpperCase();
+    }
+
     //The function need the 3 first characters of the actual-folder names are the same 3 first characters of
     //the images inside them.
+    // TODO: change name to getScore (otherwise, it's called as the class)
     public void Metrics(){
         LOGGER.info("-");
         //TODO:PRUNNING y epsConvergence
@@ -45,21 +56,32 @@ public class Metrics {
         LOGGER.info("MCL expPow: " + mclParameters.get(1));
         LOGGER.info("MCL infPow: " + mclParameters.get(2));
         LOGGER.info("-");
-        float qs = 0;
 
         File actualFolders = new File(pathActual);
         File [] actualFoldersList = actualFolders.listFiles();
         Map<String, Integer> actualFoldersSize = new TreeMap<>();
 
-
         File filePathPredicted = new File(pathPredicted);
         File [] foldersPredictedList = filePathPredicted.listFiles();
 
-        Map<String, Integer> predictedFoldersMap = new TreeMap<>();
+        Map<String, Integer> predictedFoldersMapInit = new TreeMap<>();
+
+        // Initialize empty counters
+        for(File actualFolder: actualFoldersList)
+            predictedFoldersMapInit.put(getShortName(actualFolder.getName()), 0);
+
+        // This will start from predictedFoldersMapInit, and then filled in a loop
+        Map<String, Integer> predictedFoldersMap;
 
         //----------------Used only for extra-information------------------------------------
+        /*
+        float qs = 0;
+        Map<String, Float> res;
+        Map<Integer, Integer> interTotal;
+        Map<String, Map<Integer,Integer>> winnerInterTotal;
         Map<String, Map<String, Float>> predictFolders = new TreeMap<>();
         Map<String, Map<String, Map<Integer, Integer>>> predictFolders2 = new TreeMap<>();
+        */
         //-----------------------------------------------------------------------------------
 
         Map<String, Integer> truePositivesGroupedFolders = new TreeMap<>();
@@ -68,56 +90,60 @@ public class Metrics {
         Map.Entry<String, Integer> winningClass;
         //----------------------------------Getting size by each actual folder in actualFoldersSize---------------------------
         for(File actualFolder: actualFoldersList){
-            actualFoldersSize.put(actualFolder.getName().substring(0,3).toUpperCase(), actualFolder.listFiles().length);
-            LOGGER.info("Length of " + actualFolder.getName().toUpperCase() +" (" + actualFolder.getName().substring(0,3).toUpperCase()+") folder: " + actualFolder.listFiles().length);
+            actualFoldersSize.put(getShortName(actualFolder.getName()), actualFolder.listFiles().length);
+            LOGGER.info("Length of " + actualFolder.getName().toUpperCase() +" (" + getShortName(actualFolder.getName())+") folder: " + actualFolder.listFiles().length);
         }
         //--------------------------------------------------------------------------------------------------------------------
         LOGGER.info("-");
         for(File folderPredicted: foldersPredictedList){
             //--------------------Seeking the winning class for each folder predicted------------------------------
-            for(File actualFolder: actualFoldersList){
-                predictedFoldersMap.put(actualFolder.getName().substring(0,3).toUpperCase(), 0);
-            }
-            for(File image: folderPredicted.listFiles()){
-                predictedFoldersMap.put(image.getName().substring(0,3).toUpperCase(), predictedFoldersMap.get(image.getName().substring(0,3).toUpperCase())+1);
-            }
+            predictedFoldersMap = new TreeMap<>(predictedFoldersMapInit);  // Start from a zero-counters map
+
+            // Counting number of images in actual folders that are present in this predicted folder
+            for(File image: folderPredicted.listFiles())
+                predictedFoldersMap.put(getShortName(image.getName()), predictedFoldersMap.get(getShortName(image.getName()))+1);
+
+            // The most frequent class is considered the most representative for this predicted folder
             winningClass = null;
             for(Map.Entry<String, Integer> predictedMap: predictedFoldersMap.entrySet()){
-                if(winningClass == null || predictedMap.getValue().compareTo(winningClass.getValue())>0){
+                if(winningClass == null || predictedMap.getValue().compareTo(winningClass.getValue())>0)
                     winningClass = predictedMap;
-                }
             }
+
+            if(winningClass == null)
+                // To avoid exceptions later
+                continue;
             //------------------------------------------------------------------------------------------------------
 
+            /*
             //-----------------------FolderName -> <ActualNameWinner, SorensenDice>---------------------------------
             qs = (float) (2.0 * winningClass.getValue() / (actualFoldersSize.get(winningClass.getKey()) + folderPredicted.listFiles().length));
-            Map<String, Float> res = new TreeMap<>();
+            res = new TreeMap<>();
             res.put(winningClass.getKey(),qs);
             predictFolders.put(folderPredicted.getName(),res); //just for verify...
             //------------------------------------------------------------------------------------------------------
 
             //----------------FolderName -> ActualNameWinner -> Intersection, SizeFolderResult----------------------
-            Map<Integer, Integer> interTotal = new TreeMap<>();
+            interTotal = new TreeMap<>();
             interTotal.put(winningClass.getValue(), folderPredicted.listFiles().length);
-            Map<String, Map<Integer,Integer>> winnerInterTotal = new TreeMap<>();
+            winnerInterTotal = new TreeMap<>();
             winnerInterTotal.put(winningClass.getKey(), interTotal);
             predictFolders2.put(folderPredicted.getName(),winnerInterTotal); //just for more details...
             //------------------------------------------------------------------------------------------------------
+            */
 
             //-----------Looking for true positives, grouping in one folder by group, for each predicted folder-----
-            if(truePositivesGroupedFolders.containsKey(winningClass.getKey())){
-                truePositivesGroupedFolders.put(winningClass.getKey(), truePositivesGroupedFolders.get(winningClass.getKey())+winningClass.getValue());
-            }else{
+            if(truePositivesGroupedFolders.containsKey(winningClass.getKey()))
+                truePositivesGroupedFolders.put(winningClass.getKey(), truePositivesGroupedFolders.get(winningClass.getKey()) + winningClass.getValue());
+            else
                 truePositivesGroupedFolders.put(winningClass.getKey(), winningClass.getValue());
-            }
             //-------------------------------------------------------------------------------------------------------
 
             //--------------Getting total size, grouping in one folder by group, for each predicted folder-----------
-            if(totalSizeGroupedFolders.containsKey(winningClass.getKey())){
+            if(totalSizeGroupedFolders.containsKey(winningClass.getKey()))
                 totalSizeGroupedFolders.put(winningClass.getKey(), totalSizeGroupedFolders.get(winningClass.getKey()) + folderPredicted.listFiles().length);
-            }else{
+            else
                 totalSizeGroupedFolders.put(winningClass.getKey(), folderPredicted.listFiles().length);
-            }
             //--------------------------------------------------------------------------------------------------------
 
             predictedFoldersMap.clear();
@@ -128,44 +154,56 @@ public class Metrics {
         Map<String, Float> precisionGrouped = new TreeMap<>();
         Map<String, Float> recallGrouped = new TreeMap<>();
         Map<String, Float> f1ScoreGrouped = new TreeMap<>();
+
+        String folderName;
+
         for(File actualFolder: actualFoldersList){
-            sorensenDiceGrouped.put(actualFolder.getName().substring(0,3).toUpperCase(),(float) 0);
-            precisionGrouped.put(actualFolder.getName().substring(0,3).toUpperCase(),(float) 0);
-            recallGrouped.put(actualFolder.getName().substring(0,3).toUpperCase(),(float) 0);
-            f1ScoreGrouped.put(actualFolder.getName().substring(0,3).toUpperCase(),(float) 0);
+            folderName = getShortName(actualFolder.getName());
+            sorensenDiceGrouped.put(folderName, 0.f);
+            precisionGrouped.put(folderName,0.f);
+            recallGrouped.put(folderName, 0.f);
+            f1ScoreGrouped.put(folderName, 0.f);
         }
         //-----------------------Getting metrics for each grouped folders----------------------------------------------
+        float precision, recall, sd, f1;
+        int tp, totalp, totala;
         for(Map.Entry<String, Integer> truePositivesGroup:truePositivesGroupedFolders.entrySet()){
-            sorensenDiceGrouped.put(truePositivesGroup.getKey(), (float) (2.0*truePositivesGroup.getValue())/(actualFoldersSize.get(truePositivesGroup.getKey())+totalSizeGroupedFolders.get(truePositivesGroup.getKey())));
-            precisionGrouped.put(truePositivesGroup.getKey(), (float) truePositivesGroup.getValue()/totalSizeGroupedFolders.get(truePositivesGroup.getKey()));
-            recallGrouped.put(truePositivesGroup.getKey(), (float) truePositivesGroup.getValue()/actualFoldersSize.get(truePositivesGroup.getKey()));
-            f1ScoreGrouped.put(truePositivesGroup.getKey(), (2*precisionGrouped.get(truePositivesGroup.getKey())*recallGrouped.get(truePositivesGroup.getKey()))/(precisionGrouped.get(truePositivesGroup.getKey())+recallGrouped.get(truePositivesGroup.getKey())));
+            tp = truePositivesGroup.getValue();  // True positives
+            totalp = totalSizeGroupedFolders.get(truePositivesGroup.getKey());  // TP + FP = Total predicted positives
+            totala = actualFoldersSize.get(truePositivesGroup.getKey());  // TP + FN = Total actual positives
+
+            precision = (float) tp/totalp;  // P = TP/(TP+FP)
+            recall = (float) tp/totala;  // R = TP/(TP+FN)
+            f1 = 2*precision*recall/(precision+recall);  // F1=2*P*R/(P+R)
+            sd = (float) (2.0*tp)/(totala+totalp);  // SD=2|A+B|/(|A|+|B|)
+
+            sorensenDiceGrouped.put(truePositivesGroup.getKey(), sd);
+            precisionGrouped.put(truePositivesGroup.getKey(), precision);
+            recallGrouped.put(truePositivesGroup.getKey(), recall);
+            f1ScoreGrouped.put(truePositivesGroup.getKey(), f1);
         }
         //--------------------------------------------------------------------------------------------------------------
 
         //---------------------Getting average Sorencen-Dice coefficient------------------------------------------------
-        float sorensenAverge = 0;
-        for(Map.Entry<String, Float> sorensen:sorensenDiceGrouped.entrySet()){
-            sorensenAverge+=sorensen.getValue();
-        }
-        sorensenAverge/=sorensenDiceGrouped.size();
+        float sorensenAverage = 0.f;
+        for(Map.Entry<String, Float> sorensen:sorensenDiceGrouped.entrySet())
+            sorensenAverage += sorensen.getValue();
+        sorensenAverage/=sorensenDiceGrouped.size();  // TODO: how is this used to validate clustering? what represents?
         //---------------------------------------------------------------------------------------------------------------
 
         //----------------------------------------Getting Total Accuracy-------------------------------------------------
         int truePositives = 0;
-        for(Map.Entry<String,Integer> truePositiveGroup:truePositivesGroupedFolders.entrySet()){
-            truePositives+=truePositiveGroup.getValue();
-        }
+        for(Map.Entry<String,Integer> truePositiveGroup:truePositivesGroupedFolders.entrySet())
+            truePositives += truePositiveGroup.getValue();
         int totalImages = 0;
-        for(Map.Entry<String, Integer> tot:totalSizeGroupedFolders.entrySet()){
-            totalImages+=tot.getValue();
-        }
+        for(Map.Entry<String, Integer> tot:totalSizeGroupedFolders.entrySet())
+            totalImages += tot.getValue();
 
-        float accuracy = (float) truePositives/totalImages;
+        float accuracy = (float) truePositives/totalImages;  // The greater the acc, the higher the density of clusters
         //----------------------------------------------------------------------------------------------------------------
 
         LOGGER.info("-");
-        LOGGER.info("Sorensen-Dice Average: " + sorensenAverge);
+        LOGGER.info("Sorensen-Dice Average: " + sorensenAverage);
         LOGGER.info("-");
         LOGGER.info("Accuracy: " + accuracy);
         LOGGER.info("-");
@@ -174,14 +212,14 @@ public class Metrics {
         float macroAveraginPrecision = 0;
         float macroAveraginRecall = 0;
         float macroAveraginF1Score = 0;
-        for(Map.Entry<String, Float> precision:precisionGrouped.entrySet()){
-            LOGGER.info("Precision for " + precision.getKey() + ": "+precision.getValue());
-            LOGGER.info("Recall for " + precision.getKey() + ": "+recallGrouped.get(precision.getKey()));
-            LOGGER.info("F1-Score for " + precision.getKey() + ": "+f1ScoreGrouped.get(precision.getKey()));
+        for(Map.Entry<String, Float> precisionG:precisionGrouped.entrySet()){
+            LOGGER.info("Precision for " + precisionG.getKey() + ": "+precisionG.getValue());
+            LOGGER.info("Recall for " + precisionG.getKey() + ": "+recallGrouped.get(precisionG.getKey()));
+            LOGGER.info("F1-Score for " + precisionG.getKey() + ": "+f1ScoreGrouped.get(precisionG.getKey()));
             LOGGER.info("-");
-            macroAveraginPrecision+=precision.getValue();
-            macroAveraginRecall+=recallGrouped.get(precision.getKey());
-            macroAveraginF1Score+=f1ScoreGrouped.get(precision.getKey());
+            macroAveraginPrecision+=precisionG.getValue();
+            macroAveraginRecall+=recallGrouped.get(precisionG.getKey());
+            macroAveraginF1Score+=f1ScoreGrouped.get(precisionG.getKey());
         }
         macroAveraginPrecision/=precisionGrouped.size();
         macroAveraginRecall/=recallGrouped.size();
@@ -195,6 +233,7 @@ public class Metrics {
     }
 
     public void Silhouette(){
+        // From https://en.wikipedia.org/wiki/Silhouette_(clustering)
         //------------Getting clusters---------------------------
         Map<Integer, List<String>> clusters = new TreeMap<>();
         List<String> images;
@@ -210,34 +249,61 @@ public class Metrics {
             }
         }
         //------------------------------------------------------
-        float averageClusterDistance, lowestAverageDistance, lowestAverageDistanceAuxiliary ,silhouette, silhouetteAuxiliary;
-        silhouette=0;
+        float averageClusterDistance, lowestAverageDistance, lowestAverageDistanceAuxiliary, silhouette, silhouetteAuxiliary;
+        //Map<Integer, Float> silhouetteAvgCluster = new TreeMap<>();
+        float silhouetteCluster;
+        silhouette=0.f;
+        String imgPointI;
+        int sizeCluster;
+
         for(Map.Entry<Integer, List<String>> cluster:clusters.entrySet()){
-            if(cluster.getValue().size()!=1){
-                for(int i=0;i<cluster.getValue().size();i++){
-                    averageClusterDistance=0;
-                    for(int j=0;j<cluster.getValue().size();j++){
-                        averageClusterDistance+=getAffinityDistance(cluster.getValue().get(i),cluster.getValue().get(j));
+            sizeCluster = cluster.getValue().size();
+            silhouetteCluster = 0.f;
+            // for clusters with size=1, the score is 0 to prevent large number of clusters
+            if(sizeCluster>1){
+                for(int i=0;i<sizeCluster;i++){
+                    // Let a(i) be the average distance between i and all other data within the same cluster.
+                    // We can interpret a(i) as a measure of how well i is assigned to its cluster
+                    // (the smaller the value, the better the assignment).
+                    imgPointI = cluster.getValue().get(i);
+                    averageClusterDistance=0.f;
+                    for(int j=0;j<sizeCluster;j++){
+                        if(i == j) continue;  // we don't have to take into account the given point i
+                        averageClusterDistance+=getAffinityDistance(imgPointI, cluster.getValue().get(j));
                     }
-                    averageClusterDistance/=cluster.getValue().size();
-                    lowestAverageDistance=10000;
+                    averageClusterDistance/=(sizeCluster-1);  // all the data excepting by the given point i
+
+                    // Let b(i) be the lowest average distance of i to all points in any other cluster,
+                    // of which i is not a member.
+                    // The cluster with this lowest average dissimilarity is said to be the "neighbouring cluster" of i
+                    // because it is the next best fit cluster for point i
+                    lowestAverageDistance=Float.POSITIVE_INFINITY;
                     for(Map.Entry<Integer, List<String>> cluster2:clusters.entrySet()){
-                        if(!Objects.equals(cluster.getKey(), cluster2.getKey())){
-                            lowestAverageDistanceAuxiliary=0;
-                            for(int j=0;j<cluster2.getValue().size();j++){
-                                lowestAverageDistanceAuxiliary+=getAffinityDistance(cluster.getValue().get(i),cluster2.getValue().get(j));
-                            }
+                        if(!Objects.equals(cluster.getKey(), cluster2.getKey())){  // if this is any other cluster
+                            lowestAverageDistanceAuxiliary=0.f;
+                            for(int j=0;j<cluster2.getValue().size();j++)
+                                lowestAverageDistanceAuxiliary+=getAffinityDistance(imgPointI,cluster2.getValue().get(j));
+
                             lowestAverageDistanceAuxiliary/=cluster2.getValue().size();
-                            if(lowestAverageDistanceAuxiliary<lowestAverageDistance){
+                            if(lowestAverageDistanceAuxiliary<lowestAverageDistance)
                                 lowestAverageDistance=lowestAverageDistanceAuxiliary;
-                            }
                         }
                     }
+                    // We now define a silhouette:
+                    // s(i) = (b(i) - a(i))/max(a(i), b(i))
                     silhouetteAuxiliary = (lowestAverageDistance-averageClusterDistance) / Math.max(averageClusterDistance,lowestAverageDistance);
+
+                    // Adding this computed value to avg measures
                     silhouette+=silhouetteAuxiliary;
+                    silhouetteCluster+=silhouetteAuxiliary;
                 }
             }
+            silhouetteCluster /= sizeCluster;
+            //silhouetteAvgCluster.put(cluster.getKey(), silhouetteCluster);
+            LOGGER.info(String.format(Locale.ENGLISH,"Silhouette for cluster %d: %a", cluster.getKey(), silhouetteCluster));
         }
+        // The average of s(i) over all points of a cluster is a measure of how tightly grouped all the points in the cluster are.
+        // Thus the average s(i) over all data of the entire dataset is a measure of how appropriately the data have been clustered.
         LOGGER.info("Average Silhouette: " + silhouette/vImages.size());
     }
 
