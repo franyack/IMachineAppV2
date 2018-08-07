@@ -1,13 +1,13 @@
 package com.example.fran.imachineappv2;
 
-import android.util.Log;
+import org.ejml.data.DMatrixRMaj;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.TreeMap;
-import java.util.TreeSet;
 import java.util.logging.Logger;
 
 /**
@@ -20,11 +20,20 @@ public class Metrics {
     private String pathActual;
     private String pathPredicted;
     private List<String> mclParameters = new ArrayList<>();
+    DMatrixRMaj affinityMatrix;
+    ArrayList<String> vImages;
+    ArrayList<Integer> vClusters;
 
     public Metrics(String pathActual,String pathPredicted, List<String> mclParameters){
         this.pathActual = pathActual;
         this.pathPredicted = pathPredicted;
         this.mclParameters = mclParameters;
+    }
+
+    public Metrics(DMatrixRMaj affinityMatrix, ArrayList<String> vImages,ArrayList<Integer> vClusters){
+        this.affinityMatrix = affinityMatrix;
+        this.vImages = vImages;
+        this.vClusters = vClusters;
     }
 
     //The function need the 3 first characters of the actual-folder names are the same 3 first characters of
@@ -184,5 +193,65 @@ public class Metrics {
         LOGGER.info("F1-Score Macro-Averaging: "+ macroAveraginF1Score);
         LOGGER.info("-");
     }
+
+    public void Silhouette(){
+        //------------Getting clusters---------------------------
+        Map<Integer, List<String>> clusters = new TreeMap<>();
+        List<String> images;
+        for(int i=0;i<vClusters.size();i++){
+            images = new ArrayList<>();
+            if(!clusters.containsKey(vClusters.get(i))){
+                images.add(vImages.get(i));
+                clusters.put(vClusters.get(i),images);
+            }else{
+                images = clusters.get(vClusters.get(i));
+                images.add(vImages.get(i));
+                clusters.put(vClusters.get(i),images);
+            }
+        }
+        //------------------------------------------------------
+        float averageClusterDistance, lowestAverageDistance, lowestAverageDistanceAuxiliary ,silhouette, silhouetteAuxiliary;
+        silhouette=0;
+        for(Map.Entry<Integer, List<String>> cluster:clusters.entrySet()){
+            if(cluster.getValue().size()!=1){
+                for(int i=0;i<cluster.getValue().size();i++){
+                    averageClusterDistance=0;
+                    for(int j=0;j<cluster.getValue().size();j++){
+                        averageClusterDistance+=getAffinityDistance(cluster.getValue().get(i),cluster.getValue().get(j));
+                    }
+                    averageClusterDistance/=cluster.getValue().size();
+                    lowestAverageDistance=10000;
+                    for(Map.Entry<Integer, List<String>> cluster2:clusters.entrySet()){
+                        if(!Objects.equals(cluster.getKey(), cluster2.getKey())){
+                            lowestAverageDistanceAuxiliary=0;
+                            for(int j=0;j<cluster2.getValue().size();j++){
+                                lowestAverageDistanceAuxiliary+=getAffinityDistance(cluster.getValue().get(i),cluster2.getValue().get(j));
+                            }
+                            lowestAverageDistanceAuxiliary/=cluster2.getValue().size();
+                            if(lowestAverageDistanceAuxiliary<lowestAverageDistance){
+                                lowestAverageDistance=lowestAverageDistanceAuxiliary;
+                            }
+                        }
+                    }
+                    silhouetteAuxiliary = (lowestAverageDistance-averageClusterDistance) / Math.max(averageClusterDistance,lowestAverageDistance);
+                    silhouette+=silhouetteAuxiliary;
+                }
+            }
+        }
+        LOGGER.info("Average Silhouette: " + silhouette/vImages.size());
+    }
+
+    private float getAffinityDistance(String img1, String img2) {
+        int i=0;
+        while(!vImages.get(i).equals(img1)){
+            i++;
+        }
+        int j=0;
+        while(!vImages.get(j).equals(img2)){
+            j++;
+        }
+        return (float) (1-affinityMatrix.get(i,j));
+    }
+
 
 }

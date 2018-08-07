@@ -4,6 +4,8 @@ import android.content.Context;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 
+import org.ejml.data.DMatrixRMaj;
+
 import java.util.List;
 
 /**
@@ -45,4 +47,5 @@ public interface MainActivityMvpPresenter {
     List<String> getMclParameters();
 
     void callErrorToast(String s);
+
 }
