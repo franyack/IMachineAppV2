@@ -48,13 +48,13 @@ public class Metrics {
 
     //The function need the 3 first characters of the actual-folder names are the same 3 first characters of
     //the images inside them.
-    // TODO: change name to getScore (otherwise, it's called as the class)
-    public void Metrics(){
+
+    public void getScore(){
         LOGGER.info("-");
-        //TODO:PRUNNING y epsConvergence
         LOGGER.info("MCL maxIt: " + mclParameters.get(0));
         LOGGER.info("MCL expPow: " + mclParameters.get(1));
         LOGGER.info("MCL infPow: " + mclParameters.get(2));
+        LOGGER.info("MCL threshPrune: " + mclParameters.get(3));
         LOGGER.info("-");
 
         File actualFolders = new File(pathActual);
@@ -188,7 +188,7 @@ public class Metrics {
         float sorensenAverage = 0.f;
         for(Map.Entry<String, Float> sorensen:sorensenDiceGrouped.entrySet())
             sorensenAverage += sorensen.getValue();
-        sorensenAverage/=sorensenDiceGrouped.size();  // TODO: how is this used to validate clustering? what represents?
+        sorensenAverage/=sorensenDiceGrouped.size();
         //---------------------------------------------------------------------------------------------------------------
 
         //----------------------------------------Getting Total Accuracy-------------------------------------------------

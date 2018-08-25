@@ -286,6 +286,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         mclParameters.add(""+maxIt);
         mclParameters.add(""+expPow);
         mclParameters.add(""+infPow);
+        mclParameters.add(""+threshPrune);
         return  mclParameters;
     }
 
@@ -300,7 +301,6 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-//                LOGGER.info("processImages");
             }else {
                 cantidadImgProcesadas+=1;
             }
@@ -369,7 +369,9 @@ public class MainActivityModel implements MainActivityMvpModel {
                 }
             }
         }
-        postCluster();
+        for(int i=0;i<3;i++){
+            postCluster();
+        }
 
         fillClustersResult(vClusters);
 
@@ -779,7 +781,6 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-//                LOGGER.info("getGrammaticalAffinity");
             }else {
                 cantidadImgProcesadas+=1;
             }
@@ -856,7 +857,6 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-//                LOGGER.info("getImageAffinity");
             }else {
                 cantidadImgProcesadas+=1;
             }
