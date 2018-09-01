@@ -4,8 +4,6 @@ import android.content.Context;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 
-import org.ejml.data.DMatrixRMaj;
-
 import java.util.List;
 
 /**
@@ -24,8 +22,8 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
 
 
     @Override
-    public void deleteClusterResultFolder(String pathFolderResult) {
-        dataManager.deleteClusterResultFolder(pathFolderResult);
+    public void deleteClusterResultFolder(String pathFolderResult, MainActivityView mainActivityView) {
+        dataManager.deleteClusterResultFolder(pathFolderResult, mainActivityView);
     }
 
     @Override
@@ -86,8 +84,8 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     }
 
     @Override
-    public void folderGenerator(String pathFolder, Context applicationContext) {
-        dataManager.folderGenerator(pathFolder, applicationContext);
+    public void folderGenerator(String pathFolder, MainActivityView mainActivityView) {
+        dataManager.folderGenerator(pathFolder, mainActivityView);
     }
 
     @Override

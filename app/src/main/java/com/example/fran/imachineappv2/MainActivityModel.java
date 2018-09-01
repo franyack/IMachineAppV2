@@ -1,10 +1,15 @@
 package com.example.fran.imachineappv2;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
+import android.os.Environment;
 import android.util.Log;
 import android.widget.CheckBox;
 import com.codekidlabs.storagechooser.StorageChooser;
@@ -101,11 +106,15 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     @Override
-    public void deleteClusterResultFolder(String pathFolderResult) {
+    public void deleteClusterResultFolder(String pathFolderResult,final MainActivityView mainActivityView) {
         File folder = new File(pathFolderResult);
         if (folder.exists()){
             try {
                 FileUtils.deleteDirectory(folder);
+                Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                Uri fileContentUri = Uri.fromFile(folder);
+                mediaScannerIntent.setData(fileContentUri);
+                mainActivityView.sendBroadcast(mediaScannerIntent);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -198,7 +207,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 getAllFiles(f);
             }else {
                 if(f.isFile()){
-                    if (images.size()>=300){
+                    if (images.size()>=1000){
                         break;
                     }
                     //TODO: lower path
@@ -231,7 +240,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     @Override
-    public void folderGenerator(String pathFolder, Context applicationContext) {
+    public void folderGenerator(String pathFolder, final MainActivityView mainActivityView) {
         File folder = new File(pathFolder);
         if (!folder.exists()) {
             folder.mkdirs();
@@ -248,29 +257,42 @@ public class MainActivityModel implements MainActivityMvpModel {
             //TODO: remember change when the size of images processed grow up
             number = String.valueOf(numberFolder);
             if(number.length()==1){
-                number = "00"+number;
+                number = "000"+number;
             }else{
                 if(number.length()==2){
-                    number = "0"+number;
+                    number = "00"+number;
+                }else{
+                    if(number.length()==3){
+                        number = "0"+number;
+                    }
                 }
             }
             mainActivityPresenter.growProgress();
-            folder = new File(pathFolder + File.separator + applicationContext.getString(R.string.folder) + number);
-            folder.mkdirs();
-            File destination = new File(folder.getAbsolutePath() + File.separator);
+            folder = new File(pathFolder + File.separator + mainActivityView.getApplicationContext().getString(R.string.folder) + number);
+            try {
+                FileUtils.forceMkdir(folder);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             for (int j = 0; j < vClusters.size(); j++) {
                 if (Objects.equals(cluster, vClusters.get(j))) {
                     File source = new File(vImages.get(j));
                     try {
-                        FileUtils.copyFileToDirectory(source,destination);
+                        FileUtils.copyFileToDirectory(source,folder);
+                        //You need to tell the media scanner about the new file so that it is immediately available to the user.
+                        source = new File(folder.getPath() + File.separator + source.getName());
+                        Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                        Uri fileContentUri = Uri.fromFile(source);
+                        mediaScannerIntent.setData(fileContentUri);
+                        mainActivityView.getApplicationContext().sendBroadcast(mediaScannerIntent);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
                 }
             }
             numberFolder++;
         }
+
         mainActivityPresenter.showFilesManager(pathFolder);
     }
 
@@ -374,9 +396,6 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
 
         fillClustersResult(vClusters);
-
-        //TODO: here
-//        postProcess();
 
         double tLoop = (System.nanoTime() - startLoop) / 1e9;
 

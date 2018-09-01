@@ -40,12 +40,11 @@ public class ResultsActivityView extends Activity implements ResultsActivityMvpV
     }
 
     public void confirmResults(View view) {
-        //TODO: darle al usuario la posibilidad de elegir el path final?
         presenter.confirmResults(pathFolder, ResultsActivityView.this);
     }
 
     public void deleteResults(View view) {
-        presenter.deleteResults(pathFolder);
+        presenter.deleteResults(pathFolder, ResultsActivityView.this);
     }
 
     public void backToEditions(View view) {

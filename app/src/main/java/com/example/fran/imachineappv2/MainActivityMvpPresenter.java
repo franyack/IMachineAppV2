@@ -4,8 +4,6 @@ import android.content.Context;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 
-import org.ejml.data.DMatrixRMaj;
-
 import java.util.List;
 
 /**
@@ -14,7 +12,7 @@ import java.util.List;
 
 public interface MainActivityMvpPresenter {
 
-    void deleteClusterResultFolder(String pathFolderResult);
+    void deleteClusterResultFolder(String pathFolderResult, MainActivityView mainActivityView);
 
     void chooseGallery(MainActivityView view);
 
@@ -36,7 +34,7 @@ public interface MainActivityMvpPresenter {
 
     void clustersReady();
 
-    void folderGenerator(String pathFolder, Context applicationContext);
+    void folderGenerator(String pathFolder, MainActivityView mainActivityView);
 
     void showFilesManager(String pathFolder);
 

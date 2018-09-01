@@ -11,7 +11,7 @@ import java.util.List;
 
 public interface MainActivityMvpModel {
 
-    void deleteClusterResultFolder(String pathFolderResult);
+    void deleteClusterResultFolder(String pathFolderResult, MainActivityView mainActivityView);
 
     void chooseGallery(MainActivityView view);
 
@@ -23,7 +23,7 @@ public interface MainActivityMvpModel {
 
     void startImageProcess(MainActivityView mainActivityView);
 
-    void folderGenerator(String pathFolder, Context applicationContext);
+    void folderGenerator(String pathFolder, MainActivityView mainActivityView);
 
     boolean folderResultsExist(String pathFoldersResult);
 

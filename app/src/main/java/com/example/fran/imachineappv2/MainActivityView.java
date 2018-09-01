@@ -80,7 +80,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         super.onDestroy();
     }
 
-    private void deleteClusterResultFolder(String pathFoldersResult) {presenter.deleteClusterResultFolder(pathFoldersResult);}
+    private void deleteClusterResultFolder(String pathFoldersResult, MainActivityView mainActivityView) {presenter.deleteClusterResultFolder(pathFoldersResult, mainActivityView);}
 
     public void chooseGallery(View view) {presenter.chooseGallery(MainActivityView.this);}
 
@@ -97,7 +97,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
     public void procesarImagenes(View view) {
 
-        deleteClusterResultFolder(pathFoldersResult);
+        deleteClusterResultFolder(pathFoldersResult, MainActivityView.this);
 
         if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 0){
             Toast.makeText(getApplicationContext(),getString(R.string.noneselected), Toast.LENGTH_SHORT).show();
@@ -122,7 +122,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     @Override
     public void clusterReady() {
 //        this.imagesPath=new String[imagespath.length];
-        presenter.folderGenerator(pathFoldersResult, getApplicationContext());
+        presenter.folderGenerator(pathFoldersResult, MainActivityView.this);
     }
 
     public void showFilesManagerActivity(String pathFolder){

@@ -4,7 +4,6 @@ import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
 import android.content.Intent;
-import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
 import android.util.Log;
@@ -71,11 +70,16 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
     }
 
     @Override
-    public void deleteResults(String pathFolderResult) {
+    public void deleteResults(String pathFolderResult, final ResultsActivityView resultsActivityView) {
         File folder = new File(pathFolderResult);
         if (folder.exists()){
             try {
                 FileUtils.deleteDirectory(folder);
+                //You need to tell the media scanner about the new file so that it is immediately available to the user.
+                Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                Uri fileContentUri = Uri.fromFile(folder);
+                mediaScannerIntent.setData(fileContentUri);
+                resultsActivityView.sendBroadcast(mediaScannerIntent);
             } catch (IOException e) {
                 e.printStackTrace();
             }
