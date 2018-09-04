@@ -222,7 +222,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 getAllFiles(f);
             }else {
                 if(f.isFile()){
-                    if (images.size()>=1000){
+                    if (images.size()>=400){
                         break;
                     }
                     //TODO: lower path
@@ -416,8 +416,8 @@ public class MainActivityModel implements MainActivityMvpModel {
 
         LOGGER.info(String.format("Total process took %f seconds", tLoop));
 
-        Metrics a = new Metrics(affinityMatrix,vImages,vClusters);
-        a.Silhouette();
+//        Metrics a = new Metrics(affinityMatrix,vImages,vClusters);
+//        a.Silhouette();
 
         mainActivityPresenter.clustersReady();
     }
