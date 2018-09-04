@@ -39,6 +39,11 @@ public class ResultsActivityView extends Activity implements ResultsActivityMvpV
         startActivity(i);
     }
 
+    @Override
+    public void notSufficientStorage() {
+        Toast.makeText(getApplicationContext(), getString(R.string.insufficientsizecopyresults), Toast.LENGTH_SHORT).show();
+    }
+
     public void confirmResults(View view) {
         presenter.confirmResults(pathFolder, ResultsActivityView.this);
     }

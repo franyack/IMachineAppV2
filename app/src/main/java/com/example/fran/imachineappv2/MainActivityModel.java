@@ -10,6 +10,7 @@ import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.StatFs;
 import android.util.Log;
 import android.widget.CheckBox;
 import com.codekidlabs.storagechooser.StorageChooser;
@@ -169,17 +170,31 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
         getAllFiles(curDir);
         imagespath = new String[images.size()];
+        long totalBytes = 0;
+        File file;
         for (int i = 0; i<images.size(); i++){
             imagespath[i] = images.get(i);
+            file = new File(imagespath[i]);
+            if(file.exists()){
+                totalBytes+=file.length();
+            }
         }
-
+        //Because we need to save storage por the temporary folder
+        totalBytes*=2;
         if(imagespath.length==0){
             return 1;
         }
 
+        StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+        long bytesAvailable;
+        bytesAvailable = stat.getBlockSizeLong() * stat.getAvailableBlocksLong();
+        if(bytesAvailable<totalBytes){
+            return 2;
+        }
+
         writeToFile(imagespath, applicationContext);
 
-        return 2;
+        return 3;
     }
 
     private void writeToFile(String[] data, Context context) {

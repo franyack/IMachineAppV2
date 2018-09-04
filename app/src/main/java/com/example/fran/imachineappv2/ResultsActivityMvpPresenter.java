@@ -13,4 +13,6 @@ public interface ResultsActivityMvpPresenter {
     void deleteResults(String pathFolder, ResultsActivityView resultsActivityView);
 
     void backToMainActivity(String i);
+
+    void notSufficientStorage();
 }

@@ -106,6 +106,11 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
             if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 1){
                 Toast.makeText(getApplicationContext(),getString(R.string.thefolderisempty), Toast.LENGTH_SHORT).show();
                 return;
+            }else{
+                if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 2) {
+                    Toast.makeText(getApplicationContext(), getString(R.string.insufficientsizeprocess), Toast.LENGTH_SHORT).show();
+                    return;
+                }
             }
         }
 

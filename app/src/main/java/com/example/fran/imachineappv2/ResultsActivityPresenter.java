@@ -28,4 +28,9 @@ public class ResultsActivityPresenter implements ResultsActivityMvpPresenter {
     public void backToMainActivity(String dstFolder) {
         view.backToMainActivity(dstFolder);
     }
+
+    @Override
+    public void notSufficientStorage() {
+        view.notSufficientStorage();
+    }
 }

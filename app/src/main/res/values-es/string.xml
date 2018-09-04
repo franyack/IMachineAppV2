@@ -42,6 +42,8 @@
     <string name="confirm_results">SALIR DE LA EDICIÓN</string>
     <string name="noneselected">Debe seleccionar un directorio a procesar</string>
     <string name="thefolderisempty">La carpeta a procesar está vacía o no contiene ninguna imagen</string>
+    <string name="insufficientsizeprocess">¡No posee demasiada memoria para realizar el procesamiento!</string>
+    <string name="insufficientsizecopyresults">¡No posee demasiada memoria para copiar el resultado final!</string>
     <string name="previousresultsnotexists">¡No existen resultados anteriores!</string>
     <string name="choosefolder">Elegir carpeta</string>
     <string name="allimages">Todas las imágenes</string>

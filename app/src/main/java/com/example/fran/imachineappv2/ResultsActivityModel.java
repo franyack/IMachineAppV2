@@ -6,6 +6,7 @@ import android.content.DialogInterface;
 import android.content.Intent;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.StatFs;
 import android.util.Log;
 
 import org.apache.commons.io.FileUtils;
@@ -95,6 +96,10 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
         builder.setPositiveButton(R.string.label_copy, new DialogInterface.OnClickListener() {
             @Override
             public void onClick(DialogInterface dialogInterface, int i) {
+                if(!isSufficientStorage(pathFolderTemporary)){
+                    presenter.notSufficientStorage();
+                    return;
+                }
                 generateNewResultFolder(pathFolderTemporary,resultsActivityView);
             }
         });
@@ -128,6 +133,26 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
         });
         final AlertDialog dialog=builder.create();
         dialog.show();
+    }
+
+    private boolean isSufficientStorage(String pathFolderTemporary) {
+        File pathFolderTemporaryFolder = new File(pathFolderTemporary);
+        long totalBytes = 0;
+        StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+        long bytesAvailable;
+        bytesAvailable = stat.getBlockSizeLong() * stat.getAvailableBlocksLong();
+        for(File file:pathFolderTemporaryFolder.listFiles()){
+            if(file.isDirectory()){
+                for(File f:file.listFiles()){
+                    totalBytes+=f.length();
+                }
+            }else{
+                totalBytes+=file.length();
+            }
+        }
+
+        return bytesAvailable>totalBytes;
+
     }
 
     private List<String> readFromFile(Context context) {
