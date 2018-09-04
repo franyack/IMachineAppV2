@@ -1,10 +1,16 @@
 package com.example.fran.imachineappv2;
 
+import android.content.ContentResolver;
 import android.content.Context;
+import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
 import android.graphics.Bitmap;
 import android.graphics.BitmapFactory;
+import android.media.MediaScannerConnection;
+import android.net.Uri;
+import android.os.Environment;
+import android.os.StatFs;
 import android.util.Log;
 import android.widget.CheckBox;
 import com.codekidlabs.storagechooser.StorageChooser;
@@ -31,6 +37,7 @@ import java.util.Collections;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
@@ -62,11 +69,11 @@ public class MainActivityModel implements MainActivityMvpModel {
     private static final float IMAGE_STD = 128.0f;
 
     //MCL
-    int maxIt = 100;
-    int expPow = 2;
-    int infPow = 2;
-    double epsConvergence = 1e-3;
-    double threshPrune = 0.01;
+    private int maxIt = 100;
+    private int expPow = 2;
+    private int infPow = 3;
+    private double epsConvergence = 1e-3;
+    private double threshPrune = 0.01;
     int n = 100;
     int seed = 1234;
 
@@ -83,12 +90,13 @@ public class MainActivityModel implements MainActivityMvpModel {
 //    private List<String> label_lookup = new ArrayList<>();
 
 
-    ArrayList<String> vImages = new ArrayList<>();
-    ArrayList<Integer> vClusters = new ArrayList<>();
+    private ArrayList<String> vImages = new ArrayList<>();
+    private ArrayList<Integer> vClusters = new ArrayList<>();
 //    Vector<Integer> vClustersResult = new Vector<>();
-    Set<Integer> ClustersResult = new TreeSet<>();  // TreeSet guarantees the order of elements when iterated
+    private Set<Integer> ClustersResult = new TreeSet<>();  // TreeSet guarantees the order of elements when iterated
     private List<Top_Predictions> top_predictions = new ArrayList<>();
     private List<float[]> embeddings_list = new ArrayList<>();
+    private DMatrixRMaj affinityMatrix;
 
     private long startLoop;
 
@@ -99,11 +107,15 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     @Override
-    public void deleteClusterResultFolder(String pathFolderResult) {
+    public void deleteClusterResultFolder(String pathFolderResult,final MainActivityView mainActivityView) {
         File folder = new File(pathFolderResult);
         if (folder.exists()){
             try {
                 FileUtils.deleteDirectory(folder);
+                Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                Uri fileContentUri = Uri.fromFile(folder);
+                mediaScannerIntent.setData(fileContentUri);
+                mainActivityView.sendBroadcast(mediaScannerIntent);
             } catch (IOException e) {
                 e.printStackTrace();
             }
@@ -151,7 +163,6 @@ public class MainActivityModel implements MainActivityMvpModel {
         if (chAllImages.isChecked()){
             curDir = new File("/storage/emulated/0");
         }else{
-            assert path_chosen != null;
             curDir = new File(path_chosen);
         }
         if (images.size()>0){
@@ -159,17 +170,31 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
         getAllFiles(curDir);
         imagespath = new String[images.size()];
+        long totalBytes = 0;
+        File file;
         for (int i = 0; i<images.size(); i++){
             imagespath[i] = images.get(i);
+            file = new File(imagespath[i]);
+            if(file.exists()){
+                totalBytes+=file.length();
+            }
         }
-
+        //Because we need to save storage por the temporary folder
+        totalBytes*=2;
         if(imagespath.length==0){
             return 1;
         }
 
+        StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
+        long bytesAvailable;
+        bytesAvailable = stat.getBlockSizeLong() * stat.getAvailableBlocksLong();
+        if(bytesAvailable<totalBytes){
+            return 2;
+        }
+
         writeToFile(imagespath, applicationContext);
 
-        return 2;
+        return 3;
     }
 
     private void writeToFile(String[] data, Context context) {
@@ -197,7 +222,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 getAllFiles(f);
             }else {
                 if(f.isFile()){
-                    if (images.size()>=300){
+                    if (images.size()>=1000){
                         break;
                     }
                     //TODO: lower path
@@ -230,7 +255,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     @Override
-    public void folderGenerator(String pathFolder) {
+    public void folderGenerator(String pathFolder, final MainActivityView mainActivityView) {
         File folder = new File(pathFolder);
         if (!folder.exists()) {
             folder.mkdirs();
@@ -242,31 +267,47 @@ public class MainActivityModel implements MainActivityMvpModel {
             }
         }
         String number;
-        for (int i = 0; i < ClustersResult.size(); i++) {
-            mainActivityPresenter.growProgress();
-            number = String.valueOf(i+1);
+        int numberFolder=1;
+        for (Integer cluster:ClustersResult) {
+            //TODO: remember change when the size of images processed grow up
+            number = String.valueOf(numberFolder);
             if(number.length()==1){
-                number = "00"+number;
+                number = "000"+number;
             }else{
                 if(number.length()==2){
-                    number = "0"+number;
+                    number = "00"+number;
+                }else{
+                    if(number.length()==3){
+                        number = "0"+number;
+                    }
                 }
             }
-            folder = new File(pathFolder + File.separator + "Carpeta" + number);
-            folder.mkdirs();
+            mainActivityPresenter.growProgress();
+            folder = new File(pathFolder + File.separator + mainActivityView.getApplicationContext().getString(R.string.folder) + number);
+            try {
+                FileUtils.forceMkdir(folder);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
             for (int j = 0; j < vClusters.size(); j++) {
-                if (vClusters.get(j) == i) {
+                if (Objects.equals(cluster, vClusters.get(j))) {
                     File source = new File(vImages.get(j));
-                    File destination = new File(folder.getAbsolutePath() + File.separator);
                     try {
-                        FileUtils.copyFileToDirectory(source,destination);
+                        FileUtils.copyFileToDirectory(source,folder);
+                        //You need to tell the media scanner about the new file so that it is immediately available to the user.
+                        source = new File(folder.getPath() + File.separator + source.getName());
+                        Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+                        Uri fileContentUri = Uri.fromFile(source);
+                        mediaScannerIntent.setData(fileContentUri);
+                        mainActivityView.getApplicationContext().sendBroadcast(mediaScannerIntent);
                     } catch (IOException e) {
                         e.printStackTrace();
                     }
-
                 }
             }
+            numberFolder++;
         }
+
         mainActivityPresenter.showFilesManager(pathFolder);
     }
 
@@ -282,6 +323,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         mclParameters.add(""+maxIt);
         mclParameters.add(""+expPow);
         mclParameters.add(""+infPow);
+        mclParameters.add(""+threshPrune);
         return  mclParameters;
     }
 
@@ -296,7 +338,6 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-//                LOGGER.info("processImages");
             }else {
                 cantidadImgProcesadas+=1;
             }
@@ -342,7 +383,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         CommonOps_DDRM.add(g_matrix, i_matrix, cluster_matrix);
         CommonOps_DDRM.divide(cluster_matrix, 2.0);
 
-
+        affinityMatrix = cluster_matrix.copy();
 
         MCLDenseEJML mcl = new MCLDenseEJML(maxIt, expPow, infPow, epsConvergence, threshPrune);
 
@@ -365,13 +406,185 @@ public class MainActivityModel implements MainActivityMvpModel {
                 }
             }
         }
-//        mainActivityPresenter.growProgress();
+        for(int i=0;i<3;i++){
+            postCluster();
+        }
+
         fillClustersResult(vClusters);
+
         double tLoop = (System.nanoTime() - startLoop) / 1e9;
 
         LOGGER.info(String.format("Total process took %f seconds", tLoop));
 
+        Metrics a = new Metrics(affinityMatrix,vImages,vClusters);
+        a.Silhouette();
+
         mainActivityPresenter.clustersReady();
+    }
+
+    private void postCluster() {
+        List<String> imagesNotClustered = new ArrayList<>();
+        for(int i=0;i<vClusters.size();i++){
+            int size=0;
+            for(int j=0; j<vClusters.size();j++){
+                if(Objects.equals(vClusters.get(i), vClusters.get(j))){
+                    size++;
+                }
+            }
+            if(size==1){
+                imagesNotClustered.add(vImages.get(i));
+            }
+        }
+        int imagePosition, newClusterPosition;
+        String imageWithMaxAffinity;
+        for(String image:imagesNotClustered){
+            imageWithMaxAffinity=getImageWithMaxAffinity(image);
+            imagePosition=0;
+            newClusterPosition=0;
+            while(!vImages.get(imagePosition).equals(image)){
+                imagePosition++;
+            }
+            if(imageWithMaxAffinity.equals("")){
+                vClusters.set(imagePosition,999);
+            }else{
+                while(!vImages.get(newClusterPosition).equals(imageWithMaxAffinity)){
+                    newClusterPosition++;
+                }
+                vClusters.set(imagePosition,vClusters.get(newClusterPosition));
+            }
+        }
+    }
+
+    private String getImageWithMaxAffinity(String image) {
+        int i=0;
+        while(!vImages.get(i).equals(image)){
+            i++;
+        }
+        double maxAffinity=0;
+        String maxAffinityImage="";
+        for(int j=0;j<affinityMatrix.numCols;j++){
+            if(i!=j){
+                if(affinityMatrix.get(i,j)>maxAffinity){
+                    maxAffinity=affinityMatrix.get(i,j);
+                    maxAffinityImage=vImages.get(j);
+                }
+            }
+        }
+        return maxAffinityImage;
+    }
+
+    private void postProcess() {
+        List<List<String>> groups = new ArrayList<>();
+        List<String> groupTemp;
+        for (int i = 0; i < ClustersResult.size(); i++) {
+            groupTemp = new ArrayList<>();
+            for (int j = 0; j < vClusters.size(); j++) {
+                if (vClusters.get(j) == i) {
+                    groupTemp.add(vImages.get(j));
+                }
+            }
+            groups.add(groupTemp);
+        }
+        int percentThreshold;
+        if(vImages.size()<50){
+            percentThreshold=10;
+        }else{
+            percentThreshold=4;
+        }
+        List<Float> groupsPercent = new ArrayList<>();
+        List<Float> groupsAffinityAverage = new ArrayList<>();
+        for(int i = 0;i<groups.size();i++){
+            groupsPercent.add((float) (((float) groups.get(i).size()/vImages.size())*100.0));
+            groupsAffinityAverage.add((float) getAffinitySum(groups.get(i))/groups.get(i).size());
+        }
+        List<Integer> smallGroups = new ArrayList<>();
+        List<Integer> bigGroups = new ArrayList<>();
+        for(int i=0; i<groupsPercent.size();i++){
+            if(groupsPercent.get(i)<=percentThreshold){
+                smallGroups.add(i);
+            }else{
+                bigGroups.add(i);
+            }
+        }
+        float newAffinity=0,newAffinityIterator=0;
+        int r;
+        List<String> newCluster, newClusterIterator;
+        newCluster=new ArrayList<>();
+        while(smallGroups.size()>0) {
+            for (int k = 0; k < smallGroups.size(); k++) {
+                if (bigGroups.size() == 0) {
+                    break;
+                }
+                r=-1;
+                for (int i = 0; i < bigGroups.size(); i++) {
+                    newClusterIterator = new ArrayList<>();
+                    for(int j=0; j<groups.get(smallGroups.get(k)).size();j++){
+                        newClusterIterator.add(groups.get(smallGroups.get(k)).get(j));
+                    }
+                    for (int j = 0; j < groups.get(bigGroups.get(i)).size(); j++) {
+                        newClusterIterator.add(groups.get(bigGroups.get(i)).get(j));
+                    }
+                    newAffinityIterator = (float) getAffinitySum(newClusterIterator)/newClusterIterator.size();
+                    if(Math.abs(newAffinityIterator-groupsAffinityAverage.get(bigGroups.get(i))) > .05 ){
+                        if(newAffinityIterator>=newAffinity){
+                            newAffinity=newAffinityIterator;
+                            newCluster=newClusterIterator;
+                            r=i;
+                        }
+//                        Iterator<List<String>> a = groups.iterator();
+//                        while(a.hasNext()){
+//                            List<String> o = a.next();
+//                            if(groups.get(bigGroups.get(i))==a){
+//                                a.remove();
+//                            }else{
+//                                if(groups.get(smallGroups.get(k))==a){
+//                                    a.remove();
+//                                }
+//                            }
+//                        }
+                    }
+                }
+                if (r != -1) {
+                    groups.remove(bigGroups.get(r));
+                    groups.remove(smallGroups.get(k));
+                    groups.add(newCluster);
+                    smallGroups.remove(k);
+                    groupsAffinityAverage.clear();
+                    for(int i = 0;i<groups.size();i++){
+                        groupsAffinityAverage.add((float) getAffinitySum(groups.get(i))/groups.get(i).size());
+                    }
+                }
+            }
+        }
+    }
+
+    private double getAffinitySum(List<String> images) {
+        double average = 0;
+        for(int i = 0; i< images.size(); i++){
+            if(i+1<images.size()){
+                average+=getAffinity(images.get(i), images.get(i+1));
+//                LOGGER.info("Afinidad entre " + images.get(i) + " y " + images.get(i+1) + " = " + getAffinity(images.get(i), images.get(i+1)));
+//                LOGGER.info(" - ");
+            }
+        }
+        return average;
+    }
+
+    private double getAffinity(String img1, String img2) {
+        int i=0,j=0;
+        while(i<vImages.size()){
+            if(vImages.get(i).equals(img1)){
+                break;
+            }
+            i++;
+        }
+        while(j<vImages.size()){
+            if(vImages.get(j).equals(img2)){
+                break;
+            }
+            j++;
+        }
+        return affinityMatrix.get(i,j);
     }
 
     private void fillClustersResult(ArrayList<Integer> vClusters) {
@@ -505,7 +718,13 @@ public class MainActivityModel implements MainActivityMvpModel {
                             INPUT_SIZE);
                     setParameters();
                 } catch (final Exception e) {
-                    throw new RuntimeException("Error initializing TensorFlow!", e);
+//                    mainActivityView.runOnUiThread(new Runnable() {
+//                        @Override
+//                        public void run() {
+//                            mainActivityPresenter.callErrorToast(e.toString());
+//                        }
+//                    });
+                    throw new RuntimeException("Error!", e);
                 }
             }
         });
@@ -596,7 +815,6 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-//                LOGGER.info("getGrammaticalAffinity");
             }else {
                 cantidadImgProcesadas+=1;
             }
@@ -623,35 +841,36 @@ public class MainActivityModel implements MainActivityMvpModel {
             for (int r=0;r<v1.length;r++) v1[r] /= v1_s;
 
             for(int j=0;j<top_predictions.size();j++){
-                predResults = top_predictions.get(j).getResult();
-                predDict = new TreeMap<>();
+                if(i!=j){
+                    predResults = top_predictions.get(j).getResult();
+                    predDict = new TreeMap<>();
 
-                for (wnIdPredictions wnIdPred: predResults)
-                    predDict.put(wnIdPred.getWnId(), wnIdPred.getPrediction());
+                    for (wnIdPredictions wnIdPred: predResults)
+                        predDict.put(wnIdPred.getWnId(), wnIdPred.getPrediction());
 
-                v2=new double[dictionary.size()];
+                    v2=new double[dictionary.size()];
 
-                d = 0;
-                for(String wnIdDict : dictionary){
-                    v = 0.0;
-                    if(predDict.containsKey(wnIdDict))
-                        v = predDict.get(wnIdDict);
-                    v2[d++] = v;
+                    d = 0;
+                    for(String wnIdDict : dictionary){
+                        v = 0.0;
+                        if(predDict.containsKey(wnIdDict))
+                            v = predDict.get(wnIdDict);
+                        v2[d++] = v;
+                    }
+
+                    // Normalize values in v2 by the sum of total
+                    v2_s=0;
+                    for (double v2_r : v2) v2_s += v2_r;
+                    for (int r=0;r<v2.length;r++) v2[r] /= v2_s;
+
+                    corr = new PearsonsCorrelation().correlation(v2,v1);
+                    corr = (corr + 1)/2.0; //Normalize output
+                    if(corr < THRESHOLD_PROBABILITY_PREDICTION) corr = 0.0;
+                }else{
+                    corr=1;
                 }
-
-                // Normalize values in v2 by the sum of total
-                v2_s=0;
-                for (double v2_r : v2) v2_s += v2_r;
-                for (int r=0;r<v2.length;r++) v2[r] /= v2_s;
-
-                // TODO: corr(i,i)==1.0 always so we can save computation
-                corr = new PearsonsCorrelation().correlation(v2,v1);
-                corr = (corr + 1)/2.0; //Normalize output
-                if(corr < THRESHOLD_PROBABILITY_PREDICTION) corr = 0.0;
-
                 result[i][j] = corr;
             }
-
         }
         return result;
     }
@@ -672,7 +891,6 @@ public class MainActivityModel implements MainActivityMvpModel {
             if(cantidadImgProcesadas==percent){
                 mainActivityPresenter.growProgress();
                 cantidadImgProcesadas=0;
-//                LOGGER.info("getImageAffinity");
             }else {
                 cantidadImgProcesadas+=1;
             }
@@ -682,16 +900,18 @@ public class MainActivityModel implements MainActivityMvpModel {
             for (int r=0;r<v1.length;r++) v1[r] = (double) embed[r];
 
             for(int j=0;j<embeddings.size();j++){
-                embed = embeddings.get(j);
-                v2 = new double[embed.length];
+                if(i!=j){
+                    embed = embeddings.get(j);
+                    v2 = new double[embed.length];
 
-                for (int r=0;r<v2.length;r++) v2[r] = (double) embed[r];
+                    for (int r=0;r<v2.length;r++) v2[r] = (double) embed[r];
 
-                // TODO: corr(i,i)==1.0 always so we can save computation
-                corr = new PearsonsCorrelation().correlation(v2,v1);
-                corr = (corr + 1)/2.0; //Normalize output
-                if(corr < THRESHOLD_PROBABILITY_PREDICTION) corr = 0.0;
-
+                    corr = new PearsonsCorrelation().correlation(v2,v1);
+                    corr = (corr + 1)/2.0; //Normalize output
+                    if(corr < THRESHOLD_PROBABILITY_PREDICTION) corr = 0.0;
+                }else{
+                    corr=1;
+                }
                 result[i][j] = corr;
             }
 

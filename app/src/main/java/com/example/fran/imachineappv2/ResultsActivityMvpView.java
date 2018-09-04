@@ -7,4 +7,6 @@ package com.example.fran.imachineappv2;
 public interface ResultsActivityMvpView {
 
     void backToMainActivity(String action);
+
+    void notSufficientStorage();
 }

@@ -10,7 +10,9 @@ public interface ResultsActivityMvpPresenter {
 
     void confirmResults(String pathFolder, ResultsActivityView resultsActivityView);
 
-    void deleteResults(String pathFolder);
+    void deleteResults(String pathFolder, ResultsActivityView resultsActivityView);
 
     void backToMainActivity(String i);
+
+    void notSufficientStorage();
 }

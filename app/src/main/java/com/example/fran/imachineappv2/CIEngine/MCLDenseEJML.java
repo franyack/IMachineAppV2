@@ -35,11 +35,21 @@ public class MCLDenseEJML {
     public DMatrixRMaj prune(DMatrixRMaj M){
         DMatrixRMaj R = M.copy();
 
-        for (int i=0; i < M.numRows; i++)
-            for (int j=0; j < M.numCols; j++)
-                if (M.get(i, j) <= thresholdPrune)
-                    R.set(i, j, 0.0);
-
+        for (int i=0; i < M.numRows; i++) {
+            for (int j = 0; j < M.numCols; j++) {
+                if(Double.isNaN(M.get(i,j)) || Double.isInfinite(M.get(i,j))){
+                    if(i==j){
+                        R.set(i, j, 1.0);
+                    }else{
+                        R.set(i, j, 0.0);
+                    }
+                }else{
+                    if (M.get(i, j) <= thresholdPrune) {
+                        R.set(i, j, 0.0);
+                    }
+                }
+            }
+        }
         return R;
     }
 

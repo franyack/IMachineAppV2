@@ -39,13 +39,17 @@ public class ResultsActivityView extends Activity implements ResultsActivityMvpV
         startActivity(i);
     }
 
+    @Override
+    public void notSufficientStorage() {
+        Toast.makeText(getApplicationContext(), getString(R.string.insufficientsizecopyresults), Toast.LENGTH_SHORT).show();
+    }
+
     public void confirmResults(View view) {
-        //TODO: darle al usuario la posibilidad de elegir el path final?
         presenter.confirmResults(pathFolder, ResultsActivityView.this);
     }
 
     public void deleteResults(View view) {
-        presenter.deleteResults(pathFolder);
+        presenter.deleteResults(pathFolder, ResultsActivityView.this);
     }
 
     public void backToEditions(View view) {

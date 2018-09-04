@@ -1,7 +1,5 @@
 package com.example.fran.imachineappv2;
 
-import java.util.ArrayList;
-
 /**
  * Created by fran on 25/05/18.
  */
@@ -22,12 +20,17 @@ public class ResultsActivityPresenter implements ResultsActivityMvpPresenter {
     }
 
     @Override
-    public void deleteResults(String pathFolder) {
-        resultsActivityModel.deleteResults(pathFolder);
+    public void deleteResults(String pathFolder, ResultsActivityView resultsActivityView) {
+        resultsActivityModel.deleteResults(pathFolder, resultsActivityView);
     }
 
     @Override
     public void backToMainActivity(String dstFolder) {
         view.backToMainActivity(dstFolder);
+    }
+
+    @Override
+    public void notSufficientStorage() {
+        view.notSufficientStorage();
     }
 }

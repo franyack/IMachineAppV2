@@ -22,8 +22,8 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
 
 
     @Override
-    public void deleteClusterResultFolder(String pathFolderResult) {
-        dataManager.deleteClusterResultFolder(pathFolderResult);
+    public void deleteClusterResultFolder(String pathFolderResult, MainActivityView mainActivityView) {
+        dataManager.deleteClusterResultFolder(pathFolderResult, mainActivityView);
     }
 
     @Override
@@ -84,8 +84,8 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     }
 
     @Override
-    public void folderGenerator(String pathFolder) {
-        dataManager.folderGenerator(pathFolder);
+    public void folderGenerator(String pathFolder, MainActivityView mainActivityView) {
+        dataManager.folderGenerator(pathFolder, mainActivityView);
     }
 
     @Override
@@ -107,6 +107,12 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     public List<String> getMclParameters() {
         return dataManager.getMclParameters();
     }
+
+    @Override
+    public void callErrorToast(String s) {
+        view.callErrorToast(s);
+    }
+
 
 
 }

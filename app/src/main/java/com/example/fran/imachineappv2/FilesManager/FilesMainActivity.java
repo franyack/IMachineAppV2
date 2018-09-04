@@ -1,6 +1,7 @@
 package com.example.fran.imachineappv2.FilesManager;
 
 import android.Manifest;
+import android.app.Activity;
 import android.content.ActivityNotFoundException;
 import android.content.Intent;
 import android.content.pm.PackageManager;
@@ -19,6 +20,7 @@ import android.view.MenuItem;
 import android.view.View;
 import android.webkit.MimeTypeMap;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
 import android.widget.PopupMenu;
 import android.widget.TextView;
 
@@ -68,6 +70,7 @@ public class FilesMainActivity extends AppCompatActivity implements
     private String mMovingPath;
     private boolean mInternal = false;
     String pathFolder;
+    int lastPosition;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -203,6 +206,7 @@ public class FilesMainActivity extends AppCompatActivity implements
         if (file.isDirectory()) {
             mTreeSteps++;
             String path = file.getAbsolutePath();
+            lastPosition = ((LinearLayoutManager) mRecyclerView.getLayoutManager()).findFirstCompletelyVisibleItemPosition();
             showFiles(path);
         } else {
 
@@ -269,6 +273,10 @@ public class FilesMainActivity extends AppCompatActivity implements
             String path = getPreviousPath();
             mTreeSteps--;
             showFiles(path);
+            RecyclerView.LayoutManager layoutManager = new LinearLayoutManager(this);
+            mRecyclerView.setLayoutManager(layoutManager);
+            mRecyclerView.setAdapter(mFilesAdapter);
+            layoutManager.scrollToPosition(lastPosition);
             return;
         }else{
             Intent i = getBaseContext().getPackageManager()

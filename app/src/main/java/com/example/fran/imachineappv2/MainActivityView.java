@@ -16,6 +16,8 @@ import android.widget.Toast;
 import com.daimajia.numberprogressbar.NumberProgressBar;
 import com.example.fran.imachineappv2.FilesManager.FilesMainActivity;
 
+import org.ejml.data.DMatrixRMaj;
+
 import java.io.File;
 import java.util.List;
 import java.util.logging.Logger;
@@ -78,7 +80,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         super.onDestroy();
     }
 
-    private void deleteClusterResultFolder(String pathFoldersResult) {presenter.deleteClusterResultFolder(pathFoldersResult);}
+    private void deleteClusterResultFolder(String pathFoldersResult, MainActivityView mainActivityView) {presenter.deleteClusterResultFolder(pathFoldersResult, mainActivityView);}
 
     public void chooseGallery(View view) {presenter.chooseGallery(MainActivityView.this);}
 
@@ -95,7 +97,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
     public void procesarImagenes(View view) {
 
-        deleteClusterResultFolder(pathFoldersResult);
+        deleteClusterResultFolder(pathFoldersResult, MainActivityView.this);
 
         if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 0){
             Toast.makeText(getApplicationContext(),getString(R.string.noneselected), Toast.LENGTH_SHORT).show();
@@ -104,6 +106,11 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
             if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 1){
                 Toast.makeText(getApplicationContext(),getString(R.string.thefolderisempty), Toast.LENGTH_SHORT).show();
                 return;
+            }else{
+                if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 2) {
+                    Toast.makeText(getApplicationContext(), getString(R.string.insufficientsizeprocess), Toast.LENGTH_SHORT).show();
+                    return;
+                }
             }
         }
 
@@ -120,7 +127,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     @Override
     public void clusterReady() {
 //        this.imagesPath=new String[imagespath.length];
-        presenter.folderGenerator(pathFoldersResult);
+        presenter.folderGenerator(pathFoldersResult, MainActivityView.this);
     }
 
     public void showFilesManagerActivity(String pathFolder){
@@ -144,6 +151,16 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         });
     }
 
+    @Override
+    public void callErrorToast(String s) {
+        Toast.makeText(getApplicationContext(),s, Toast.LENGTH_SHORT).show();
+        Intent i = getBaseContext().getPackageManager()
+                .getLaunchIntentForPackage(getBaseContext().getPackageName());
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(i);
+    }
+
+
     public void verResultadosAnteriores(View view) {
 
         if(!presenter.folderResultsExists(pathFoldersResult)){
@@ -152,8 +169,8 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         }
         List<String> mclParameters = presenter.getMclParameters();
         String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
-//        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
-//        a.Metrics();
+        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
+        a.getScore();
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFoldersResult);
         startActivity(i);

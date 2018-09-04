@@ -12,7 +12,7 @@ import java.util.List;
 
 public interface MainActivityMvpPresenter {
 
-    void deleteClusterResultFolder(String pathFolderResult);
+    void deleteClusterResultFolder(String pathFolderResult, MainActivityView mainActivityView);
 
     void chooseGallery(MainActivityView view);
 
@@ -34,7 +34,7 @@ public interface MainActivityMvpPresenter {
 
     void clustersReady();
 
-    void folderGenerator(String pathFolder);
+    void folderGenerator(String pathFolder, MainActivityView mainActivityView);
 
     void showFilesManager(String pathFolder);
 
@@ -43,4 +43,7 @@ public interface MainActivityMvpPresenter {
     void growProgress();
 
     List<String> getMclParameters();
+
+    void callErrorToast(String s);
+
 }
