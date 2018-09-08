@@ -161,7 +161,9 @@ public class MainActivityModel implements MainActivityMvpModel {
             return 0;
         }
         if (chAllImages.isChecked()){
-            curDir = new File("/storage/emulated/0");
+            String dcimPath = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DCIM).getAbsolutePath();
+            curDir = new File(dcimPath);
         }else{
             curDir = new File(path_chosen);
         }
@@ -222,7 +224,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 getAllFiles(f);
             }else {
                 if(f.isFile()){
-                    if (images.size()>=1000){
+                    if (images.size()>=400){
                         break;
                     }
                     //TODO: lower path

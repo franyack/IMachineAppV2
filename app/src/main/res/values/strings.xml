@@ -44,7 +44,7 @@
     <string name="insufficientsizecopyresults">You do not have sufficient storage for copy the final result!</string>
     <string name="previousresultsnotexists">Previous results does not exists!</string>
     <string name="choosefolder">Choose folder</string>
-    <string name="allimages">All images</string>
+    <string name="cameraimages">Camera Images</string>
     <string name="process">Process</string>
     <string name="previouslyresults">Previously results</string>
     <string name="working">WORKING</string>

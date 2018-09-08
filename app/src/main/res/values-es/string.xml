@@ -46,7 +46,7 @@
     <string name="insufficientsizecopyresults">¡No posee demasiada memoria para copiar el resultado final!</string>
     <string name="previousresultsnotexists">¡No existen resultados anteriores!</string>
     <string name="choosefolder">Elegir carpeta</string>
-    <string name="allimages">Todas las imágenes</string>
+    <string name="cameraimages">Imágenes de la Cámara</string>
     <string name="process">Procesar</string>
     <string name="previouslyresults">Resultados Anteriores</string>
     <string name="working">TRABAJANDO</string>

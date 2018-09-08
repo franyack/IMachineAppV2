@@ -14,7 +14,7 @@
         android:id="@+id/imageView"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_above="@+id/checkTodasLasImagenes"
+        android:layout_above="@+id/checkCameraImages"
         android:layout_alignParentStart="true"
         android:layout_marginBottom="46dp"
         app:srcCompat="@drawable/image" />
@@ -33,13 +33,13 @@
         />
 
     <CheckBox
-        android:id="@+id/checkTodasLasImagenes"
+        android:id="@+id/checkCameraImages"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_below="@+id/btnCarpetaProcesar"
         android:layout_centerHorizontal="true"
         android:layout_marginTop="28dp"
-        android:text="@string/allimages"
+        android:text="@string/cameraimages"
         android:onClick="checkBoxClick"
         />
 
@@ -49,7 +49,7 @@
         android:layout_height="wrap_content"
         android:textSize="20sp"
         android:textStyle="bold"
-        android:layout_below="@+id/checkTodasLasImagenes"
+        android:layout_below="@+id/checkCameraImages"
         android:layout_centerHorizontal="true"
         android:textAlignment="center"
         android:layout_marginTop="40dp"
