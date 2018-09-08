@@ -113,6 +113,10 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
         view.callErrorToast(s);
     }
 
+    @Override
+    public void checkNumberImages(MainActivityView mainActivityView) {
+        dataManager.checkNumberImages(mainActivityView);
+    }
 
 
 }

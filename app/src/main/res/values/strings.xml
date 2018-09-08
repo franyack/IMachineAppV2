@@ -60,6 +60,6 @@
     <string name="wishcopyormove">Do you wish copy or move permanently the final result?</string>
     <string name="folder">Folder</string>
     <string name="noclusterfound">ImagesWithoutGroup</string>
-
+    <string name="tooMuchImages">This folder has too much images. Only 400 will be processed!</string>
 
 </resources>

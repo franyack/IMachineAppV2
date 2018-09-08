@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -114,12 +115,13 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
             }
         }
 
+        presenter.checkNumberImages(MainActivityView.this);
+
         setContentView(R.layout.working);
 
         workingText = (TextView) findViewById(R.id.workingTexto);
 
         presenter.fillWorkingText();
-
 
         presenter.procesarImagenes(MainActivityView.this);
     }
