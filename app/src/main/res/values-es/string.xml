@@ -46,7 +46,7 @@
     <string name="insufficientsizecopyresults">¡No posee demasiada memoria para copiar el resultado final!</string>
     <string name="previousresultsnotexists">¡No existen resultados anteriores!</string>
     <string name="choosefolder">Elegir carpeta</string>
-    <string name="allimages">Todas las imágenes</string>
+    <string name="cameraimages">Imágenes de la Cámara</string>
     <string name="process">Procesar</string>
     <string name="previouslyresults">Resultados Anteriores</string>
     <string name="working">TRABAJANDO</string>
@@ -62,4 +62,5 @@
     <string name="wishcopyormove">¿Desea copiar o mover de manera permanente el resultado final?</string>
     <string name="folder">Carpeta</string>
     <string name="noclusterfound">ImagenesSinAgrupar</string>
+    <string name="tooMuchImages">Esta carpeta contiene demasiadas imágenes. Solo se procesarán 400!</string>
 </resources>

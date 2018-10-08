@@ -42,9 +42,9 @@
     <string name="thefolderisempty">The directory selected is empty or does not contain images</string>
     <string name="insufficientsizeprocess">You do not have sufficient storage for do the process!</string>
     <string name="insufficientsizecopyresults">You do not have sufficient storage for copy the final result!</string>
-    <string name="previousresultsnotexists">Previous results does not exists!</string>
+    <string name="previousresultsnotexists">Previous results does not exist!</string>
     <string name="choosefolder">Choose folder</string>
-    <string name="allimages">All images</string>
+    <string name="cameraimages">Camera Images</string>
     <string name="process">Process</string>
     <string name="previouslyresults">Previously results</string>
     <string name="working">WORKING</string>
@@ -60,6 +60,6 @@
     <string name="wishcopyormove">Do you wish copy or move permanently the final result?</string>
     <string name="folder">Folder</string>
     <string name="noclusterfound">ImagesWithoutGroup</string>
-
+    <string name="tooMuchImages">This folder has too much images. Only 400 will be processed!</string>
 
 </resources>

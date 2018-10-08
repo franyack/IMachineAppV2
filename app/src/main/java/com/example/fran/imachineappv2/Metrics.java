@@ -300,7 +300,7 @@ public class Metrics {
             }
             silhouetteCluster /= sizeCluster;
             //silhouetteAvgCluster.put(cluster.getKey(), silhouetteCluster);
-            LOGGER.info(String.format(Locale.ENGLISH,"Silhouette for cluster %d: %a", cluster.getKey(), silhouetteCluster));
+//            LOGGER.info(String.format(Locale.ENGLISH,"Silhouette for cluster %d: %a", cluster.getKey(), silhouetteCluster));
         }
         // The average of s(i) over all points of a cluster is a measure of how tightly grouped all the points in the cluster are.
         // Thus the average s(i) over all data of the entire dataset is a measure of how appropriately the data have been clustered.

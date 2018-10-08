@@ -1,7 +1,9 @@
 package com.example.fran.imachineappv2;
 
+import android.app.AlertDialog;
 import android.content.ContentResolver;
 import android.content.Context;
+import android.content.DialogInterface;
 import android.content.Intent;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
@@ -10,6 +12,7 @@ import android.graphics.BitmapFactory;
 import android.media.MediaScannerConnection;
 import android.net.Uri;
 import android.os.Environment;
+import android.os.Handler;
 import android.os.StatFs;
 import android.util.Log;
 import android.widget.CheckBox;
@@ -56,6 +59,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     private String[] imagespath;
     private Vector<String> images = new Vector<>();
+    private boolean tooMuchImages = false;
 
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
     private static final String MODEL_PATH = "mobilenet_v1_224.tflite";
@@ -161,7 +165,9 @@ public class MainActivityModel implements MainActivityMvpModel {
             return 0;
         }
         if (chAllImages.isChecked()){
-            curDir = new File("/storage/emulated/0");
+            String dcimPath = Environment.getExternalStoragePublicDirectory(
+                    Environment.DIRECTORY_DCIM).getAbsolutePath();
+            curDir = new File(dcimPath);
         }else{
             curDir = new File(path_chosen);
         }
@@ -223,6 +229,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             }else {
                 if(f.isFile()){
                     if (images.size()>=400){
+                        tooMuchImages = true;
                         break;
                     }
                     //TODO: lower path
@@ -325,6 +332,35 @@ public class MainActivityModel implements MainActivityMvpModel {
         mclParameters.add(""+infPow);
         mclParameters.add(""+threshPrune);
         return  mclParameters;
+    }
+
+    @Override
+    public void checkNumberImages(MainActivityView mainActivityView) {
+        if(tooMuchImages){
+            final AlertDialog.Builder builder = new AlertDialog.Builder(mainActivityView);
+            builder.setTitle(R.string.attention);
+            builder.setMessage(R.string.tooMuchImages);
+            final AlertDialog dialog=builder.create();
+            dialog.show();
+            // Hide after some seconds
+            final Handler handler  = new Handler();
+            final Runnable runnable = new Runnable() {
+                @Override
+                public void run() {
+                    if (dialog.isShowing()) {
+                        dialog.dismiss();
+                    }
+                }
+            };
+
+            dialog .setOnDismissListener(new DialogInterface.OnDismissListener() {
+                @Override
+                public void onDismiss(DialogInterface dialog) {
+                    handler.removeCallbacks(runnable);
+                }
+            });
+            handler.postDelayed(runnable, 4000);
+        }
     }
 
     //    @Override

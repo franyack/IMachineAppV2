@@ -28,4 +28,6 @@ public interface MainActivityMvpModel {
     boolean folderResultsExist(String pathFoldersResult);
 
     List<String> getMclParameters();
+
+    void checkNumberImages(MainActivityView mainActivityView);
 }

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.content.Intent;
 import android.os.Build;
 import android.os.Environment;
+import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.view.View;
@@ -27,7 +28,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     private MainActivityMvpPresenter presenter;
 
     TextView path_chosen;
-    CheckBox chAllImages;
+    CheckBox checkCameraImages;
     Button btnChooseGallery;
     TextView workingText;
     ProgressBar progressBarWorking;
@@ -54,7 +55,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         }
         pathFoldersResult = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppTemporaryResults";
         path_chosen = (TextView) findViewById(R.id.path_chosen);
-        chAllImages = (CheckBox) findViewById(R.id.checkTodasLasImagenes);
+        checkCameraImages = (CheckBox) findViewById(R.id.checkCameraImages);
         btnChooseGallery = (Button) findViewById(R.id.btnCarpetaProcesar);
 
 
@@ -88,7 +89,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
     public void buttonChooseGalleryEnable(boolean enable){btnChooseGallery.setEnabled(enable);}
 
-    public void checkBoxClick(View view) {presenter.checkBoxClick(chAllImages);}
+    public void checkBoxClick(View view) {presenter.checkBoxClick(checkCameraImages);}
 
     public void showWorkingText(String result){
         String text = getString(R.string.processing) + " " + result + " " + getString(R.string.images);
@@ -99,27 +100,28 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
         deleteClusterResultFolder(pathFoldersResult, MainActivityView.this);
 
-        if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 0){
+        if (presenter.prepararImagenes((String) path_chosen.getText(),checkCameraImages, getApplicationContext()) == 0){
             Toast.makeText(getApplicationContext(),getString(R.string.noneselected), Toast.LENGTH_SHORT).show();
             return;
         }else{
-            if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 1){
+            if (presenter.prepararImagenes((String) path_chosen.getText(),checkCameraImages, getApplicationContext()) == 1){
                 Toast.makeText(getApplicationContext(),getString(R.string.thefolderisempty), Toast.LENGTH_SHORT).show();
                 return;
             }else{
-                if (presenter.prepararImagenes((String) path_chosen.getText(),chAllImages, getApplicationContext()) == 2) {
+                if (presenter.prepararImagenes((String) path_chosen.getText(),checkCameraImages, getApplicationContext()) == 2) {
                     Toast.makeText(getApplicationContext(), getString(R.string.insufficientsizeprocess), Toast.LENGTH_SHORT).show();
                     return;
                 }
             }
         }
 
+        presenter.checkNumberImages(MainActivityView.this);
+
         setContentView(R.layout.working);
 
         workingText = (TextView) findViewById(R.id.workingTexto);
 
         presenter.fillWorkingText();
-
 
         presenter.procesarImagenes(MainActivityView.this);
     }
