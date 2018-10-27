@@ -7,9 +7,15 @@ import org.ejml.equation.Equation;
 
 import java.util.ArrayList;
 import java.util.Random;
-import java.util.logging.Logger;
+// import java.util.logging.Logger;
 
 // See https://github.com/GuyAllard/markov_clustering/blob/master/markov_clustering/mcl.py
+
+/**
+ * TODO list:
+ * - Develop MCLSparseEJML to support sparse matrices
+ * - Improve performance
+ */
 
 public class MCLDenseEJML {
     private int maxIterations = 100;
@@ -18,7 +24,8 @@ public class MCLDenseEJML {
     private double epsilon = 1e-3;
     private double thresholdPrune = 0.01;
 
-    private static final Logger LOGGER = Logger.getLogger(MCLDenseEJML.class.getName());
+    // TODO: would be used this logger?
+    // private static final Logger LOGGER = Logger.getLogger(MCLDenseEJML.class.getName());
 
     public MCLDenseEJML(int maxIterations, int expansionPow, int inflationPow, double epsilon, double thresholdPrune){
         this.maxIterations = maxIterations;
@@ -32,7 +39,7 @@ public class MCLDenseEJML {
 
     }
 
-    public DMatrixRMaj prune(DMatrixRMaj M){
+    private DMatrixRMaj prune(DMatrixRMaj M){
         DMatrixRMaj R = M.copy();
 
         for (int i=0; i < M.numRows; i++) {
@@ -53,7 +60,7 @@ public class MCLDenseEJML {
         return R;
     }
 
-    public void normalize(DMatrixRMaj M) {
+    private void normalize(DMatrixRMaj M) {
         // TODO: similar method that returns a matrix, avoiding modifications on the given one
         // TODO: handle division by zero when having rows with all zeros
         double suma=0;
@@ -78,16 +85,18 @@ public class MCLDenseEJML {
 //            }
         for(int i=0; i < M.numRows; i++){
             eq.alias(i, "i");
+            //eq.process("M(i,:) = exp(M(i,:) - max(M(i,:)))");  // to prevent high values in exp(M)
+            //eq.process("M(i,:) = M(i,:) / sum(M(i,:))");
             eq.process("M(i,:) = M(i,:) / sum(M(i,:))");
 //            eq.process("M(i,:) = M(i,:) / s");
         }
     }
 
-    public void normalizeF(DMatrixRMaj M) {
+    private void normalizeF(DMatrixRMaj M) {
         NormOps_DDRM.normalizeF(M);
     }
 
-    public void expand(DMatrixRMaj M){
+    private void expand(DMatrixRMaj M){
         // TODO: similar method that returns a matrix, avoiding modifications on the given one
         Equation eq = new Equation();
         eq.alias(M, "M");
@@ -97,7 +106,7 @@ public class MCLDenseEJML {
         }
     }
 
-    public void inflate(DMatrixRMaj M){
+    private void inflate(DMatrixRMaj M){
         // TODO: similar method that returns a matrix, avoiding modifications on the given one
         Equation eq = new Equation();
         eq.alias(M, "M", this.inflationPow, "p");
@@ -110,8 +119,8 @@ public class MCLDenseEJML {
 
     }
 
-    public double deltaAbs(DMatrixRMaj M1, DMatrixRMaj M2){
-        assert M1.numRows == M2.numRows && M1.numCols == M2.numCols;
+    private double deltaAbs(DMatrixRMaj M1, DMatrixRMaj M2){
+        //assert M1.numRows == M2.numRows && M1.numCols == M2.numCols;
         int nElements = M1.numCols*M1.numCols;
 
         Equation eq = new Equation();
