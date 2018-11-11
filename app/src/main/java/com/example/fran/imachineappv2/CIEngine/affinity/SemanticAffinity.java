@@ -5,7 +5,11 @@ import com.example.fran.imachineappv2.CIEngine.imagenet.WNIDPrediction;
 
 import org.apache.commons.math3.stat.correlation.PearsonsCorrelation;
 
-import java.util.*;
+import java.util.List;
+import java.util.Map;
+import java.util.Set;
+import java.util.TreeMap;
+import java.util.TreeSet;
 
 /**
  * Documentation here...
@@ -57,7 +61,7 @@ public class SemanticAffinity {
         double v, v1_s, v2_s, corr;
         int d;
 
-
+        // TODO: loop O(n^2) -> loop O(N*(N-1)/2)
         for (int i=0; i < topPredictions.size(); i++){
             predResults = topPredictions.get(i).getResult();
             predDict = new TreeMap<>();
@@ -82,6 +86,7 @@ public class SemanticAffinity {
             for (int r=0;r<v1.length;r++) v1[r] /= v1_s;
 
             for(int j=0;j<topPredictions.size();j++){
+                // This loop only make sense for different elements
                 if(i!=j){
                     predResults = topPredictions.get(j).getResult();
                     predDict = new TreeMap<>();
@@ -91,6 +96,7 @@ public class SemanticAffinity {
 
                     v2=new double[dictionary.size()];
 
+                    // Get a vector v2 with all predictions for each WNID handled
                     d = 0;
                     for(String wnIdDict : dictionary){
                         v = 0.0;
@@ -100,15 +106,23 @@ public class SemanticAffinity {
                     }
 
                     // Normalize values in v2 by the sum of total
+                    // TODO: is this necessary for correlation?
                     v2_s=0;
                     for (double v2_r : v2) v2_s += v2_r;
                     for (int r=0;r<v2.length;r++) v2[r] /= v2_s;
+
+                    // Now compute the correlation between v1 and v2
                     corr = new PearsonsCorrelation().correlation(v2,v1);
-                    corr = (corr + 1)/2.0; //Normalize output
+                    corr = (corr + 1)/2.0; // Scale result from range [-1,1] to range [0,1]
+
+                    // Prune correlation values that are less than 'thresholdAffinity'
                     if(corr < thresholdAffinity) corr = 0.0;
-                }else{
-                    corr=1;
                 }
+                else{
+                    // Otherwise, equal elements has correlation equals to 1
+                    corr=1.0;
+                }
+                // Fill affinity matrix with correlation values
                 result[i][j] = corr;
             }
         }
