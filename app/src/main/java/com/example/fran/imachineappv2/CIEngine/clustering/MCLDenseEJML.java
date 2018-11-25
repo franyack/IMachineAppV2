@@ -1,11 +1,13 @@
 package com.example.fran.imachineappv2.CIEngine.clustering;
 
 import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.dense.row.NormOps_DDRM;
 import org.ejml.dense.row.RandomMatrices_DDRM;
 import org.ejml.equation.Equation;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -177,6 +179,28 @@ public class MCLDenseEJML {
 
         return M;
 
+    }
+
+    // TODO: think on another method to perform weighted average
+    public static DMatrixRMaj averageMatrices(List<DMatrixRMaj> matList){
+        int n = matList.size(); // n matrices to average
+
+        // Create resulting matrix
+        DMatrixRMaj res = new DMatrixRMaj(matList.get(0).numRows, matList.get(0).numCols);
+
+        // Fill matrix with all zeros
+        res.zero();
+
+        // Loop to add matrices
+        for (DMatrixRMaj mat: matList) {
+            // TODO: assert mat.size() == res.size() ?
+            CommonOps_DDRM.add(res, mat, res);
+        }
+
+        // Divide by total of matrices
+        CommonOps_DDRM.divide(res, (float) n);
+
+        return res;
     }
 
     public DMatrixRMaj generateRandomAffinityMatrix(int n, int seed){

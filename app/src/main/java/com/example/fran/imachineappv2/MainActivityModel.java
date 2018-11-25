@@ -14,6 +14,8 @@ import com.example.fran.imachineappv2.CIEngine.imagenet.WNIDPrediction;
 import com.example.fran.imachineappv2.CIEngine.util.ImageUtils;
 
 import com.codekidlabs.storagechooser.StorageChooser;
+
+import android.annotation.SuppressLint;
 import android.app.AlertDialog;
 import android.content.Context;
 import android.content.DialogInterface;
@@ -30,7 +32,6 @@ import android.widget.CheckBox;
 
 import org.apache.commons.io.FileUtils;
 import org.ejml.data.DMatrixRMaj;
-import org.ejml.dense.row.CommonOps_DDRM;
 
 import java.io.BufferedReader;
 import java.io.File;
@@ -368,6 +369,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
     }
 
+    @SuppressLint("DefaultLocale")
     private void processImages() {
         int percent = imagespath.length / 30;
         if(percent < 1){
@@ -396,6 +398,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 float[][][][] emb = ((float[][][][]) outputs.get(1)).clone();
 
                 List<WNIDPrediction> wnIdPredictionsList = new ArrayList<>();
+                // assert results.size() > 0
                 if (results.size() == 0){
                     // TODO: this is an error or what?
                     WNIDPrediction entity = new WNIDPrediction("n00001740",1);
@@ -409,38 +412,23 @@ public class MainActivityModel implements MainActivityMvpModel {
                 }
                 topPredictions.add(new TopPredictions(imagespath[i], wnIdPredictionsList));
                 embeddingsList.add(emb[0][0][0].clone());
-//                LOGGER.info(imagespath[i]);
-//            for (int j=0;j<wnIdPredictionsList.size();j++){
-//                String word;
-//                word = imageNetUtils.get_label_from_wnid(wnIdPredictionsList.get(j).getWnId(),imageNetUtils.wnidWordsList);
-//                LOGGER.info(word+": "+wnIdPredictionsList.get(j).getPrediction());
-//            }
-//            LOGGER.info("                                                                                ");
             }
         }
-        double[][] g_aff_matrix, i_aff_matrix;
 
-        g_aff_matrix = semanticAffinity.getAffinityMatrix(topPredictions);
-        i_aff_matrix = vectorAffinity.getAffinityMatrix(embeddingsList);
+        double[][] g_aff_matrix = semanticAffinity.getAffinityMatrix(topPredictions);
+        double[][] i_aff_matrix = vectorAffinity.getAffinityMatrix(embeddingsList);
 
-        DMatrixRMaj g_matrix = new DMatrixRMaj(g_aff_matrix);
-        DMatrixRMaj i_matrix = new DMatrixRMaj(i_aff_matrix);
+        List<DMatrixRMaj> matList = new ArrayList<>();
+        matList.add(new DMatrixRMaj(g_aff_matrix));
+        matList.add(new DMatrixRMaj(i_aff_matrix));
 
-        DMatrixRMaj cluster_matrix = new DMatrixRMaj(g_matrix.numRows, g_matrix.numCols);
-        CommonOps_DDRM.add(g_matrix, i_matrix, cluster_matrix);
-        CommonOps_DDRM.divide(cluster_matrix, 2.0);
-
-        affinityMatrix = cluster_matrix.copy();
+        affinityMatrix = MCLDenseEJML.averageMatrices(matList);
 
         MCLDenseEJML mcl = new MCLDenseEJML(maxIt, expPow, infPow, epsConvergence, threshPrune);
 
-//        mainActivityPresenter.growProgress();
-//        LOGGER.info("                                                                           ");
-//        LOGGER.info("Rows: "+cluster_matrix.getNumRows());
-//        LOGGER.info("Rows: "+cluster_matrix.getNumCols());
-        cluster_matrix = mcl.run(cluster_matrix);
+        affinityMatrix = mcl.run(affinityMatrix);
 
-        ArrayList<ArrayList<Integer>> clusters = mcl.getClusters(cluster_matrix);
+        ArrayList<ArrayList<Integer>> clusters = mcl.getClusters(affinityMatrix);
 
         for (int i=0;i<imagespath.length;i++){
             vImages.add(imagespath[i]);
@@ -453,6 +441,8 @@ public class MainActivityModel implements MainActivityMvpModel {
                 }
             }
         }
+
+        // TODO: check this! why the loop?
         for(int i=0;i<3;i++){
             postCluster();
         }
@@ -469,6 +459,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         mainActivityPresenter.clustersReady();
     }
 
+    // TODO: move to CIEngine
     private void postCluster() {
         List<String> imagesNotClustered = new ArrayList<>();
         for(int i=0;i<vClusters.size();i++){
