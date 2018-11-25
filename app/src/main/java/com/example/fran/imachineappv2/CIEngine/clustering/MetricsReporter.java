@@ -1,11 +1,12 @@
-package com.example.fran.imachineappv2;
+package com.example.fran.imachineappv2.CIEngine.clustering;
+
+import com.example.fran.imachineappv2.MainActivityView;
 
 import org.ejml.data.DMatrixRMaj;
 
 import java.io.File;
 import java.util.ArrayList;
 import java.util.List;
-import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
@@ -15,7 +16,10 @@ import java.util.logging.Logger;
  * Created by fran on 07/07/18.
  */
 
-public class Metrics {
+
+// TODO: move to CIEngine
+
+public class MetricsReporter {
     // TODO: buscar manera de reportar hora, paquete, etc
     // --> check this: https://www.logicbig.com/tutorials/core-java-tutorial/logging/customizing-default-format.html
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
@@ -26,13 +30,13 @@ public class Metrics {
     private ArrayList<String> vImages;
     private ArrayList<Integer> vClusters;
 
-    public Metrics(String pathActual,String pathPredicted, List<String> mclParameters){
+    public MetricsReporter(String pathActual, String pathPredicted, List<String> mclParameters){
         this.pathActual = pathActual;
         this.pathPredicted = pathPredicted;
         this.mclParameters = mclParameters;
     }
 
-    public Metrics(DMatrixRMaj affinityMatrix, ArrayList<String> vImages,ArrayList<Integer> vClusters){
+    public MetricsReporter(DMatrixRMaj affinityMatrix, ArrayList<String> vImages, ArrayList<Integer> vClusters){
         this.affinityMatrix = affinityMatrix;
         this.vImages = vImages;
         this.vClusters = vClusters;
@@ -230,6 +234,8 @@ public class Metrics {
         LOGGER.info("Recall Macro-Averaging: "+ macroAveraginRecall);
         LOGGER.info("F1-Score Macro-Averaging: "+ macroAveraginF1Score);
         LOGGER.info("-");
+
+        // TODO: return these results?
     }
 
     public void Silhouette(){
