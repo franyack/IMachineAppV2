@@ -1,4 +1,4 @@
-package com.example.fran.imachineappv2.CIEngine;
+package com.example.fran.imachineappv2.CIEngine.predictor;
 
 import org.tensorflow.lite.Interpreter;
 
@@ -8,13 +8,7 @@ import java.io.IOException;
 import java.nio.ByteBuffer;
 import java.nio.MappedByteBuffer;
 import java.nio.channels.FileChannel;
-import java.util.ArrayList;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.PriorityQueue;
-import java.util.TreeMap;
+import java.util.*;
 
 /**
  * Based on: https://github.com/amitshekhariitbhu/Android-TensorFlow-Lite-Example
@@ -126,7 +120,6 @@ public class TensorFlowImageClassifier implements Classifier {
         return recognitions;
     }
 
-    //    @SuppressLint("DefaultLocale")
     private List<Recognition> getSortedResult2(byte[][] labelProbArray) {
 
         PriorityQueue<Recognition> pq =
@@ -156,5 +149,6 @@ public class TensorFlowImageClassifier implements Classifier {
 
         return recognitions;
     }
+
 
 }

@@ -1,6 +1,4 @@
-package com.example.fran.imachineappv2.CIEngine;
-
-
+package com.example.fran.imachineappv2.CIEngine.predictor;
 
 import java.nio.ByteBuffer;
 import java.util.List;

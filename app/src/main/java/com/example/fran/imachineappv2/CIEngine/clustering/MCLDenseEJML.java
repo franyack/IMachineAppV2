@@ -1,11 +1,13 @@
-package com.example.fran.imachineappv2.CIEngine;
+package com.example.fran.imachineappv2.CIEngine.clustering;
 
 import org.ejml.data.DMatrixRMaj;
+import org.ejml.dense.row.CommonOps_DDRM;
 import org.ejml.dense.row.NormOps_DDRM;
 import org.ejml.dense.row.RandomMatrices_DDRM;
 import org.ejml.equation.Equation;
 
 import java.util.ArrayList;
+import java.util.List;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -32,7 +34,7 @@ public class MCLDenseEJML {
 
     }
 
-    public DMatrixRMaj prune(DMatrixRMaj M){
+    private DMatrixRMaj prune(DMatrixRMaj M){
         DMatrixRMaj R = M.copy();
 
         for (int i=0; i < M.numRows; i++) {
@@ -53,7 +55,7 @@ public class MCLDenseEJML {
         return R;
     }
 
-    public void normalize(DMatrixRMaj M) {
+    private void normalize(DMatrixRMaj M) {
         // TODO: similar method that returns a matrix, avoiding modifications on the given one
         // TODO: handle division by zero when having rows with all zeros
         double suma=0;
@@ -78,16 +80,18 @@ public class MCLDenseEJML {
 //            }
         for(int i=0; i < M.numRows; i++){
             eq.alias(i, "i");
+            //eq.process("M(i,:) = exp(M(i,:) - max(M(i,:)))");  // to prevent high values in exp(M)
+            //eq.process("M(i,:) = M(i,:) / sum(M(i,:))");
             eq.process("M(i,:) = M(i,:) / sum(M(i,:))");
 //            eq.process("M(i,:) = M(i,:) / s");
         }
     }
 
-    public void normalizeF(DMatrixRMaj M) {
+    private void normalizeF(DMatrixRMaj M) {
         NormOps_DDRM.normalizeF(M);
     }
 
-    public void expand(DMatrixRMaj M){
+    private void expand(DMatrixRMaj M){
         // TODO: similar method that returns a matrix, avoiding modifications on the given one
         Equation eq = new Equation();
         eq.alias(M, "M");
@@ -97,7 +101,7 @@ public class MCLDenseEJML {
         }
     }
 
-    public void inflate(DMatrixRMaj M){
+    private void inflate(DMatrixRMaj M){
         // TODO: similar method that returns a matrix, avoiding modifications on the given one
         Equation eq = new Equation();
         eq.alias(M, "M", this.inflationPow, "p");
@@ -110,8 +114,8 @@ public class MCLDenseEJML {
 
     }
 
-    public double deltaAbs(DMatrixRMaj M1, DMatrixRMaj M2){
-        assert M1.numRows == M2.numRows && M1.numCols == M2.numCols;
+    private double deltaAbs(DMatrixRMaj M1, DMatrixRMaj M2){
+        // assert M1.numRows == M2.numRows && M1.numCols == M2.numCols;
         int nElements = M1.numCols*M1.numCols;
 
         Equation eq = new Equation();
@@ -177,6 +181,28 @@ public class MCLDenseEJML {
 
     }
 
+    // TODO: think on another method to perform weighted average
+    public static DMatrixRMaj averageMatrices(List<DMatrixRMaj> matList){
+        int n = matList.size(); // n matrices to average
+
+        // Create resulting matrix
+        DMatrixRMaj res = new DMatrixRMaj(matList.get(0).numRows, matList.get(0).numCols);
+
+        // Fill matrix with all zeros
+        res.zero();
+
+        // Loop to add matrices
+        for (DMatrixRMaj mat: matList) {
+            // TODO: assert mat.size() == res.size() ?
+            CommonOps_DDRM.add(res, mat, res);
+        }
+
+        // Divide by total of matrices
+        CommonOps_DDRM.divide(res, (float) n);
+
+        return res;
+    }
+
     public DMatrixRMaj generateRandomAffinityMatrix(int n, int seed){
         Random rand = new Random(seed);
 
@@ -224,39 +250,41 @@ public class MCLDenseEJML {
         return clusters;
     }
 
-//    public static void main(String[] args){
-//        int maxIt = 100;
-//        int expPow = 2;
-//        int infPow = 2;
-//        double epsConvergence = 1e-3;
-//        double threshPrune = 0.01;
-//        int n = 100;
-//        int seed = 1234;
-//
-//        MCLDenseEJML mcl = new MCLDenseEJML(maxIt, expPow, infPow, epsConvergence, threshPrune);
-//
-//
-//        double[][] data = {
-//                {1.0, 0.5, 0.0, 0.5, 0.0, 0.0},
-//                {0.5, 1.0, 0.0, 0.0, 0.0, 0.0},
-//                {0.0, 0.0, 1.0, 0.0, 0.2, 0.0},
-//                {0.5, 0.0, 0.0, 1.0, 0.0, 0.0},
-//                {0.0, 0.0, 0.2, 0.0, 1.0, 0.0},
-//                {0.0, 0.0, 0.0, 0.0, 0.0, 1.0}
-//        };
-//
-//
-//        DMatrixRMaj m = new DMatrixRMaj(data);
-//
-//        //DMatrixRMaj m = mcl.generateRandomAffinityMatrix(n, seed);
-//
-//        //m.print();
-//        m = mcl.run(m);
-//        //m.print();
-//
-//        ArrayList<ArrayList<Integer>> clusters = mcl.getClusters(m);
-//
-//        LOGGER.info(String.format("Clusters obtained: %s", clusters));
-//    }
+    /*
+    public static void main(String[] args){
+        int maxIt = 100;
+        int expPow = 2;
+        int infPow = 2;
+        double epsConvergence = 1e-3;
+        double threshPrune = 0.01;
+        int n = 100;
+        int seed = 1234;
+
+        MCLDenseEJML mcl = new MCLDenseEJML(maxIt, expPow, infPow, epsConvergence, threshPrune);
+
+
+        double[][] data = {
+                {1.0, 0.5, 0.0, 0.5, 0.0, 0.0},
+                {0.5, 1.0, 0.0, 0.0, 0.0, 0.0},
+                {0.0, 0.0, 1.0, 0.0, 0.2, 0.0},
+                {0.5, 0.0, 0.0, 1.0, 0.0, 0.0},
+                {0.0, 0.0, 0.2, 0.0, 1.0, 0.0},
+                {0.0, 0.0, 0.0, 0.0, 0.0, 1.0}
+        };
+
+
+        DMatrixRMaj m = new DMatrixRMaj(data);
+
+        //DMatrixRMaj m = mcl.generateRandomAffinityMatrix(n, seed);
+
+        //m.print();
+        m = mcl.run(m);
+        //m.print();
+
+        ArrayList<ArrayList<Integer>> clusters = mcl.getClusters(m);
+
+        LOGGER.info(String.format("Clusters obtained: %s", clusters));
+    }
+    */
 
 }
