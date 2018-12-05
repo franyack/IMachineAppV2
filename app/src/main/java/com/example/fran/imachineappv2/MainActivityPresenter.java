@@ -118,5 +118,10 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
         dataManager.checkNumberImages(mainActivityView);
     }
 
+    @Override
+    public void errorCopyingFiles() {
+        view.errorCopyingFiles();
+    }
+
 
 }

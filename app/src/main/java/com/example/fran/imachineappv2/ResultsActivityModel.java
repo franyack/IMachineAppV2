@@ -20,6 +20,7 @@ import java.io.InputStreamReader;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Vector;
+import java.util.logging.Logger;
 
 /**
  * Created by fran on 29/05/18.
@@ -29,6 +30,7 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
 
     private ResultsActivityMvpPresenter presenter;
 
+    private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
     ArrayList<String> vImages = new ArrayList<>();
     ArrayList<Integer> vClusters = new ArrayList<>();
     Vector<Integer> vClustersResult = new Vector<>();
@@ -209,9 +211,15 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
                     resultsActivityView.sendBroadcast(mediaScannerIntent);
                 }
             }
+            presenter.backToMainActivity(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppResult" + i);
         } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                FileUtils.deleteDirectory(dstFolder);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            LOGGER.info("Pase por acá");
+            generateNewResultFolder(pathFolderTemporary,resultsActivityView);
         }
-        presenter.backToMainActivity(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppResult" + i);
     }
 }

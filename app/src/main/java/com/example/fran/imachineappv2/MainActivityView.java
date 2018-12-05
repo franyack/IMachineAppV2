@@ -98,8 +98,12 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
     public void procesarImagenes(View view) {
 
-        deleteClusterResultFolder(pathFoldersResult, MainActivityView.this);
-
+        if(path_chosen.getText().equals(pathFoldersResult)){
+            Toast.makeText(getApplicationContext(),getString(R.string.cannotSelectTmpFolder), Toast.LENGTH_SHORT).show();
+            return;
+        }else{
+            deleteClusterResultFolder(pathFoldersResult, MainActivityView.this);
+        }
         if (presenter.prepararImagenes((String) path_chosen.getText(),checkCameraImages, getApplicationContext()) == 0){
             Toast.makeText(getApplicationContext(),getString(R.string.noneselected), Toast.LENGTH_SHORT).show();
             return;
@@ -162,6 +166,11 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         startActivity(i);
     }
 
+    @Override
+    public void errorCopyingFiles() {
+        Toast.makeText(getApplicationContext(),getString(R.string.errorWithFilesMain), Toast.LENGTH_LONG).show();
+        return;
+    }
 
     public void verResultadosAnteriores(View view) {
 

@@ -121,7 +121,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 mediaScannerIntent.setData(fileContentUri);
                 mainActivityView.sendBroadcast(mediaScannerIntent);
             } catch (IOException e) {
-                e.printStackTrace();
+                mainActivityPresenter.errorCopyingFiles();
             }
         }
     }
@@ -217,7 +217,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             outputStreamWriter.close();
         }
         catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
+            mainActivityPresenter.errorCopyingFiles();
         }
     }
 
@@ -257,7 +257,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             wnid_lookup.hierarchyLookupList = wnid_lookup.loadHierarchy_lookup(mainActivityView.getAssets(),HIERARCHY_PATH);
             initTensorFlowAndLoadModel(mainActivityView);
         } catch (IOException e) {
-            e.printStackTrace();
+            mainActivityPresenter.errorCopyingFiles();
         }
     }
 
@@ -270,7 +270,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             try {
                 FileUtils.cleanDirectory(folder);
             } catch (IOException e) {
-                e.printStackTrace();
+                mainActivityPresenter.errorCopyingFiles();
             }
         }
         String number;
@@ -294,7 +294,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             try {
                 FileUtils.forceMkdir(folder);
             } catch (IOException e) {
-                e.printStackTrace();
+                mainActivityPresenter.errorCopyingFiles();
             }
             for (int j = 0; j < vClusters.size(); j++) {
                 if (Objects.equals(cluster, vClusters.get(j))) {
@@ -308,7 +308,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                         mediaScannerIntent.setData(fileContentUri);
                         mainActivityView.getApplicationContext().sendBroadcast(mediaScannerIntent);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        folderGenerator(pathFolder, mainActivityView);
                     }
                 }
             }
@@ -754,13 +754,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                             INPUT_SIZE);
                     setParameters();
                 } catch (final Exception e) {
-//                    mainActivityView.runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            mainActivityPresenter.callErrorToast(e.toString());
-//                        }
-//                    });
-                    throw new RuntimeException("Error!", e);
+                    mainActivityPresenter.errorCopyingFiles();
                 }
             }
         });

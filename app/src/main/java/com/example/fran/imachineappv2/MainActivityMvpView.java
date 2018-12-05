@@ -20,4 +20,6 @@ public interface MainActivityMvpView {
     void growProgress();
 
     void callErrorToast(String s);
+
+    void errorCopyingFiles();
 }

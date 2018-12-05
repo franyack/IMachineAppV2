@@ -61,5 +61,6 @@
     <string name="folder">Folder</string>
     <string name="noclusterfound">ImagesWithoutGroup</string>
     <string name="tooMuchImages">This folder has too much images. Only 400 will be processed!</string>
-
+    <string name="cannotSelectTmpFolder">You cannot choose the temporary folder. Please select another folder.</string>
+    <string name="errorWithFilesMain">Sorry for the inconvenience, there was an error with the files. Please repeat the process.</string>
 </resources>
