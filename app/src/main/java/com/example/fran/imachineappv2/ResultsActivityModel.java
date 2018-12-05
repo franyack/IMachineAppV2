@@ -218,7 +218,6 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
             } catch (IOException e1) {
                 e1.printStackTrace();
             }
-            LOGGER.info("Pase por acá");
             generateNewResultFolder(pathFolderTemporary,resultsActivityView);
         }
     }
