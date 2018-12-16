@@ -66,7 +66,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
     private static final String MODEL_PATH = "mobilenet_v1_224.tflite";
-    private static final String LABEL_PATH = "labels2.txt";  // TODO: rename to labels.txt
+    private static final String LABEL_PATH = "labels.txt";
     private static final String WORDS_PATH = "words.txt";
     private static final String HIERARCHY_PATH = "wordnet.is_a.txt";
     private static final int IMG_W = 224;
