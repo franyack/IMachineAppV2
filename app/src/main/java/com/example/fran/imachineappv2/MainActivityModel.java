@@ -65,7 +65,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     private boolean tooManyImages = false;
 
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
-    private static final String MODEL_PATH = "mobilenet_v1_224.tflite";  // TODO: remove quant version
+    private static final String MODEL_PATH = "mobilenet_v1_224.tflite";
     private static final String LABEL_PATH = "labels2.txt";  // TODO: rename to labels.txt
     private static final String WORDS_PATH = "words.txt";
     private static final String HIERARCHY_PATH = "wordnet.is_a.txt";
