@@ -22,7 +22,7 @@ public interface MainActivityMvpPresenter {
 
     void buttonChooseGalleryEnable(boolean b);
 
-    int prepararImagenes(String s, CheckBox chAllImages, Context applicationContext);
+    int prepareImages(String s, CheckBox chAllImages, Context applicationContext);
 
     void fillWorkingText();
 

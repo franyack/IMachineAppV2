@@ -27,7 +27,6 @@ import android.net.Uri;
 import android.os.Environment;
 import android.os.Handler;
 import android.os.StatFs;
-import android.util.Log;
 import android.widget.CheckBox;
 
 import org.apache.commons.io.FileUtils;
@@ -58,13 +57,17 @@ import java.util.logging.Logger;
 
 public class MainActivityModel implements MainActivityMvpModel {
 
+    private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
     private MainActivityMvpPresenter mainActivityPresenter;
 
-    private String[] imagespath;
+    // Input images
+    private String[] pathToImages;
     private Vector<String> images = new Vector<>();
     private boolean tooManyImages = false;
 
-    private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
+    // Parameters for MobileNet model
+    private Classifier classifier;
+    private Executor executor = Executors.newSingleThreadExecutor();
     private static final String MODEL_PATH = "mobilenet_v1_224.tflite";
     private static final String LABEL_PATH = "labels.txt";
     private static final String WORDS_PATH = "words.txt";
@@ -75,8 +78,9 @@ public class MainActivityModel implements MainActivityMvpModel {
     private static final int PIXEL_SIZE = 3;
     private static final float IMAGE_MEAN = 128.f;
     private static final float IMAGE_STD = 128.f;
+    private static final double THRESHOLD_PROBABILITY_PREDICTION = 0.65;  // TODO: tune this
 
-    //MCL
+    // Parameters for clustering step
     // TODO: clustering parameters depending on N images to process?
     // TODO: static final, or there is a possibility to change them?
     private static final int maxIt = 100;
@@ -84,13 +88,8 @@ public class MainActivityModel implements MainActivityMvpModel {
     private static final int infPow = 3;
     private static final double epsConvergence = 1e-3;
     private static final double threshPrune = 0.01;
-    // private static final int n = 100;
 
-    private Classifier classifier;
-    private Executor executor = Executors.newSingleThreadExecutor();
-
-    private static final double THRESHOLD_PROBABILITY_PREDICTION = 0.65;
-
+    // Attributes for handling results
     private List<WNIDWords> wnidWordsList = new ArrayList<>();
     private List<HierarchyLookup> hierarchyLookupList = new ArrayList<>();
     private ArrayList<String> vImages = new ArrayList<>();
@@ -104,8 +103,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     private long startLoop;
 
-
-    //Constructor
+    // Constructor
     MainActivityModel(MainActivityPresenter presenter) {
         this.mainActivityPresenter = presenter;
     }
@@ -159,7 +157,8 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     @Override
-    public int prepararImagenes(String path_chosen, CheckBox chAllImages, Context applicationContext) {
+    public int prepareImages(String path_chosen, CheckBox chAllImages, Context applicationContext) {
+        // TODO: use logger
         File curDir;
         if (path_chosen.equals("") && !chAllImages.isChecked()){
             return 0;
@@ -175,19 +174,19 @@ public class MainActivityModel implements MainActivityMvpModel {
             images.clear();
         }
         getAllFiles(curDir);
-        imagespath = new String[images.size()];
+        pathToImages = new String[images.size()];
         long totalBytes = 0;
         File file;
         for (int i = 0; i<images.size(); i++){
-            imagespath[i] = images.get(i);
-            file = new File(imagespath[i]);
+            pathToImages[i] = images.get(i);
+            file = new File(pathToImages[i]);
             if(file.exists()){
                 totalBytes+=file.length();
             }
         }
         //Because we need to save storage por the temporary folder
         totalBytes*=2;
-        if(imagespath.length==0){
+        if(pathToImages.length==0){
             return 1;
         }
 
@@ -198,7 +197,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             return 2;
         }
 
-        writeToFile(imagespath, applicationContext);
+        writeToFile(pathToImages, applicationContext);
 
         return 3;
     }
@@ -217,7 +216,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             outputStreamWriter.close();
         }
         catch (IOException e) {
-            Log.e("Exception", "File write failed: " + e.toString());
+            LOGGER.warning("Exception! File write failed: " + e.toString());
         }
     }
 
@@ -371,12 +370,12 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     @SuppressLint("DefaultLocale")
     private void processImages() {
-        int percent = imagespath.length / 30;
+        int percent = pathToImages.length / 30;
         if(percent < 1){
             percent=1;
         }
         int nImgs = 0;
-        for (int i = 0; i< imagespath.length; i++){
+        for (int i = 0; i< pathToImages.length; i++){
             if(nImgs==percent){
                 mainActivityPresenter.growProgress();
                 nImgs=0;
@@ -384,7 +383,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 nImgs+=1;
             }
             Map<Integer, Object> outputs = new TreeMap<>();
-            Bitmap image = ImageUtils.lessResolution(imagespath[i],IMG_W,IMG_H);
+            Bitmap image = ImageUtils.lessResolution(pathToImages[i],IMG_W,IMG_H);
             image = Bitmap.createScaledBitmap(image,IMG_W,IMG_H,false);
             ByteBuffer byteBuffer;
             if (image != null){
@@ -410,7 +409,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                                 wnidWordsList,hierarchyLookupList, depth, threshProb);
 
                 }
-                topPredictions.add(new TopPredictions(imagespath[i], wnIdPredictionsList));
+                topPredictions.add(new TopPredictions(pathToImages[i], wnIdPredictionsList));
                 embeddingsList.add(emb[0][0][0].clone());
             }
         }
@@ -430,8 +429,8 @@ public class MainActivityModel implements MainActivityMvpModel {
 
         ArrayList<ArrayList<Integer>> clusters = mcl.getClusters(affinityMatrix);
 
-        for (int i=0;i<imagespath.length;i++){
-            vImages.add(imagespath[i]);
+        for (int i = 0; i< pathToImages.length; i++){
+            vImages.add(pathToImages[i]);
             for (int j=0;j<clusters.size();j++){
                 for (int k=0;k<clusters.get(j).size();k++){
                     if(clusters.get(j).get(k) == i){
@@ -511,6 +510,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         return maxAffinityImage;
     }
 
+    // TODO: would this be used?
     private void postProcess() {
         List<List<String>> groups = new ArrayList<>();
         List<String> groupTemp;

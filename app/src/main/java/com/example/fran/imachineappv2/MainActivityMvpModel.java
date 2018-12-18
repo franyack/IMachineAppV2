@@ -17,7 +17,7 @@ public interface MainActivityMvpModel {
 
     void checkBoxClick(CheckBox chAllImages);
 
-    int prepararImagenes(String path_chosen, CheckBox chAllImages, Context applicationContext);
+    int prepareImages(String path_chosen, CheckBox chAllImages, Context applicationContext);
 
     void fillWorkingText();
 
