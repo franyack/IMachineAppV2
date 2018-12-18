@@ -62,6 +62,7 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     }
 
     public void showWorkingText(String result){
+        // TODO: add some image? improve UI?
         if(view!=null){
             view.showWorkingText(result);
         }
@@ -70,12 +71,12 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     @Override
     public void showProgressBarWorking(ProgressBar progressBarWorking) {
 //        dataManager.showProgressBarWorking(progressBarWorking);
+        // TODO: ???
     }
 
     @Override
-    public void procesarImagenes(MainActivityView mainActivityView) {
+    public void processImages(MainActivityView mainActivityView) {
         dataManager.startImageProcess(mainActivityView);
-//        dataManager.procesarImagenes();
     }
 
     @Override

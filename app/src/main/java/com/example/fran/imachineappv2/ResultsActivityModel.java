@@ -25,6 +25,9 @@ import java.util.Vector;
  * Created by fran on 29/05/18.
  */
 
+// TODO: improve strings
+// TODO: improve paths
+
 public class ResultsActivityModel implements ResultsActivityMvpModel {
 
     private ResultsActivityMvpPresenter presenter;

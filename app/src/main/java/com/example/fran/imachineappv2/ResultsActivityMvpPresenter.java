@@ -1,7 +1,5 @@
 package com.example.fran.imachineappv2;
 
-import java.util.ArrayList;
-
 /**
  * Created by fran on 25/05/18.
  */

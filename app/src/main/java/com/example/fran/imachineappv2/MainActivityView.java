@@ -28,11 +28,11 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     CheckBox checkCameraImages;
     Button btnChooseGallery;
     TextView workingText;
-    ProgressBar progressBarWorking;
+    ProgressBar progressBarWorking;  // TODO: used?
     String pathFoldersResult;
     NumberProgressBar numberProgressBar;
     int progress=0;
-    private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
+    private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName()); // TODO: used?
 
     private static final String[] INITIAL_PERMS = new String[]{
             Manifest.permission.READ_EXTERNAL_STORAGE,
@@ -120,7 +120,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
         presenter.fillWorkingText();
 
-        presenter.procesarImagenes(MainActivityView.this);
+        presenter.processImages(MainActivityView.this);
     }
 
     @Override
@@ -168,6 +168,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         }
         List<String> mclParameters = presenter.getMclParameters();
         String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
+        // TODO: remove this entry point for metrics, and put it into a different class
 //        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
 //        a.getScore();
         Intent i = new Intent(this, FilesMainActivity.class);

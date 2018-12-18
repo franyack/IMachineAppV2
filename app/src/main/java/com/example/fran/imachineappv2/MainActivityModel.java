@@ -370,6 +370,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     @SuppressLint("DefaultLocale")
     private void processImages() {
+        // TODO: review this way to estimate progress
         int percent = pathToImages.length / 30;
         if(percent < 1){
             percent=1;

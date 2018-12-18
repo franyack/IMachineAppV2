@@ -13,6 +13,8 @@ import com.example.fran.imachineappv2.FilesManager.FilesMainActivity;
 import java.io.File;
 
 
+// TODO: improve strings!
+
 public class ResultsActivityView extends Activity implements ResultsActivityMvpView {
 
     private ResultsActivityMvpPresenter presenter;

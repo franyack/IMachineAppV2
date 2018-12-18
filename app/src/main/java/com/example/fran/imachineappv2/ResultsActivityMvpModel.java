@@ -1,7 +1,5 @@
 package com.example.fran.imachineappv2;
 
-import android.content.Context;
-
 import java.util.ArrayList;
 
 /**
