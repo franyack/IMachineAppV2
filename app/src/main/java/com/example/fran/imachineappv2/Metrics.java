@@ -1,8 +1,17 @@
 package com.example.fran.imachineappv2;
 
+import android.content.Context;
+import android.content.Intent;
+import android.net.Uri;
+import android.os.Environment;
+
+import org.apache.commons.io.FileUtils;
 import org.ejml.data.DMatrixRMaj;
 
 import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.io.OutputStreamWriter;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -25,17 +34,16 @@ public class Metrics {
     private DMatrixRMaj affinityMatrix;
     private ArrayList<String> vImages;
     private ArrayList<Integer> vClusters;
+    private double timeProcess;
 
-    public Metrics(String pathActual,String pathPredicted, List<String> mclParameters){
-        this.pathActual = pathActual;
-        this.pathPredicted = pathPredicted;
-        this.mclParameters = mclParameters;
-    }
-
-    public Metrics(DMatrixRMaj affinityMatrix, ArrayList<String> vImages,ArrayList<Integer> vClusters){
+    public Metrics(DMatrixRMaj affinityMatrix, ArrayList<String> vImages, ArrayList<Integer> vClusters, String pathActual, String pathPredicted, List<String> mclParameters, double timeProcess){
         this.affinityMatrix = affinityMatrix;
         this.vImages = vImages;
         this.vClusters = vClusters;
+        this.pathActual = pathActual;
+        this.pathPredicted = pathPredicted;
+        this.mclParameters = mclParameters;
+        this.timeProcess = timeProcess;
     }
 
     public String getShortName(String s){
@@ -49,13 +57,22 @@ public class Metrics {
     //The function need the 3 first characters of the actual-folder names are the same 3 first characters of
     //the images inside them.
 
-    public void getScore(){
-        LOGGER.info("-");
-        LOGGER.info("MCL maxIt: " + mclParameters.get(0));
-        LOGGER.info("MCL expPow: " + mclParameters.get(1));
-        LOGGER.info("MCL infPow: " + mclParameters.get(2));
-        LOGGER.info("MCL threshPrune: " + mclParameters.get(3));
-        LOGGER.info("-");
+    public void getScore(MainActivityView mainActivityView){
+
+        String output;
+        output = "Time to process: " + timeProcess + "seconds\n";
+        output += "-\n";
+        output += "MCL maxIt: " + mclParameters.get(0) + "\n";
+        output += "MCL expPow: " + mclParameters.get(1) + "\n";
+        output += "MCL infPow: " + mclParameters.get(2) + "\n";
+        output += "MCL threshPrune: " + mclParameters.get(3) + "\n";
+        output += "-\n";
+//        LOGGER.info("-");
+//        LOGGER.info("MCL maxIt: " + mclParameters.get(0));
+//        LOGGER.info("MCL expPow: " + mclParameters.get(1));
+//        LOGGER.info("MCL infPow: " + mclParameters.get(2));
+//        LOGGER.info("MCL threshPrune: " + mclParameters.get(3));
+//        LOGGER.info("-");
 
         File actualFolders = new File(pathActual);
         File [] actualFoldersList = actualFolders.listFiles();
@@ -91,10 +108,12 @@ public class Metrics {
         //----------------------------------Getting size by each actual folder in actualFoldersSize---------------------------
         for(File actualFolder: actualFoldersList){
             actualFoldersSize.put(getShortName(actualFolder.getName()), actualFolder.listFiles().length);
-            LOGGER.info("Length of " + actualFolder.getName().toUpperCase() +" (" + getShortName(actualFolder.getName())+") folder: " + actualFolder.listFiles().length);
+//            LOGGER.info("Length of " + actualFolder.getName().toUpperCase() +" (" + getShortName(actualFolder.getName())+") folder: " + actualFolder.listFiles().length);
+            output += "Length of " + actualFolder.getName().toUpperCase() +" (" + getShortName(actualFolder.getName())+") folder: " + actualFolder.listFiles().length + "\n";
         }
         //--------------------------------------------------------------------------------------------------------------------
-        LOGGER.info("-");
+//        LOGGER.info("-");
+        output += "-\n";
         for(File folderPredicted: foldersPredictedList){
             //--------------------Seeking the winning class for each folder predicted------------------------------
             predictedFoldersMap = new TreeMap<>(predictedFoldersMapInit);  // Start from a zero-counters map
@@ -201,22 +220,30 @@ public class Metrics {
 
         float accuracy = (float) truePositives/totalImages;  // The greater the acc, the higher the density of clusters
         //----------------------------------------------------------------------------------------------------------------
-
-        LOGGER.info("-");
-        LOGGER.info("Sorensen-Dice Average: " + sorensenAverage);
-        LOGGER.info("-");
-        LOGGER.info("Accuracy: " + accuracy);
-        LOGGER.info("-");
+        output += "-\n";
+        output += "Sorensen-Dice Average: " + sorensenAverage + "\n";
+        output += "-\n";
+        output += "Accuracy: " + accuracy + "\n";
+        output += "-\n";
+//        LOGGER.info("-");
+//        LOGGER.info("Sorensen-Dice Average: " + sorensenAverage);
+//        LOGGER.info("-");
+//        LOGGER.info("Accuracy: " + accuracy);
+//        LOGGER.info("-");
 
         //-------------------------------------Getting macro-averaging metrics---------------------------------------------
         float macroAveraginPrecision = 0;
         float macroAveraginRecall = 0;
         float macroAveraginF1Score = 0;
         for(Map.Entry<String, Float> precisionG:precisionGrouped.entrySet()){
-            LOGGER.info("Precision for " + precisionG.getKey() + ": "+precisionG.getValue());
-            LOGGER.info("Recall for " + precisionG.getKey() + ": "+recallGrouped.get(precisionG.getKey()));
-            LOGGER.info("F1-Score for " + precisionG.getKey() + ": "+f1ScoreGrouped.get(precisionG.getKey()));
-            LOGGER.info("-");
+//            LOGGER.info("Precision for " + precisionG.getKey() + ": "+precisionG.getValue());
+//            LOGGER.info("Recall for " + precisionG.getKey() + ": "+recallGrouped.get(precisionG.getKey()));
+//            LOGGER.info("F1-Score for " + precisionG.getKey() + ": "+f1ScoreGrouped.get(precisionG.getKey()));
+//            LOGGER.info("-");
+            output += "Precision for " + precisionG.getKey() + ": "+precisionG.getValue() + "\n";
+            output += "Recall for " + precisionG.getKey() + ": "+recallGrouped.get(precisionG.getKey()) + "\n";
+            output += "F1-Score for " + precisionG.getKey() + ": "+f1ScoreGrouped.get(precisionG.getKey()) + "\n";
+            output += "-\n";
             macroAveraginPrecision+=precisionG.getValue();
             macroAveraginRecall+=recallGrouped.get(precisionG.getKey());
             macroAveraginF1Score+=f1ScoreGrouped.get(precisionG.getKey());
@@ -225,14 +252,19 @@ public class Metrics {
         macroAveraginRecall/=recallGrouped.size();
         macroAveraginF1Score/=f1ScoreGrouped.size();
         //-------------------------------------------------------------------------------------------------------------------
+        output += "Precision Macro-Averaging: "+ macroAveraginPrecision + "\n";
+        output += "Recall Macro-Averaging: "+ macroAveraginRecall + "\n";
+        output += "F1-Score Macro-Averaging: "+ macroAveraginF1Score + "\n";
+        output += "-\n";
+//        LOGGER.info("Precision Macro-Averaging: "+ macroAveraginPrecision);
+//        LOGGER.info("Recall Macro-Averaging: "+ macroAveraginRecall);
+//        LOGGER.info("F1-Score Macro-Averaging: "+ macroAveraginF1Score);
+//        LOGGER.info("-");
 
-        LOGGER.info("Precision Macro-Averaging: "+ macroAveraginPrecision);
-        LOGGER.info("Recall Macro-Averaging: "+ macroAveraginRecall);
-        LOGGER.info("F1-Score Macro-Averaging: "+ macroAveraginF1Score);
-        LOGGER.info("-");
+        Silhouette(output, mainActivityView);
     }
 
-    public void Silhouette(){
+    public void Silhouette(String output, MainActivityView mainActivityView){
         // From https://en.wikipedia.org/wiki/Silhouette_(clustering)
         //------------Getting clusters---------------------------
         Map<Integer, List<String>> clusters = new TreeMap<>();
@@ -304,7 +336,9 @@ public class Metrics {
         }
         // The average of s(i) over all points of a cluster is a measure of how tightly grouped all the points in the cluster are.
         // Thus the average s(i) over all data of the entire dataset is a measure of how appropriately the data have been clustered.
-        LOGGER.info("Average Silhouette: " + silhouette/vImages.size());
+//        LOGGER.info("Average Silhouette: " + silhouette/vImages.size());
+        output += "Average Silhouette: " + silhouette/vImages.size() + "\n";
+        writeToFile(output, mainActivityView);
     }
 
     private float getAffinityDistance(String img1, String img2) {
@@ -319,5 +353,25 @@ public class Metrics {
         return (float) (1-affinityMatrix.get(i,j));
     }
 
-
+    private void writeToFile(String data, MainActivityView mainActivityView) {
+        try {
+            File metrics = new File(pathPredicted, "Metrics");
+            if(!metrics.exists()){
+                metrics.mkdirs();
+            }
+            File gpxfile = new File(metrics, "metrics");
+            FileWriter writer = new FileWriter(gpxfile);
+            writer.append(data);
+            writer.flush();
+            writer.close();
+            File scan = new File(metrics, "metrics");
+            Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
+            Uri fileContentUri = Uri.fromFile(scan);
+            mediaScannerIntent.setData(fileContentUri);
+            mainActivityView.getApplicationContext().sendBroadcast(mediaScannerIntent);
+        }
+        catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
 }

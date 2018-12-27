@@ -103,7 +103,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     private DMatrixRMaj affinityMatrix;
 
     private long startLoop;
-
+    private double tLoop;
 
     //Constructor
     MainActivityModel(MainActivityPresenter presenter) {
@@ -314,6 +314,10 @@ public class MainActivityModel implements MainActivityMvpModel {
             }
             numberFolder++;
         }
+//        double tLoop = (System.nanoTime() - startLoop) / 1e9;
+        String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
+        Metrics a = new Metrics(affinityMatrix, vImages, vClusters, pathFolderChosen, pathFolder, getMclParameters(), tLoop);
+        a.getScore(mainActivityView);
 
         mainActivityPresenter.showFilesManager(pathFolder);
     }
@@ -448,9 +452,9 @@ public class MainActivityModel implements MainActivityMvpModel {
 
         fillClustersResult(vClusters);
 
-        double tLoop = (System.nanoTime() - startLoop) / 1e9;
 
-        LOGGER.info(String.format("Total process took %f seconds", tLoop));
+        tLoop = (System.nanoTime() - startLoop) / 1e9;
+//        LOGGER.info(String.format("Total process took %f seconds", tLoop));
 
 //        Metrics a = new Metrics(affinityMatrix,vImages,vClusters);
 //        a.Silhouette();
