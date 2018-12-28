@@ -355,16 +355,16 @@ public class Metrics {
 
     private void writeToFile(String data, MainActivityView mainActivityView) {
         try {
-            File metrics = new File(pathPredicted, "Metrics");
+            File metrics = new File(pathActual, "Metrics");
             if(!metrics.exists()){
                 metrics.mkdirs();
             }
-            File gpxfile = new File(metrics, "metrics");
+            File gpxfile = new File(metrics, "metrics.txt");
             FileWriter writer = new FileWriter(gpxfile);
             writer.append(data);
             writer.flush();
             writer.close();
-            File scan = new File(metrics, "metrics");
+            File scan = new File(metrics, "metrics.txt");
             Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
             Uri fileContentUri = Uri.fromFile(scan);
             mediaScannerIntent.setData(fileContentUri);
