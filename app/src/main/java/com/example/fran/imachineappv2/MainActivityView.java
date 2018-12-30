@@ -93,23 +93,27 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         workingText.setText(text);
     }
 
-    public void procesarImagenes(View view) {
+    public void processImages(View view) {
 
         deleteClusterResultFolder(pathFoldersResult, MainActivityView.this);
 
-        if (presenter.prepareImages((String) path_chosen.getText(),checkCameraImages, getApplicationContext()) == 0){
-            Toast.makeText(getApplicationContext(),getString(R.string.noneselected), Toast.LENGTH_SHORT).show();
-            return;
-        }else{
-            if (presenter.prepareImages((String) path_chosen.getText(),checkCameraImages, getApplicationContext()) == 1){
-                Toast.makeText(getApplicationContext(),getString(R.string.thefolderisempty), Toast.LENGTH_SHORT).show();
-                return;
-            }else{
-                if (presenter.prepareImages((String) path_chosen.getText(),checkCameraImages, getApplicationContext()) == 2) {
+        int returnCode = presenter.prepareImages((String) path_chosen.getText(),
+                checkCameraImages, getApplicationContext());
+
+        if (returnCode != MainActivityModel.OK_FOLDER_READY) {
+
+            switch (returnCode) {
+                case MainActivityModel.ERROR_NO_SELECTION:
+                    Toast.makeText(getApplicationContext(), getString(R.string.noneselected), Toast.LENGTH_SHORT).show();
+                    break;
+                case MainActivityModel.ERROR_FOLDER_IS_EMPTY:
+                    Toast.makeText(getApplicationContext(), getString(R.string.thefolderisempty), Toast.LENGTH_SHORT).show();
+                    break;
+                case MainActivityModel.ERROR_INSUFFICIENT_STORAGE:
                     Toast.makeText(getApplicationContext(), getString(R.string.insufficientsizeprocess), Toast.LENGTH_SHORT).show();
-                    return;
-                }
+                    break;
             }
+            return;
         }
 
         presenter.checkNumberImages(MainActivityView.this);

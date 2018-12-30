@@ -60,6 +60,12 @@ public class MainActivityModel implements MainActivityMvpModel {
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
     private MainActivityMvpPresenter mainActivityPresenter;
 
+    // Error codes for the app
+    public static final int ERROR_NO_SELECTION = 0;
+    public static final int ERROR_FOLDER_IS_EMPTY = 1;
+    public static final int ERROR_INSUFFICIENT_STORAGE = 2;
+    public static final int OK_FOLDER_READY = 100;
+
     // Input images
     private String[] pathToImages;
     private Vector<String> images = new Vector<>();
@@ -113,12 +119,15 @@ public class MainActivityModel implements MainActivityMvpModel {
         File folder = new File(pathFolderResult);
         if (folder.exists()){
             try {
+                // Delete directory and send updates
+                LOGGER.info(String.format("Removing content from %s", pathFolderResult));
                 FileUtils.deleteDirectory(folder);
                 Intent mediaScannerIntent = new Intent(Intent.ACTION_MEDIA_SCANNER_SCAN_FILE);
                 Uri fileContentUri = Uri.fromFile(folder);
                 mediaScannerIntent.setData(fileContentUri);
                 mainActivityView.sendBroadcast(mediaScannerIntent);
             } catch (IOException e) {
+                LOGGER.warning(String.format("An exception has occurred! '%s'", e.toString()));
                 e.printStackTrace();
             }
         }
@@ -126,6 +135,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     @Override
     public void chooseGallery(MainActivityView view) {
+        // TODO: create chooser on constructor? or every time this funcion is called?
         StorageChooser chooser = new StorageChooser.Builder()
                 .withActivity(view)
                 .withFragmentManager(view.getFragmentManager())
@@ -134,10 +144,10 @@ public class MainActivityModel implements MainActivityMvpModel {
                 .setType(StorageChooser.DIRECTORY_CHOOSER)
                 .build();
 
-        // Show dialog whenever you want by
+        // Show dialog whenever you want
         chooser.show();
 
-        // get path that the user has chosen
+        // Get the path chosen by the user
         chooser.setOnSelectListener(new StorageChooser.OnSelectListener() {
             @Override
             public void onSelect(String path) {
@@ -153,53 +163,59 @@ public class MainActivityModel implements MainActivityMvpModel {
         }else{
             mainActivityPresenter.buttonChooseGalleryEnable(true);
         }
-        mainActivityPresenter.showGalleryChosen("");
+        mainActivityPresenter.showGalleryChosen("");  // TODO: empty path to not print anything?
     }
 
     @Override
     public int prepareImages(String path_chosen, CheckBox chAllImages, Context applicationContext) {
         // TODO: use logger
-        File curDir;
-        if (path_chosen.equals("") && !chAllImages.isChecked()){
-            return 0;
-        }
-        if (chAllImages.isChecked()){
-            String dcimPath = Environment.getExternalStoragePublicDirectory(
+
+        if (path_chosen.equals("") && !chAllImages.isChecked())
+            // No path was selected so there are no images to process
+            return ERROR_NO_SELECTION;
+
+        if (chAllImages.isChecked())
+            // Then change the path to obtain all the images stored on DCIM
+            path_chosen = Environment.getExternalStoragePublicDirectory(
                     Environment.DIRECTORY_DCIM).getAbsolutePath();
-            curDir = new File(dcimPath);
-        }else{
-            curDir = new File(path_chosen);
-        }
-        if (images.size()>0){
+
+        // Open a file from the chosen path
+        File curDir = new File(path_chosen);
+
+        // Clear previous selections, and get all the images to process
+        // TODO: do this on getAllFiles
+        if (images.size()>0)
             images.clear();
-        }
         getAllFiles(curDir);
+
+        if (images.size() == 0)
+            // It means that there are no valid images on the selected folder(s)
+            return ERROR_FOLDER_IS_EMPTY;
+
+        // Obtain the paths to images and the total of bytes involved
+        // TODO: why create 'pathToImages' having 'images' available?
         pathToImages = new String[images.size()];
         long totalBytes = 0;
-        File file;
+        File file;  // TODO: is it convenient to create a lot of files that are not going to be used?
         for (int i = 0; i<images.size(); i++){
             pathToImages[i] = images.get(i);
             file = new File(pathToImages[i]);
-            if(file.exists()){
-                totalBytes+=file.length();
-            }
-        }
-        //Because we need to save storage por the temporary folder
-        totalBytes*=2;
-        if(pathToImages.length==0){
-            return 1;
+            if(file.exists()) totalBytes += file.length();
         }
 
+        totalBytes*=2; // Because we need to save more storage for the temporary folder to create
         StatFs stat = new StatFs(Environment.getExternalStorageDirectory().getPath());
-        long bytesAvailable;
-        bytesAvailable = stat.getBlockSizeLong() * stat.getAvailableBlocksLong();
-        if(bytesAvailable<totalBytes){
-            return 2;
-        }
+        long bytesAvailable = stat.getBlockSizeLong() * stat.getAvailableBlocksLong();
 
+        if(bytesAvailable<totalBytes)
+            // Then there is not enough space to process the image on this application
+            return ERROR_INSUFFICIENT_STORAGE;
+
+        // Finally, save the list of paths to be processed later
+        // TODO: why not load the images into memory just in this method?
         writeToFile(pathToImages, applicationContext);
 
-        return 3;
+        return OK_FOLDER_READY;
     }
 
     private void writeToFile(String[] data, Context context) {
@@ -231,7 +247,8 @@ public class MainActivityModel implements MainActivityMvpModel {
                         tooManyImages = true;
                         break;
                     }
-                    //TODO: lower path
+                    // TODO: check this in a separate function, in a better way
+                    // TODO: lower path
                     if ((f.getAbsolutePath().contains(".jpg") || f.getAbsolutePath().contains(".gif") || f.getAbsolutePath().contains(".bmp")
                             || f.getAbsolutePath().contains(".jpeg") || f.getAbsolutePath().contains(".tif") || f.getAbsolutePath().contains(".tiff")
                             || f.getAbsolutePath().contains(".png")) && !f.getAbsolutePath().contains("thumbnails")){
@@ -344,6 +361,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         if(tooManyImages){
             final AlertDialog.Builder builder = new AlertDialog.Builder(mainActivityView);
             builder.setTitle(R.string.attention);
+            // TODO: too many images
             builder.setMessage(R.string.tooMuchImages);
             final AlertDialog dialog=builder.create();
             dialog.show();
