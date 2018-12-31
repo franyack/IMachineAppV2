@@ -40,6 +40,7 @@ import java.io.InputStreamReader;
 import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -60,11 +61,19 @@ public class MainActivityModel implements MainActivityMvpModel {
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
     private MainActivityMvpPresenter mainActivityPresenter;
 
+    // TODO: declare these variables in a JSON configuration file
+
     // Error codes for the app
     public static final int ERROR_NO_SELECTION = 0;
     public static final int ERROR_FOLDER_IS_EMPTY = 1;
     public static final int ERROR_INSUFFICIENT_STORAGE = 2;
     public static final int OK_FOLDER_READY = 100;
+
+    // Max number of images supported by the app
+    public static final int MAX_SUPPORTED_IMAGES = 400;
+
+    // TODO: handle this in a better way
+    public List<String> supportedImageFiles = Arrays.asList(".bmp",".gif",".jpg",".jpeg",".png",".tif",".tiff","thumbnails");
 
     // Input images
     private String[] pathToImages;
@@ -236,27 +245,42 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
     }
 
+    private boolean isValidImageFile(String path){
+        boolean isValid = false;
+
+        String p = path.toLowerCase();
+
+        for (String s:supportedImageFiles)
+            if(p.endsWith(s)){
+                isValid = true;
+                break;
+            }
+
+        return isValid;
+    }
+
     private void getAllFiles(File curDir){
         File[] filesList = curDir.listFiles();
-        for(File f : filesList){
-            if(f.isDirectory()) {
+        String filePath;
+
+        for(File f : filesList)
+            if(f.isDirectory())
+                // Recursive call to children
                 getAllFiles(f);
-            }else {
+            else
                 if(f.isFile()){
-                    if (images.size()>=400){
+                    // If the max of images has reached, then stop adding
+                    if (images.size()>= MAX_SUPPORTED_IMAGES){
                         tooManyImages = true;
                         break;
                     }
-                    // TODO: check this in a separate function, in a better way
-                    // TODO: lower path
-                    if ((f.getAbsolutePath().contains(".jpg") || f.getAbsolutePath().contains(".gif") || f.getAbsolutePath().contains(".bmp")
-                            || f.getAbsolutePath().contains(".jpeg") || f.getAbsolutePath().contains(".tif") || f.getAbsolutePath().contains(".tiff")
-                            || f.getAbsolutePath().contains(".png")) && !f.getAbsolutePath().contains("thumbnails")){
-                        images.add(f.getAbsolutePath());
+
+                    // Check the file format before adding it
+                    filePath = f.getAbsolutePath();
+                    if (isValidImageFile(filePath)){
+                        images.add(filePath);
                     }
                 }
-            }
-        }
     }
 
     @Override
