@@ -76,9 +76,15 @@ public class MainActivityModel implements MainActivityMvpModel {
     private float partialProgress = 0.0f;
     private final float deltaProgress = 0.05f;
 
-
     // TODO: handle this in a better way
     public List<String> supportedImageFiles = Arrays.asList(".bmp",".gif",".jpg",".jpeg",".png",".tif",".tiff","thumbnails");
+
+    // Parameters for image predictions
+    private static final float minConfidence = .05f;
+    private static final int maxDepthHierarchy = 4;
+
+    // Generic 'entity' prediction to be used in null predictions (with its corresponding WNID)
+    public static final WNIDPrediction ENTITY_PREDICTION = new WNIDPrediction("n00001740",1.0f);
 
     // Input images
     private String[] pathToImages;
@@ -432,37 +438,43 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     @SuppressLint("DefaultLocale")
     private void processImages() {
-        // TODO: review this way to estimate progress
-
+        // Declare just once all variables to be used during the loop
         int nImgs = 0;
+        Bitmap image;
+        Map<Integer, Object> outputs;
+        ByteBuffer byteBuffer;
+        List<Recognition> results;
+        float[][][][] emb;
+        List<WNIDPrediction> wnIdPredictionsList;
+
         for (int i = 0; i< pathToImages.length; i++){
+            // To fill the progress bar with the current progress
             checkAndReportProgress(nImgs++);
 
-            Map<Integer, Object> outputs = new TreeMap<>();
-            Bitmap image = ImageUtils.lessResolution(pathToImages[i],IMG_W,IMG_H);
+            // Read image as Bitmap in a particular resolution given by (IMG_W, IMG_H)
+            image = ImageUtils.lessResolution(pathToImages[i],IMG_W,IMG_H);
             image = Bitmap.createScaledBitmap(image,IMG_W,IMG_H,false);
-            ByteBuffer byteBuffer;
+
             if (image != null){
                 byteBuffer = ImageUtils.convertBufferedImageToByteBuffer(
                         image,BATCH_SIZE,IMG_W,IMG_H,PIXEL_SIZE,IMAGE_MEAN,IMAGE_STD);
 
+                outputs = new TreeMap<>();
                 classifier.recognize(byteBuffer, outputs);
                 byteBuffer.clear();
 
-                List<Recognition> results = (List<Recognition>) outputs.get(0);
-                float[][][][] emb = ((float[][][][]) outputs.get(1)).clone();
+                results = (List<Recognition>) outputs.get(0);
+                emb = ((float[][][][]) outputs.get(1)).clone();
 
-                List<WNIDPrediction> wnIdPredictionsList = new ArrayList<>();
+                wnIdPredictionsList = new ArrayList<>();
+
                 // assert results.size() > 0
                 if (results.size() == 0){
                     // TODO: this is an error or what?
-                    WNIDPrediction entity = new WNIDPrediction("n00001740",1);
-                    wnIdPredictionsList.add(entity);
+                    wnIdPredictionsList.add(ENTITY_PREDICTION);
                 }else{
-                    int depth = 4;
-                    double threshProb = 0.05;
                     wnIdPredictionsList = ImageNetUtils.processTopPredictions(results,
-                                wnidWordsList,hierarchyLookupList, depth, threshProb);
+                                wnidWordsList,hierarchyLookupList, maxDepthHierarchy, minConfidence);
 
                 }
                 topPredictions.add(new TopPredictions(pathToImages[i], wnIdPredictionsList));
