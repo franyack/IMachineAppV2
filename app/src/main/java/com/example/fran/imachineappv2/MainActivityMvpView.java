@@ -15,7 +15,10 @@ public interface MainActivityMvpView {
 
     void showFilesManagerActivity(String pathFolder);
 
+    // TODO: deprecate. used reportProgress instead
     void growProgress();
+
+    void reportProgress(final int p);
 
     void callErrorToast(String s);
 }

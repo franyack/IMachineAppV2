@@ -72,6 +72,11 @@ public class MainActivityModel implements MainActivityMvpModel {
     // Max number of images supported by the app
     public static final int MAX_SUPPORTED_IMAGES = 400;
 
+    // To measure progress while processing images
+    private float partialProgress = 0.0f;
+    private final float deltaProgress = 0.05f;
+
+
     // TODO: handle this in a better way
     public List<String> supportedImageFiles = Arrays.asList(".bmp",".gif",".jpg",".jpeg",".png",".tif",".tiff","thumbnails");
 
@@ -121,6 +126,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     // Constructor
     MainActivityModel(MainActivityPresenter presenter) {
         this.mainActivityPresenter = presenter;
+        resetProgress();
     }
 
     @Override
@@ -310,6 +316,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     @Override
     public void folderGenerator(String pathFolder, final MainActivityView mainActivityView) {
+        // TODO: check this method!
         File folder = new File(pathFolder);
         if (!folder.exists()) {
             folder.mkdirs();
@@ -410,22 +417,27 @@ public class MainActivityModel implements MainActivityMvpModel {
             handler.postDelayed(runnable, 4000);
         }
     }
+    private void resetProgress(){
+        partialProgress = 0.0f;
+    }
+
+    private void checkAndReportProgress(int nImgs){
+        float totalProgress = (float) nImgs / pathToImages.length;
+        if (totalProgress > partialProgress){
+            partialProgress += deltaProgress;
+            mainActivityPresenter.reportProgress((int) (totalProgress * 100));
+        }
+
+    }
 
     @SuppressLint("DefaultLocale")
     private void processImages() {
         // TODO: review this way to estimate progress
-        int percent = pathToImages.length / 30;
-        if(percent < 1){
-            percent=1;
-        }
+
         int nImgs = 0;
         for (int i = 0; i< pathToImages.length; i++){
-            if(nImgs==percent){
-                mainActivityPresenter.growProgress();
-                nImgs=0;
-            }else {
-                nImgs+=1;
-            }
+            checkAndReportProgress(nImgs++);
+
             Map<Integer, Object> outputs = new TreeMap<>();
             Bitmap image = ImageUtils.lessResolution(pathToImages[i],IMG_W,IMG_H);
             image = Bitmap.createScaledBitmap(image,IMG_W,IMG_H,false);
@@ -486,199 +498,31 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
 
         // TODO: check this! why the loop?
-        for(int i=0;i<3;i++){
-            postCluster();
-        }
+        //for(int i=0;i<3;i++){
+        //    MCLDenseEJML.postCluster();
+        //}
 
+        // Fill the set of clusters with the given results
         fillClustersResult(vClusters);
 
+        // Toc
         double tLoop = (System.nanoTime() - startLoop) / 1e9;
-
         LOGGER.info(String.format("Total process took %f seconds", tLoop));
 
 //        Metrics a = new Metrics(affinityMatrix,vImages,vClusters);
 //        a.Silhouette();
 
+        // Report end of process
         mainActivityPresenter.clustersReady();
     }
 
-    // TODO: move to CIEngine
-    private void postCluster() {
-        List<String> imagesNotClustered = new ArrayList<>();
-        for(int i=0;i<vClusters.size();i++){
-            int size=0;
-            for(int j=0; j<vClusters.size();j++){
-                if(Objects.equals(vClusters.get(i), vClusters.get(j))){
-                    size++;
-                }
-            }
-            if(size==1){
-                imagesNotClustered.add(vImages.get(i));
-            }
-        }
-        int imagePosition, newClusterPosition;
-        String imageWithMaxAffinity;
-        for(String image:imagesNotClustered){
-            imageWithMaxAffinity=getImageWithMaxAffinity(image);
-            imagePosition=0;
-            newClusterPosition=0;
-            while(!vImages.get(imagePosition).equals(image)){
-                imagePosition++;
-            }
-            if(imageWithMaxAffinity.equals("")){
-                vClusters.set(imagePosition,999);
-            }else{
-                while(!vImages.get(newClusterPosition).equals(imageWithMaxAffinity)){
-                    newClusterPosition++;
-                }
-                vClusters.set(imagePosition,vClusters.get(newClusterPosition));
-            }
-        }
-    }
-
-    private String getImageWithMaxAffinity(String image) {
-        int i=0;
-        while(!vImages.get(i).equals(image)){
-            i++;
-        }
-        double maxAffinity=0;
-        String maxAffinityImage="";
-        for(int j=0;j<affinityMatrix.numCols;j++){
-            if(i!=j){
-                if(affinityMatrix.get(i,j)>maxAffinity){
-                    maxAffinity=affinityMatrix.get(i,j);
-                    maxAffinityImage=vImages.get(j);
-                }
-            }
-        }
-        return maxAffinityImage;
-    }
-
-    // TODO: would this be used?
-    private void postProcess() {
-        List<List<String>> groups = new ArrayList<>();
-        List<String> groupTemp;
-        for (int i = 0; i < ClustersResult.size(); i++) {
-            groupTemp = new ArrayList<>();
-            for (int j = 0; j < vClusters.size(); j++) {
-                if (vClusters.get(j) == i) {
-                    groupTemp.add(vImages.get(j));
-                }
-            }
-            groups.add(groupTemp);
-        }
-        int percentThreshold;
-        if(vImages.size()<50){
-            percentThreshold=10;
-        }else{
-            percentThreshold=4;
-        }
-        List<Float> groupsPercent = new ArrayList<>();
-        List<Float> groupsAffinityAverage = new ArrayList<>();
-        for(int i = 0;i<groups.size();i++){
-            groupsPercent.add((float) (((float) groups.get(i).size()/vImages.size())*100.0));
-            groupsAffinityAverage.add((float) getAffinitySum(groups.get(i))/groups.get(i).size());
-        }
-        List<Integer> smallGroups = new ArrayList<>();
-        List<Integer> bigGroups = new ArrayList<>();
-        for(int i=0; i<groupsPercent.size();i++){
-            if(groupsPercent.get(i)<=percentThreshold){
-                smallGroups.add(i);
-            }else{
-                bigGroups.add(i);
-            }
-        }
-        float newAffinity=0,newAffinityIterator=0;
-        int r;
-        List<String> newCluster, newClusterIterator;
-        newCluster=new ArrayList<>();
-        while(smallGroups.size()>0) {
-            for (int k = 0; k < smallGroups.size(); k++) {
-                if (bigGroups.size() == 0) {
-                    break;
-                }
-                r=-1;
-                for (int i = 0; i < bigGroups.size(); i++) {
-                    newClusterIterator = new ArrayList<>();
-                    for(int j=0; j<groups.get(smallGroups.get(k)).size();j++){
-                        newClusterIterator.add(groups.get(smallGroups.get(k)).get(j));
-                    }
-                    for (int j = 0; j < groups.get(bigGroups.get(i)).size(); j++) {
-                        newClusterIterator.add(groups.get(bigGroups.get(i)).get(j));
-                    }
-                    newAffinityIterator = (float) getAffinitySum(newClusterIterator)/newClusterIterator.size();
-                    if(Math.abs(newAffinityIterator-groupsAffinityAverage.get(bigGroups.get(i))) > .05 ){
-                        if(newAffinityIterator>=newAffinity){
-                            newAffinity=newAffinityIterator;
-                            newCluster=newClusterIterator;
-                            r=i;
-                        }
-//                        Iterator<List<String>> a = groups.iterator();
-//                        while(a.hasNext()){
-//                            List<String> o = a.next();
-//                            if(groups.get(bigGroups.get(i))==a){
-//                                a.remove();
-//                            }else{
-//                                if(groups.get(smallGroups.get(k))==a){
-//                                    a.remove();
-//                                }
-//                            }
-//                        }
-                    }
-                }
-                if (r != -1) {
-                    groups.remove(bigGroups.get(r));
-                    groups.remove(smallGroups.get(k));
-                    groups.add(newCluster);
-                    smallGroups.remove(k);
-                    groupsAffinityAverage.clear();
-                    for(int i = 0;i<groups.size();i++){
-                        groupsAffinityAverage.add((float) getAffinitySum(groups.get(i))/groups.get(i).size());
-                    }
-                }
-            }
-        }
-    }
-
-    private double getAffinitySum(List<String> images) {
-        double average = 0;
-        for(int i = 0; i< images.size(); i++){
-            if(i+1<images.size()){
-                average+=getAffinity(images.get(i), images.get(i+1));
-//                LOGGER.info("Afinidad entre " + images.get(i) + " y " + images.get(i+1) + " = " + getAffinity(images.get(i), images.get(i+1)));
-//                LOGGER.info(" - ");
-            }
-        }
-        return average;
-    }
-
-    private double getAffinity(String img1, String img2) {
-        int i=0,j=0;
-        while(i<vImages.size()){
-            if(vImages.get(i).equals(img1)){
-                break;
-            }
-            i++;
-        }
-        while(j<vImages.size()){
-            if(vImages.get(j).equals(img2)){
-                break;
-            }
-            j++;
-        }
-        return affinityMatrix.get(i,j);
-    }
-
     private void fillClustersResult(ArrayList<Integer> vClusters) {
-//        ArrayList<Integer> vClustersCopy = new ArrayList<Integer>(vClusters);
-        if (ClustersResult.size()>0){
+        // First clear previous results
+        if (ClustersResult.size()>0)
             ClustersResult.clear();
-        }
-        for (Integer cluster: vClusters) {
-            if (!ClustersResult.contains(cluster)){
-                ClustersResult.add(cluster);
-            }
-        }
+
+        // Then add the new ones to the Set of results
+        ClustersResult.addAll(vClusters);
     }
 
     private void initTensorFlowAndLoadModel(final MainActivityView mainActivityView) throws IOException {

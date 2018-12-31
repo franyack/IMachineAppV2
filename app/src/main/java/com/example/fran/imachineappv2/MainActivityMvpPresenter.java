@@ -40,7 +40,10 @@ public interface MainActivityMvpPresenter {
 
     boolean folderResultsExists(String pathFoldersResult);
 
+    // TODO: deprecate. used reportProgress instead
     void growProgress();
+
+    void reportProgress(final int p);
 
     List<String> getMclParameters();
 

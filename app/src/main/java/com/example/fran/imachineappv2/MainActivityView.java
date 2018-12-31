@@ -54,8 +54,6 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
         path_chosen = (TextView) findViewById(R.id.path_chosen);
         checkCameraImages = (CheckBox) findViewById(R.id.checkCameraImages);
         btnChooseGallery = (Button) findViewById(R.id.btnCarpetaProcesar);
-
-
     }
 
     @Override
@@ -140,16 +138,31 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     }
 
     @Override
+    // TODO: deprecated. use reportProgress instead
     public void growProgress() {
+        // TODO: receive delta to add
+        // TODO: improve this!
         progress+=2.5;
         if(progress>=100){
-            progress=95;
+            progress=95;  // TODO: why?
         }
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
                 numberProgressBar = (NumberProgressBar) findViewById(R.id.number_progress_bar);
                 numberProgressBar.setProgress(progress);
+            }
+        });
+    }
+
+    @Override
+    public void reportProgress(final int p) {
+        // TODO: check why the bar is being reset
+        runOnUiThread(new Runnable() {
+            @Override
+            public void run() {
+                numberProgressBar = findViewById(R.id.number_progress_bar);
+                numberProgressBar.setProgress(p);
             }
         });
     }

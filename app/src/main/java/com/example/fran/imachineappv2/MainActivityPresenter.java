@@ -99,9 +99,15 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
         return dataManager.folderResultsExist(pathFoldersResult);
     }
 
+    // TODO: deprecate. used reportProgress instead
     @Override
     public void growProgress() {
         view.growProgress();
+    }
+
+    @Override
+    public void reportProgress(final int p){
+        view.reportProgress(p);
     }
 
     @Override
