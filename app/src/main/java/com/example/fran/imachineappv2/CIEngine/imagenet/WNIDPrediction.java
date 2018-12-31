@@ -5,6 +5,7 @@ public class WNIDPrediction{
     private float prediction;
 
     public WNIDPrediction(String wnId, float prediction){
+        // TODO: confidence instead of prediction
         this.wnId = wnId;
         this.prediction = prediction;
     }

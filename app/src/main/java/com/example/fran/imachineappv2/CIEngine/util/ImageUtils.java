@@ -27,6 +27,7 @@ public class ImageUtils {
     }
 
     public static Bitmap lessResolution (String filePath, int width, int height){
+        // TODO: handle exceptions
         BitmapFactory.Options options = new BitmapFactory.Options();
 
         //First decode with inJustDecodeBounds = true to check dimensions

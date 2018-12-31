@@ -290,6 +290,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     @Override
     public void startImageProcess(MainActivityView mainActivityView) {
+        // TODO: load these things on the constructor would be the correct way
         try {
             startLoop = System.nanoTime();
 

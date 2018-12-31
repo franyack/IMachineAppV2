@@ -65,7 +65,7 @@ public interface Classifier {
         }
     }
 
-
+    // TODO: those methods are used?
     List<Recognition> recognizeImage(ByteBuffer byteBuffer);
     void recognize(ByteBuffer byteBuffer, Map<Integer, Object> outputs);
 
