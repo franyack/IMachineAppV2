@@ -74,7 +74,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     // To measure progress while processing images
     private float partialProgress = 0.0f;
-    private final float deltaProgress = 0.05f;
+    private static final float DELTA_PROGRESS = 0.05f;
 
     // TODO: handle this in a better way
     public List<String> supportedImageFiles = Arrays.asList(".bmp",".gif",".jpg",".jpeg",".png",".tif",".tiff","thumbnails");
@@ -430,7 +430,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     private void checkAndReportProgress(int nImgs){
         float totalProgress = (float) nImgs / pathToImages.length;
         if (totalProgress > partialProgress){
-            partialProgress += deltaProgress;
+            partialProgress += DELTA_PROGRESS;
             mainActivityPresenter.reportProgress((int) (totalProgress * 100));
         }
 
@@ -447,41 +447,49 @@ public class MainActivityModel implements MainActivityMvpModel {
         float[][][][] emb;
         List<WNIDPrediction> wnIdPredictionsList;
 
-        for (int i = 0; i< pathToImages.length; i++){
+        for (String imgPath : pathToImages){
             // To fill the progress bar with the current progress
             checkAndReportProgress(nImgs++);
 
             // Read image as Bitmap in a particular resolution given by (IMG_W, IMG_H)
-            image = ImageUtils.lessResolution(pathToImages[i],IMG_W,IMG_H);
+            image = ImageUtils.lessResolution(imgPath,IMG_W,IMG_H);
             image = Bitmap.createScaledBitmap(image,IMG_W,IMG_H,false);
 
             if (image != null){
+                // Now convert the image into a byte buffer
+                // In addition, the image is standardized with IMAGE_MEAN and IMAGE_STD
                 byteBuffer = ImageUtils.convertBufferedImageToByteBuffer(
                         image,BATCH_SIZE,IMG_W,IMG_H,PIXEL_SIZE,IMAGE_MEAN,IMAGE_STD);
 
+                // Now get the prediction of the MobileNet model (classification + embedding)
                 outputs = new TreeMap<>();
                 classifier.recognize(byteBuffer, outputs);
                 byteBuffer.clear();
 
+                // Unzip output of model
                 results = (List<Recognition>) outputs.get(0);
-                emb = ((float[][][][]) outputs.get(1)).clone();
+                emb = ((float[][][][]) outputs.get(1)).clone(); // embeddings are obtained as 4D arrays
 
                 wnIdPredictionsList = new ArrayList<>();
 
                 // assert results.size() > 0
                 if (results.size() == 0){
-                    // TODO: this is an error or what?
+                    // TODO: is this necessary?
+                    // Add a generic prediction in case of not having a valid one
                     wnIdPredictionsList.add(ENTITY_PREDICTION);
                 }else{
+                    // Process the obtained predictions to get the WNIDs of the related families
                     wnIdPredictionsList = ImageNetUtils.processTopPredictions(results,
                                 wnidWordsList,hierarchyLookupList, maxDepthHierarchy, minConfidence);
 
                 }
-                topPredictions.add(new TopPredictions(pathToImages[i], wnIdPredictionsList));
+                topPredictions.add(new TopPredictions(imgPath, wnIdPredictionsList));
                 embeddingsList.add(emb[0][0][0].clone());
             }
         }
 
+        // TODO: here, potentially, loop over all the chosen affinity methods and then aggregate them
+        // Obtain the affinity matrix A = 0.5 * G + 0.5 * I
         double[][] g_aff_matrix = semanticAffinity.getAffinityMatrix(topPredictions);
         double[][] i_aff_matrix = vectorAffinity.getAffinityMatrix(embeddingsList);
 
@@ -491,12 +499,14 @@ public class MainActivityModel implements MainActivityMvpModel {
 
         affinityMatrix = MCLDenseEJML.averageMatrices(matList);
 
+        // Now run MCL clustering over A with the given parameters
         MCLDenseEJML mcl = new MCLDenseEJML(maxIt, expPow, infPow, epsConvergence, threshPrune);
-
         affinityMatrix = mcl.run(affinityMatrix);
 
+        // Get list of clusters having integer indexes of images that are contained
         ArrayList<ArrayList<Integer>> clusters = mcl.getClusters(affinityMatrix);
 
+        // TODO: improve this loop
         for (int i = 0; i< pathToImages.length; i++){
             vImages.add(pathToImages[i]);
             for (int j=0;j<clusters.size();j++){
@@ -568,6 +578,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         });
     }
     private void setParameters() {
+        // TODO: is it necessary to check size?
         if (vImages.size()>0){
             vImages.clear();
         }
@@ -575,6 +586,10 @@ public class MainActivityModel implements MainActivityMvpModel {
             vClusters.clear();
         }
         processImages();
+    }
+
+    public DMatrixRMaj getAffinityMatrix(){
+        return affinityMatrix;
     }
 
 }
