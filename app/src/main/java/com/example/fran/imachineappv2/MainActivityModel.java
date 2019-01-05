@@ -30,8 +30,11 @@ import org.ejml.dense.row.CommonOps_DDRM;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
+import java.io.ObjectOutputStream;
 import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.nio.ByteOrder;
@@ -46,6 +49,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
@@ -86,7 +90,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
 
     private Classifier classifier;
-    private Executor executor = Executors.newSingleThreadExecutor();
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private double THRESHOLD_PROBABILITY_PREDICTION = 0.65;
 
@@ -104,6 +108,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     private long startLoop;
     private double tLoop;
+    private Metrics metrics;
 
     //Constructor
     MainActivityModel(MainActivityPresenter presenter) {
@@ -315,9 +320,9 @@ public class MainActivityModel implements MainActivityMvpModel {
             numberFolder++;
         }
 //        double tLoop = (System.nanoTime() - startLoop) / 1e9;
-        String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
-        Metrics a = new Metrics(affinityMatrix, vImages, vClusters, pathFolderChosen, pathFolder, getMclParameters(), tLoop);
-        a.getScore(mainActivityView);
+//        String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
+//        Metrics a = new Metrics(affinityMatrix, vImages, vClusters, pathFolderChosen, pathFolder, getMclParameters(), tLoop);
+//        a.getScore(mainActivityView);
 
         mainActivityPresenter.showFilesManager(pathFolder);
     }
@@ -456,8 +461,54 @@ public class MainActivityModel implements MainActivityMvpModel {
         tLoop = (System.nanoTime() - startLoop) / 1e9;
 //        LOGGER.info(String.format("Total process took %f seconds", tLoop));
 
-//        Metrics a = new Metrics(affinityMatrix,vImages,vClusters);
-//        a.Silhouette();
+        String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
+        String pathFolder = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppTemporaryResults";
+        String pathMetrics = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppMetrics";
+        File file = new File(pathMetrics);
+        if(file.exists()){
+            try {
+                FileUtils.cleanDirectory(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else{
+            try {
+                FileUtils.forceMkdir(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        if(metrics == null){
+            FileOutputStream fout = null;
+            ObjectOutputStream oos = null;
+            metrics = new Metrics(affinityMatrix, vImages, vClusters, pathFolderChosen, pathFolder, getMclParameters(), tLoop);
+            try {
+                fout = new FileOutputStream(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppMetrics" + File.separator + "objectMetrics.ser");
+                oos = new ObjectOutputStream(fout);
+                oos.writeObject(metrics);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (fout != null) {
+                    try {
+                        fout.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (oos != null) {
+                    try {
+                        oos.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+        }
 
         mainActivityPresenter.clustersReady();
     }
@@ -758,7 +809,13 @@ public class MainActivityModel implements MainActivityMvpModel {
                             INPUT_SIZE);
                     setParameters();
                 } catch (final Exception e) {
-                    mainActivityPresenter.errorCopyingFiles();
+                    executor.shutdown();
+                    mainActivityView.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mainActivityPresenter.errorCopyingFiles();
+                        }
+                    });
                 }
             }
         });

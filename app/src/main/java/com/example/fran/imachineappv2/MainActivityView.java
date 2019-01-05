@@ -20,6 +20,10 @@ import com.example.fran.imachineappv2.FilesManager.FilesMainActivity;
 import org.ejml.data.DMatrixRMaj;
 
 import java.io.File;
+import java.io.FileInputStream;
+import java.io.FileNotFoundException;
+import java.io.IOException;
+import java.io.ObjectInputStream;
 import java.util.List;
 import java.util.logging.Logger;
 
@@ -168,8 +172,12 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
     @Override
     public void errorCopyingFiles() {
+        presenter.deleteClusterResultFolder(pathFoldersResult, MainActivityView.this);
+        Intent i = getBaseContext().getPackageManager()
+                .getLaunchIntentForPackage(getBaseContext().getPackageName());
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(i);
         Toast.makeText(getApplicationContext(),getString(R.string.errorWithFilesMain), Toast.LENGTH_LONG).show();
-        return;
     }
 
     public void verResultadosAnteriores(View view) {
@@ -178,10 +186,29 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
             Toast.makeText(getApplicationContext(),getString(R.string.previousresultsnotexists), Toast.LENGTH_SHORT).show();
             return;
         }
-        List<String> mclParameters = presenter.getMclParameters();
-        String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
-//        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
-//        a.getScore();
+        Metrics metrics = null;
+        // read object from file
+        FileInputStream fis = null;
+        try {
+            File file = new File(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppMetrics" + File.separator + "objectMetrics.ser");
+            if(file.exists()){
+                fis = new FileInputStream(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppMetrics" + File.separator + "objectMetrics.ser");
+                ObjectInputStream ois = new ObjectInputStream(fis);
+                metrics = (Metrics) ois.readObject();
+                ois.close();
+            }
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        } catch (ClassNotFoundException e) {
+            e.printStackTrace();
+        }
+
+        if(metrics != null){
+            metrics.getScore(MainActivityView.this);
+        }
+
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFoldersResult);
         startActivity(i);

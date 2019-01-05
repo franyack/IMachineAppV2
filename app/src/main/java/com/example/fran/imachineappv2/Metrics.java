@@ -12,6 +12,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
+import java.io.Serializable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Locale;
@@ -24,7 +25,7 @@ import java.util.logging.Logger;
  * Created by fran on 07/07/18.
  */
 
-public class Metrics {
+public class Metrics implements Serializable {
     // TODO: buscar manera de reportar hora, paquete, etc
     // --> check this: https://www.logicbig.com/tutorials/core-java-tutorial/logging/customizing-default-format.html
     private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
@@ -355,7 +356,14 @@ public class Metrics {
 
     private void writeToFile(String data, MainActivityView mainActivityView) {
         try {
-            File metrics = new File(pathActual, "Metrics");
+            String pathMetrics = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppMetrics";
+            File file = new File(pathMetrics);
+            if(file.exists()){
+                FileUtils.cleanDirectory(file);
+            }else{
+                FileUtils.forceMkdir(file);
+            }
+            File metrics = new File(pathMetrics, "Metrics");
             if(!metrics.exists()){
                 metrics.mkdirs();
             }
