@@ -168,8 +168,12 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
     @Override
     public void errorCopyingFiles() {
+        presenter.deleteClusterResultFolder(pathFoldersResult, MainActivityView.this);
+        Intent i = getBaseContext().getPackageManager()
+                .getLaunchIntentForPackage(getBaseContext().getPackageName());
+        i.addFlags(Intent.FLAG_ACTIVITY_CLEAR_TOP);
+        startActivity(i);
         Toast.makeText(getApplicationContext(),getString(R.string.errorWithFilesMain), Toast.LENGTH_LONG).show();
-        return;
     }
 
     public void verResultadosAnteriores(View view) {

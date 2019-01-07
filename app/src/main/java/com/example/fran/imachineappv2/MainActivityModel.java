@@ -46,6 +46,7 @@ import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
 import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
@@ -86,7 +87,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
 
     private Classifier classifier;
-    private Executor executor = Executors.newSingleThreadExecutor();
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
 
     private double THRESHOLD_PROBABILITY_PREDICTION = 0.65;
 
@@ -754,7 +755,13 @@ public class MainActivityModel implements MainActivityMvpModel {
                             INPUT_SIZE);
                     setParameters();
                 } catch (final Exception e) {
-                    mainActivityPresenter.errorCopyingFiles();
+                    executor.shutdown();
+                    mainActivityView.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mainActivityPresenter.errorCopyingFiles();
+                        }
+                    });
                 }
             }
         });
