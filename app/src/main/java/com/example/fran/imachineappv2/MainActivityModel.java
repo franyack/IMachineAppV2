@@ -267,7 +267,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     @Override
-    public void folderGenerator(String pathFolder, final MainActivityView mainActivityView) {
+    public void folderGenerator(String pathFolder, final MainActivityView mainActivityView, boolean keepWorking) {
         File folder = new File(pathFolder);
         if (!folder.exists()) {
             folder.mkdirs();
@@ -275,7 +275,9 @@ public class MainActivityModel implements MainActivityMvpModel {
             try {
                 FileUtils.cleanDirectory(folder);
             } catch (IOException e) {
-                mainActivityPresenter.errorCopyingFiles();
+//                LOGGER.info("Aca falle limpiando los directorios...");
+                keepWorking = false;
+                folderGenerator(pathFolder, mainActivityView, true);
             }
         }
         String number;
@@ -299,7 +301,10 @@ public class MainActivityModel implements MainActivityMvpModel {
             try {
                 FileUtils.forceMkdir(folder);
             } catch (IOException e) {
-                mainActivityPresenter.errorCopyingFiles();
+//                LOGGER.info("Aca falle creando una carpeta...");
+                keepWorking = false;
+                folderGenerator(pathFolder, mainActivityView, true);
+                break;
             }
             for (int j = 0; j < vClusters.size(); j++) {
                 if (Objects.equals(cluster, vClusters.get(j))) {
@@ -313,18 +318,21 @@ public class MainActivityModel implements MainActivityMvpModel {
                         mediaScannerIntent.setData(fileContentUri);
                         mainActivityView.getApplicationContext().sendBroadcast(mediaScannerIntent);
                     } catch (IOException e) {
-                        folderGenerator(pathFolder, mainActivityView);
+//                        LOGGER.info("Aca falle copiando archivos..." + e.toString());
+                        folderGenerator(pathFolder, mainActivityView, true);
+                        keepWorking = false;
+                        break;
                     }
                 }
             }
+            if(!keepWorking){
+                break;
+            }
             numberFolder++;
         }
-//        double tLoop = (System.nanoTime() - startLoop) / 1e9;
-//        String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
-//        Metrics a = new Metrics(affinityMatrix, vImages, vClusters, pathFolderChosen, pathFolder, getMclParameters(), tLoop);
-//        a.getScore(mainActivityView);
-
-        mainActivityPresenter.showFilesManager(pathFolder);
+        if(keepWorking){
+            mainActivityPresenter.showFilesManager(pathFolder);
+        }
     }
 
     @Override

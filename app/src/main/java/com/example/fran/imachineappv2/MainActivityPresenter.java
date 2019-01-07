@@ -85,7 +85,7 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
 
     @Override
     public void folderGenerator(String pathFolder, MainActivityView mainActivityView) {
-        dataManager.folderGenerator(pathFolder, mainActivityView);
+        dataManager.folderGenerator(pathFolder, mainActivityView, true);
     }
 
     @Override
