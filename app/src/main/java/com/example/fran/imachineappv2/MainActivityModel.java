@@ -349,7 +349,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                     }
                 }
             }
-            mainActivityPresenter.growProgress();
+            // mainActivityPresenter.growProgress();  // TODO: check
             folder = new File(pathFolder + File.separator + mainActivityView.getApplicationContext().getString(R.string.folder) + number);
             try {
                 FileUtils.forceMkdir(folder);
@@ -452,19 +452,21 @@ public class MainActivityModel implements MainActivityMvpModel {
             checkAndReportProgress(nImgs++);
 
             // Read image as Bitmap in a particular resolution given by (IMG_W, IMG_H)
-            image = ImageUtils.lessResolution(imgPath,IMG_W,IMG_H);
-            image = Bitmap.createScaledBitmap(image,IMG_W,IMG_H,false);
+            image = ImageUtils.lessResolution(imgPath,IMG_W,IMG_H); // TODO: improve speed
 
             if (image != null){
                 // Now convert the image into a byte buffer
                 // In addition, the image is standardized with IMAGE_MEAN and IMAGE_STD
-                byteBuffer = ImageUtils.convertBufferedImageToByteBuffer(
-                        image,BATCH_SIZE,IMG_W,IMG_H,PIXEL_SIZE,IMAGE_MEAN,IMAGE_STD);
+                byteBuffer = ImageUtils.convertBitmapToByteBuffer(
+                        image,BATCH_SIZE,IMG_W,IMG_H,PIXEL_SIZE,IMAGE_MEAN,IMAGE_STD);  // TODO: improve speed
 
                 // Now get the prediction of the MobileNet model (classification + embedding)
                 outputs = new TreeMap<>();
                 classifier.recognize(byteBuffer, outputs);
                 byteBuffer.clear();
+
+                // TODO: filter results by THRESHOLD_PROBABILITY_PREDICTION ?
+                // already done in classifier.recognize()
 
                 // Unzip output of model
                 results = (List<Recognition>) outputs.get(0);
@@ -479,6 +481,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                     wnIdPredictionsList.add(ENTITY_PREDICTION);
                 }else{
                     // Process the obtained predictions to get the WNIDs of the related families
+                    // TODO: improve speed
                     wnIdPredictionsList = ImageNetUtils.processTopPredictions(results,
                                 wnidWordsList,hierarchyLookupList, maxDepthHierarchy, minConfidence);
 
@@ -488,10 +491,10 @@ public class MainActivityModel implements MainActivityMvpModel {
             }
         }
 
-        // TODO: here, potentially, loop over all the chosen affinity methods and then aggregate them
         // Obtain the affinity matrix A = 0.5 * G + 0.5 * I
         double[][] g_aff_matrix = semanticAffinity.getAffinityMatrix(topPredictions);
         double[][] i_aff_matrix = vectorAffinity.getAffinityMatrix(embeddingsList);
+        // NOTE: in the future, loop over all the chosen affinity methods and then aggregate them
 
         List<DMatrixRMaj> matList = new ArrayList<>();
         matList.add(new DMatrixRMaj(g_aff_matrix));
@@ -530,9 +533,6 @@ public class MainActivityModel implements MainActivityMvpModel {
         // Toc
         double tLoop = (System.nanoTime() - startLoop) / 1e9;
         LOGGER.info(String.format("Total process took %f seconds", tLoop));
-
-//        Metrics a = new Metrics(affinityMatrix,vImages,vClusters);
-//        a.Silhouette();
 
         // Report end of process
         mainActivityPresenter.clustersReady();

@@ -16,11 +16,14 @@ import java.util.*;
 
 public class TensorFlowImageClassifier implements Classifier {
 
+    // TODO: set these parameters on constructor?
     private static final int MAX_RESULTS = 5;
-    private static final float THRESHOLD = 0.05f;
+    private static final float THRESHOLD = 0.05f;  // TODO: 0.3f
+    public static final int LABEL_LIST_SIZE = 1001;
+    public static final int EMBEDDING_SIZE = 1024;
 
     private Interpreter interpreter;
-    private int inputSize;
+    private int inputSize;  // TODO: used?
     private List<String> labelList;
 
     /** An array to hold inference results, to be feed into Tensorflow Lite as outputs. */
@@ -31,7 +34,17 @@ public class TensorFlowImageClassifier implements Classifier {
 
     }
 
-    public static Classifier create(BufferedReader reader,
+    private TensorFlowImageClassifier(Interpreter interpreter, List<String> labelList, int inputSize){
+        this.interpreter = interpreter;
+        this.labelList = labelList;
+        this.inputSize = inputSize;
+
+        // Create new arrays
+        this.labelProbArray = new float[1][LABEL_LIST_SIZE];
+        this.embeddingArray = new float[1][1][1][EMBEDDING_SIZE];
+    }
+
+    public static Classifier createOld(BufferedReader reader,
                                     FileInputStream inputStream,
                                     long startOffset,
                                     long declaredLength,
@@ -46,6 +59,18 @@ public class TensorFlowImageClassifier implements Classifier {
         classifier.embeddingArray = new float[1][1][1][1024];
 
         return classifier;
+    }
+
+    public static Classifier create(BufferedReader reader,
+                                    FileInputStream inputStream,
+                                    long startOffset,
+                                    long declaredLength,
+                                    int inputSize) throws IOException {
+
+        Interpreter interpreter = new Interpreter(loadModelFile(inputStream, startOffset,declaredLength));
+        List<String> labelList = loadLabelList(reader);
+
+        return new TensorFlowImageClassifier(interpreter, labelList, inputSize);
     }
 
     @Override
@@ -65,6 +90,8 @@ public class TensorFlowImageClassifier implements Classifier {
         interpreter.runForMultipleInputsOutputs(inputs, outputs);
         // ----
 
+        // TODO: is it necessary sorted?
+        // TODO: confidence / 100.f ?
         results.put(0, getSortedResult(labelProbArray));
         results.put(1, embeddingArray);
     }
@@ -75,7 +102,7 @@ public class TensorFlowImageClassifier implements Classifier {
         interpreter = null;
     }
 
-    private MappedByteBuffer loadModelFile(FileInputStream inputStream, long startOffset, long declaredLength) throws IOException {
+    private static MappedByteBuffer loadModelFile(FileInputStream inputStream, long startOffset, long declaredLength) throws IOException {
         FileChannel fileChannel = inputStream.getChannel();
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
@@ -104,6 +131,7 @@ public class TensorFlowImageClassifier implements Classifier {
 
         for (int i = 0; i < labelList.size(); ++i) {
             float confidence = labelProbArray[0][i];
+            confidence /= 100.f;  // TODO: check this
             if (confidence > THRESHOLD) {
                 pq.add(new Recognition("" + i,
                         labelList.size() > i ? labelList.get(i) : "unknown",
@@ -120,6 +148,7 @@ public class TensorFlowImageClassifier implements Classifier {
         return recognitions;
     }
 
+    // TODO: remove this, since it was thought for quantized models
     private List<Recognition> getSortedResult2(byte[][] labelProbArray) {
 
         PriorityQueue<Recognition> pq =
