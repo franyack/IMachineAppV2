@@ -124,6 +124,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     private List<TopPredictions> topPredictions = new ArrayList<>();
     private List<float[]> embeddingsList = new ArrayList<>();
     private DMatrixRMaj affinityMatrix;
+    private DMatrixRMaj clusterMatrix;
     private SemanticAffinity semanticAffinity = new SemanticAffinity(THRESHOLD_PROBABILITY_PREDICTION);
     private VectorAffinity vectorAffinity = new VectorAffinity(THRESHOLD_PROBABILITY_PREDICTION);
 
@@ -204,9 +205,9 @@ public class MainActivityModel implements MainActivityMvpModel {
         File curDir = new File(path_chosen);
 
         // Clear previous selections, and get all the images to process
-        // TODO: do this on getAllFiles
         if (images.size()>0)
             images.clear();
+
         getAllFiles(curDir);
 
         if (images.size() == 0)
@@ -496,6 +497,8 @@ public class MainActivityModel implements MainActivityMvpModel {
         double[][] i_aff_matrix = vectorAffinity.getAffinityMatrix(embeddingsList);
         // NOTE: in the future, loop over all the chosen affinity methods and then aggregate them
 
+        // TODO: clear memory by deleting these previous matrices not longer used
+
         List<DMatrixRMaj> matList = new ArrayList<>();
         matList.add(new DMatrixRMaj(g_aff_matrix));
         matList.add(new DMatrixRMaj(i_aff_matrix));
@@ -504,10 +507,10 @@ public class MainActivityModel implements MainActivityMvpModel {
 
         // Now run MCL clustering over A with the given parameters
         MCLDenseEJML mcl = new MCLDenseEJML(maxIt, expPow, infPow, epsConvergence, threshPrune);
-        affinityMatrix = mcl.run(affinityMatrix);
+        clusterMatrix = mcl.run(affinityMatrix);
 
         // Get list of clusters having integer indexes of images that are contained
-        ArrayList<ArrayList<Integer>> clusters = mcl.getClusters(affinityMatrix);
+        ArrayList<ArrayList<Integer>> clusters = mcl.getClusters(clusterMatrix);
 
         // TODO: improve this loop
         for (int i = 0; i< pathToImages.length; i++){
@@ -522,10 +525,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             }
         }
 
-        // TODO: check this! why the loop?
-        //for(int i=0;i<3;i++){
-        //    MCLDenseEJML.postCluster();
-        //}
+        MCLDenseEJML.postCluster(vClusters, affinityMatrix, 0.05);
 
         // Fill the set of clusters with the given results
         fillClustersResult(vClusters);
@@ -590,6 +590,9 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     public DMatrixRMaj getAffinityMatrix(){
         return affinityMatrix;
+    }
+    public DMatrixRMaj getClusterMatrix(){
+        return clusterMatrix;
     }
 
 }

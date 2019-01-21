@@ -8,6 +8,7 @@ import org.ejml.equation.Equation;
 
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Random;
 import java.util.logging.Logger;
 
@@ -206,7 +207,7 @@ public class MCLDenseEJML {
     public DMatrixRMaj generateRandomAffinityMatrix(int n, int seed){
         Random rand = new Random(seed);
 
-        return RandomMatrices_DDRM.symmetric(n, 0.0, 1.0, rand);
+        return RandomMatrices_DDRM.symmetric(n, 0.0, 1.0, rand);  // TODO: new here?
     }
 
     public ArrayList<ArrayList<Integer>> getClusters(DMatrixRMaj M){
@@ -248,6 +249,75 @@ public class MCLDenseEJML {
         }
 
         return clusters;
+    }
+
+    public static void postCluster(List<Integer> clusters, DMatrixRMaj affinityMatrix,
+                                            double threshAffinity) {
+        /**
+         * Function to perform a post-cluster to merge one-image clusters with the most similar ones
+         * INPLACE
+         */
+
+        // Get those images contained in a one-image cluster
+
+        // TODO: this could be improved with a proper structure based on Map to get O(1) access
+        // -> then we could avoid the unnecessary loop
+
+        List<Integer> imagesNotClustered = new ArrayList<>();
+        int size;
+
+        for(int i=0;i<clusters.size();i++){
+            size=0;
+
+            for(int j=0; j<clusters.size();j++){  // TODO: j > i
+                if(Objects.equals(clusters.get(i), clusters.get(j))){
+                    size++;
+                }
+            }
+
+            if(size==1){
+                // Then this image is part of a one-image cluster
+                imagesNotClustered.add(i);
+            }
+        }
+
+        // Now for each single image, get the most similar cluster to put the image there
+        int maxAffIdx;
+        double maxAff;
+
+        for(int imageIdx:imagesNotClustered){
+            // TODO: most similar image, or most similar cluster (in avg) ??
+            maxAffIdx=getIndexMaxAffinity(imageIdx, affinityMatrix);
+
+            if (maxAffIdx == -1)
+                continue;
+
+            maxAff = affinityMatrix.get(imageIdx, maxAffIdx);
+
+            if (maxAff < threshAffinity)
+                // No similar enough image was found
+                continue;
+
+            // Otherwise, set a the new closest cluster to the given image
+            clusters.set(imageIdx, maxAffIdx);
+
+        }
+    }
+
+    private static int getIndexMaxAffinity(int idx, DMatrixRMaj affinityMatrix) {
+
+        double maxAff=0.0;
+        int maxAffIdx=-1;
+
+        for(int j=0;j<affinityMatrix.numCols;j++){
+            if(idx!=j){
+                if(affinityMatrix.get(idx,j)>maxAff){
+                    maxAff=affinityMatrix.get(idx,j);
+                    maxAffIdx = j;
+                }
+            }
+        }
+        return maxAffIdx;
     }
 
     /*
