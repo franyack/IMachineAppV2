@@ -98,12 +98,8 @@ public class MainActivityModel implements MainActivityMvpModel {
     private static final String LABEL_PATH = "labels.txt";
     private static final String WORDS_PATH = "words.txt";
     private static final String HIERARCHY_PATH = "wordnet.is_a.txt";
-    private static final int IMG_W = 224;
-    private static final int IMG_H = 224;
     private static final int BATCH_SIZE = 1;
     private static final int PIXEL_SIZE = 3;
-    private static final float IMAGE_MEAN = 128.f;
-    private static final float IMAGE_STD = 128.f;
     private static final double THRESHOLD_PROBABILITY_PREDICTION = 0.65;  // TODO: tune this
 
     // Parameters for clustering step
@@ -305,18 +301,26 @@ public class MainActivityModel implements MainActivityMvpModel {
     public void startImageProcess(MainActivityView mainActivityView) {
         // TODO: load these things on the constructor would be the correct way
         try {
+            // Start timing
             startLoop = System.nanoTime();
 
             AssetManager assetManager = mainActivityView.getAssets();
 
+            // Read WNID words list for classifier
             BufferedReader reader = new BufferedReader(new InputStreamReader(assetManager.open(WORDS_PATH)));
             wnidWordsList = ImageNetUtils.loadWNIDWords(reader);
-//            label_lookup = TensorFlowImageClassifier.loadLabelList(mainActivityView.getAssets(),LABEL_PATH);
+            reader.close();
 
+            // Read the hierarchy list that relate those WNID words as well
             reader = new BufferedReader(new InputStreamReader(assetManager.open(HIERARCHY_PATH)));
             hierarchyLookupList = ImageNetUtils.loadHierarchyLookup(reader);
+            reader.close();
+
+            // Finally, load the classifier
             initTensorFlowAndLoadModel(mainActivityView);
+
         } catch (IOException e) {
+            // TODO: log error
             e.printStackTrace();
         }
     }
@@ -453,13 +457,16 @@ public class MainActivityModel implements MainActivityMvpModel {
             checkAndReportProgress(nImgs++);
 
             // Read image as Bitmap in a particular resolution given by (IMG_W, IMG_H)
-            image = ImageUtils.lessResolution(imgPath,IMG_W,IMG_H); // TODO: improve speed
+            image = ImageUtils.readBitmapFromDisk(imgPath, TensorFlowImageClassifier.IMG_W,
+                    TensorFlowImageClassifier.IMG_H);
+            image = ImageUtils.resize(image, TensorFlowImageClassifier.IMG_W, TensorFlowImageClassifier.IMG_H);
 
             if (image != null){
                 // Now convert the image into a byte buffer
                 // In addition, the image is standardized with IMAGE_MEAN and IMAGE_STD
                 byteBuffer = ImageUtils.convertBitmapToByteBuffer(
-                        image,BATCH_SIZE,IMG_W,IMG_H,PIXEL_SIZE,IMAGE_MEAN,IMAGE_STD);  // TODO: improve speed
+                        image,BATCH_SIZE,TensorFlowImageClassifier.IMG_W,TensorFlowImageClassifier.IMG_H,
+                        PIXEL_SIZE,TensorFlowImageClassifier.IMAGE_MEAN,TensorFlowImageClassifier.IMAGE_STD);  // TODO: improve speed
 
                 // Now get the prediction of the MobileNet model (classification + embedding)
                 outputs = new TreeMap<>();
@@ -476,6 +483,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                 wnIdPredictionsList = new ArrayList<>();
 
                 // assert results.size() > 0
+                assert results != null;
                 if (results.size() == 0){
                     // TODO: is this necessary?
                     // Add a generic prediction in case of not having a valid one
@@ -563,7 +571,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                             inputStream,
                             startOffset,
                             declaredLength,
-                            IMG_W);
+                            TensorFlowImageClassifier.IMG_H);
                     setParameters();
                 } catch (final Exception e) {
 //                    mainActivityView.runOnUiThread(new Runnable() {

@@ -40,4 +40,6 @@ public class TestMCLDenseEJML {
         Assert.assertTrue(CommonOps_DDRM.elementMax(result) > 0.0);
         Assert.assertTrue(CommonOps_DDRM.elementMin(result) == 0.0);
     }
+
+    // TODO: test postCluster, with a list of one-image clusters that would be merged due to have affinity values to link with
 }

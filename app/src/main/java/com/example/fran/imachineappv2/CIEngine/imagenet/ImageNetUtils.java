@@ -36,7 +36,6 @@ public class ImageNetUtils {
             w2 = line.substring(line.lastIndexOf(" ")+1);
             hierarchyLookupList.add(new HierarchyLookup(w1,w2));
         }
-        reader.close();  // TODO: here is not the place to close the reader
         return hierarchyLookupList;
     }
 
@@ -94,7 +93,7 @@ public class ImageNetUtils {
         return results;
     }
 
-    // TODO: limit to Top K predictions? or change to processPredictions since it doesn't limit to the top ones
+    // TODO: limit to Top K predictions? or change to processPredictions since it doesn't limit to the top ones ???
     // TODO: thresholdConfidence instead of thresh_prob
     public static List<WNIDPrediction> processTopPredictions(List<Classifier.Recognition> results,
                                                       List<WNIDWords> wnidWordsList,

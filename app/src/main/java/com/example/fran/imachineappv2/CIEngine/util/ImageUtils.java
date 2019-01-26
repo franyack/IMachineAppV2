@@ -28,13 +28,14 @@ public class ImageUtils {
         return inSampleSize;
     }
 
+    @Deprecated
     public static Bitmap lessResolution (String filePath, int width, int height){
         // TODO: handle exceptions
         BitmapFactory.Options options = new BitmapFactory.Options();
 
         //First decode with inJustDecodeBounds = true to check dimensions
         options.inJustDecodeBounds = true;
-        BitmapFactory.decodeFile(filePath,options);
+        BitmapFactory.decodeFile(filePath,options);  // TODO: ???
 
         //Calculate inSampleSize
         options.inSampleSize = calculateInSampleSize(options, width, height);
@@ -50,6 +51,31 @@ public class ImageUtils {
         image = Bitmap.createScaledBitmap(image, width, height,false);
 
         return image;
+    }
+
+    public static Bitmap readBitmapFromDisk (String filePath, int width, int height){
+        // TODO: improve speed
+        // TODO: handle exceptions
+        BitmapFactory.Options options = new BitmapFactory.Options();
+
+        //First decode with inJustDecodeBounds = true to check dimensions
+        options.inJustDecodeBounds = true;
+        BitmapFactory.decodeFile(filePath,options);  // TODO: ???
+
+        //Calculate inSampleSize
+        options.inSampleSize = calculateInSampleSize(options, width, height);
+
+        //Decode bitmap with inSampleSize set
+        options.inJustDecodeBounds = false;
+
+        // TODO: this function is not returning a max of either IMG_W or IMG_H
+        return BitmapFactory.decodeFile(filePath,options);
+    }
+
+    public static Bitmap resize(Bitmap image, int width, int height){
+        // TODO: improve speed
+        // TODO: is this conserving the aspect ratio??
+        return Bitmap.createScaledBitmap(image, width, height,false);
     }
 
     public static ByteBuffer convertBitmapToByteBuffer(

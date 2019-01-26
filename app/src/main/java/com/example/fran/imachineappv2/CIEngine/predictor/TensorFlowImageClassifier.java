@@ -19,8 +19,13 @@ public class TensorFlowImageClassifier implements Classifier {
     // TODO: set these parameters on constructor?
     private static final int MAX_RESULTS = 5;
     private static final float THRESHOLD = 0.05f;  // TODO: 0.3f
+
     public static final int LABEL_LIST_SIZE = 1001;
     public static final int EMBEDDING_SIZE = 1024;
+    public static final int IMG_W = 224;
+    public static final int IMG_H = 224;
+    public static final float IMAGE_MEAN = 128.f;
+    public static final float IMAGE_STD = 128.f;
 
     private Interpreter interpreter;
     private int inputSize;  // TODO: used?
@@ -44,6 +49,7 @@ public class TensorFlowImageClassifier implements Classifier {
         this.embeddingArray = new float[1][1][1][EMBEDDING_SIZE];
     }
 
+    @Deprecated
     public static Classifier createOld(BufferedReader reader,
                                     FileInputStream inputStream,
                                     long startOffset,
@@ -61,6 +67,7 @@ public class TensorFlowImageClassifier implements Classifier {
         return classifier;
     }
 
+    // TODO: don't receive inputSize
     public static Classifier create(BufferedReader reader,
                                     FileInputStream inputStream,
                                     long startOffset,
@@ -107,7 +114,7 @@ public class TensorFlowImageClassifier implements Classifier {
         return fileChannel.map(FileChannel.MapMode.READ_ONLY, startOffset, declaredLength);
     }
 
-    public static List<String> loadLabelList(BufferedReader reader) throws IOException {
+    private static List<String> loadLabelList(BufferedReader reader) throws IOException {
         List<String> labelList = new ArrayList<>();
         String line;
         while ((line = reader.readLine()) != null) {
@@ -149,6 +156,7 @@ public class TensorFlowImageClassifier implements Classifier {
     }
 
     // TODO: remove this, since it was thought for quantized models
+    @Deprecated
     private List<Recognition> getSortedResult2(byte[][] labelProbArray) {
 
         PriorityQueue<Recognition> pq =

@@ -1,4 +1,4 @@
-package com.example.fran.imachineappv2;
+package com.example.fran.imachineappv2.CIEngine.predictor;
 
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
@@ -35,15 +35,8 @@ public class TestTensorFlowImageClassifier {
     private static final String LABELS_FILENAME = "labels.txt";
     private static final String TEST_IMAGE_FILENAME = "test_image.jpg";
 
-    private static final int INPUT_SIZE = 224;
-    private static final int IMG_W = 224;
-    private static final int IMG_H = 224;
     private static final int BATCH_SIZE = 1;
     private static final int PIXEL_SIZE = 3;
-    private static final float IMAGE_MEAN = 128.f;
-    private static final float IMAGE_STD = 128.f;
-
-    private static final int EXPECTED_SIZE_EMBEDDING_VECTOR = 1024;
 
     private TensorFlowImageClassifier classifier;
     private ByteBuffer byteBuffer;
@@ -61,8 +54,10 @@ public class TestTensorFlowImageClassifier {
         FileInputStream inputStream = new FileInputStream(fileDescriptor.getFileDescriptor());
         long startOffset = fileDescriptor.getStartOffset();
         long declaredLength = fileDescriptor.getDeclaredLength();
+        // TODO: read through ImageUtils
         Bitmap image = BitmapFactory.decodeStream(assetManager.open(TEST_IMAGE_FILENAME));
-        image = ImageUtils.resize(image, INPUT_SIZE, INPUT_SIZE);  // Rescale as needed for model
+        image = ImageUtils.resize(image, TensorFlowImageClassifier.IMG_W,
+                TensorFlowImageClassifier.IMG_H);  // Rescale as needed for model
 
         // Create classifier to be tested
         classifier = (TensorFlowImageClassifier) TensorFlowImageClassifier.create(
@@ -70,11 +65,12 @@ public class TestTensorFlowImageClassifier {
                 inputStream,
                 startOffset,
                 declaredLength,
-                INPUT_SIZE);
+                TensorFlowImageClassifier.IMG_H);
 
         // Convert to buffer of bytes
-        byteBuffer = ImageUtils.convertBitmapToByteBuffer(
-                image,BATCH_SIZE,IMG_W,IMG_H,PIXEL_SIZE,IMAGE_MEAN,IMAGE_STD);
+        byteBuffer = ImageUtils.convertBitmapToByteBuffer(image,BATCH_SIZE,
+                TensorFlowImageClassifier.IMG_W,TensorFlowImageClassifier.IMG_H,
+                PIXEL_SIZE,TensorFlowImageClassifier.IMAGE_MEAN,TensorFlowImageClassifier.IMAGE_STD);
     }
 
     @Test
@@ -107,7 +103,7 @@ public class TestTensorFlowImageClassifier {
             List<float[]> embList = Arrays.asList(embArr[0][0][0]);
 
             assertEquals(embList.size(), 1);  // just one image processed
-            assertEquals(embList.get(0).length, EXPECTED_SIZE_EMBEDDING_VECTOR);
+            assertEquals(embList.get(0).length, TensorFlowImageClassifier.EMBEDDING_SIZE);
 
 
         } catch (IOException e) {
