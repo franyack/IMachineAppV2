@@ -533,7 +533,7 @@ public class MainActivityModel implements MainActivityMvpModel {
             }
         }
 
-        MCLDenseEJML.postCluster(vClusters, affinityMatrix, 0.05);
+        MCLDenseEJML.postCluster(vClusters, affinityMatrix);
 
         // Fill the set of clusters with the given results
         fillClustersResult(vClusters);

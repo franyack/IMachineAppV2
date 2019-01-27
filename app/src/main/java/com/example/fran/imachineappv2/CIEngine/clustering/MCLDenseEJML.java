@@ -251,8 +251,7 @@ public class MCLDenseEJML {
         return clusters;
     }
 
-    public static void postCluster(List<Integer> clusters, DMatrixRMaj affinityMatrix,
-                                            double threshAffinity) {
+    public static void postCluster(List<Integer> clusters, DMatrixRMaj affinityMatrix) {
         /**
          * Function to perform a post-cluster to merge one-image clusters with the most similar ones
          * INPLACE
@@ -262,6 +261,8 @@ public class MCLDenseEJML {
 
         // TODO: this could be improved with a proper structure based on Map to get O(1) access
         // -> then we could avoid the unnecessary loop
+
+        // Not using threshold to get always the most similar cluster despite the similarity
 
         List<Integer> imagesNotClustered = new ArrayList<>();
         int size;
@@ -283,7 +284,6 @@ public class MCLDenseEJML {
 
         // Now for each single image, get the most similar cluster to put the image there
         int maxAffIdx;
-        double maxAff;
 
         for(int imageIdx:imagesNotClustered){
             // TODO: most similar image, or most similar cluster (in avg) ??
@@ -292,14 +292,8 @@ public class MCLDenseEJML {
             if (maxAffIdx == -1)
                 continue;
 
-            maxAff = affinityMatrix.get(imageIdx, maxAffIdx);
-
-            if (maxAff < threshAffinity)
-                // No similar enough image was found
-                continue;
-
             // Otherwise, set a the new closest cluster to the given image
-            clusters.set(imageIdx, maxAffIdx);
+            clusters.set(imageIdx, clusters.get(maxAffIdx));
 
         }
     }

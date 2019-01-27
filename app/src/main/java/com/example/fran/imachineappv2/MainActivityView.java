@@ -138,7 +138,7 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
     }
 
     @Override
-    // TODO: deprecated. use reportProgress instead
+    @Deprecated
     public void growProgress() {
         // TODO: receive delta to add
         // TODO: improve this!
