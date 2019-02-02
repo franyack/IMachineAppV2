@@ -7,6 +7,7 @@ import org.ejml.dense.row.RandomMatrices_DDRM;
 import org.ejml.equation.Equation;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import java.util.Objects;
 import java.util.Random;
@@ -263,6 +264,8 @@ public class MCLDenseEJML {
         // -> then we could avoid the unnecessary loop
 
         // Not using threshold to get always the most similar cluster despite the similarity
+        // NOTE: now that there is a cluster of 'others', a threshold may be convenient to
+        // define how similar a image should be to be matched with a cluster or to be in 'others'
 
         List<Integer> imagesNotClustered = new ArrayList<>();
         int size;
@@ -270,7 +273,7 @@ public class MCLDenseEJML {
         for(int i=0;i<clusters.size();i++){
             size=0;
 
-            for(int j=0; j<clusters.size();j++){  // TODO: j > i
+            for(int j=0; j<clusters.size();j++){
                 if(Objects.equals(clusters.get(i), clusters.get(j))){
                     size++;
                 }
@@ -285,17 +288,26 @@ public class MCLDenseEJML {
         // Now for each single image, get the most similar cluster to put the image there
         int maxAffIdx;
 
+        List<Integer> othersCluster = new ArrayList<>();
+
         for(int imageIdx:imagesNotClustered){
             // TODO: most similar image, or most similar cluster (in avg) ??
             maxAffIdx=getIndexMaxAffinity(imageIdx, affinityMatrix);
 
             if (maxAffIdx == -1)
-                continue;
+                // Put this image in a single cluster for all the images with no similar cluster
+                othersCluster.add(imageIdx);
 
             // Otherwise, set a the new closest cluster to the given image
             clusters.set(imageIdx, clusters.get(maxAffIdx));
 
         }
+
+        // Finally, add the "others" cluster having the max index of clusters
+        int othersClusterIdx = Collections.max(clusters) + 1;
+
+        for(int imageIdx:othersCluster)
+            clusters.set(imageIdx, othersClusterIdx);
     }
 
     private static int getIndexMaxAffinity(int idx, DMatrixRMaj affinityMatrix) {
