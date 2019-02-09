@@ -81,6 +81,8 @@ public class SemanticAffinity {
             }
 
             // Normalize values in v1 by the sum of total
+            // NOTE: this may not be necessary for correlation calculation,
+            // but at least in useful for debugging purposes.
             v1_s=0;
             for (double v1_r : v1) v1_s += v1_r;
             for (int r=0;r<v1.length;r++) v1[r] /= v1_s;
@@ -106,7 +108,8 @@ public class SemanticAffinity {
                     }
 
                     // Normalize values in v2 by the sum of total
-                    // TODO: is this necessary for correlation?
+                    // NOTE: this may not be necessary for correlation calculation,
+                    // but at least in useful for debugging purposes.
                     v2_s=0;
                     for (double v2_r : v2) v2_s += v2_r;
                     for (int r=0;r<v2.length;r++) v2[r] /= v2_s;
