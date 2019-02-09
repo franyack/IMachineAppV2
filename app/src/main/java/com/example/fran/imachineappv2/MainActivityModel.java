@@ -41,6 +41,7 @@ import java.io.OutputStreamWriter;
 import java.nio.ByteBuffer;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Objects;
@@ -117,12 +118,12 @@ public class MainActivityModel implements MainActivityMvpModel {
     private ArrayList<String> vImages = new ArrayList<>();
     private ArrayList<Integer> vClusters = new ArrayList<>();
     private Set<Integer> ClustersResult = new TreeSet<>();  // TreeSet guarantees the order of elements when iterated
-    private List<TopPredictions> topPredictions = new ArrayList<>();
-    private List<float[]> embeddingsList = new ArrayList<>();
     private DMatrixRMaj affinityMatrix;
-    private DMatrixRMaj clusterMatrix;
-    private SemanticAffinity semanticAffinity = new SemanticAffinity(THRESHOLD_PROBABILITY_PREDICTION);
-    private VectorAffinity vectorAffinity = new VectorAffinity(THRESHOLD_PROBABILITY_PREDICTION);
+    // private List<TopPredictions> topPredictions = new ArrayList<>();
+    // private List<float[]> embeddingsList = new ArrayList<>();
+    // private DMatrixRMaj clusterMatrix;
+    // private SemanticAffinity semanticAffinity = new SemanticAffinity(THRESHOLD_PROBABILITY_PREDICTION);
+    // private VectorAffinity vectorAffinity = new VectorAffinity(THRESHOLD_PROBABILITY_PREDICTION);
 
     private long startLoop;
 
@@ -130,6 +131,17 @@ public class MainActivityModel implements MainActivityMvpModel {
     MainActivityModel(MainActivityPresenter presenter) {
         this.mainActivityPresenter = presenter;
         resetProgress();
+    }
+
+    // TODO: avoid static definition if parameters are explicit on constructor
+    public static Map<String, Number> getMCLParameters(){
+        Map <String, Number> params = new HashMap<>();
+        params.put("maxIterations", maxIt);
+        params.put("expansionPower", expPow);
+        params.put("inflationPower", infPow);
+        params.put("thresholdPrune", threshPrune);
+
+        return params;
     }
 
     @Override
@@ -389,6 +401,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         return folder.exists();
     }
 
+    @Deprecated
     @Override
     public List<String> getMclParameters() {
         List<String> mclParameters = new ArrayList<>();
@@ -432,17 +445,21 @@ public class MainActivityModel implements MainActivityMvpModel {
         partialProgress = 0.0f;
     }
 
-    private void checkAndReportProgress(int nImgs){
-        float totalProgress = (float) nImgs / pathToImages.length;
+    private static float checkAndReportProgress(int nImgs, int totalImgs, float partialProgress,
+                                                MainActivityMvpPresenter mainActivityPresenter){
+        float totalProgress = (float) nImgs / totalImgs;
         if (totalProgress > partialProgress){
             partialProgress += DELTA_PROGRESS;
             mainActivityPresenter.reportProgress((int) (totalProgress * 100));
         }
 
+        return partialProgress;
     }
 
-    @SuppressLint("DefaultLocale")
-    private void processImages() {
+    public static DMatrixRMaj runProcessing(String[] pathToImages, MainActivityMvpPresenter mainActivityPresenter,
+                                      Classifier classifier, List<WNIDWords> wnidWordsList,
+                                      List<HierarchyLookup> hierarchyLookupList,
+                                      List<String> vImages, List<Integer> vClusters){
         // Declare just once all variables to be used during the loop
         int nImgs = 0;
         Bitmap image;
@@ -452,9 +469,22 @@ public class MainActivityModel implements MainActivityMvpModel {
         float[][][][] emb;
         List<WNIDPrediction> wnIdPredictionsList;
 
+        float partialProgress = 0.f;
+        List<TopPredictions> topPredictions = new ArrayList<>();
+        List<float[]> embeddingsList = new ArrayList<>();
+        DMatrixRMaj affinityMatrix, clusterMatrix;
+        SemanticAffinity semanticAffinity = new SemanticAffinity(THRESHOLD_PROBABILITY_PREDICTION);
+        VectorAffinity vectorAffinity = new VectorAffinity(THRESHOLD_PROBABILITY_PREDICTION);
+
+        // TODO: sort pathToImages
+
         for (String imgPath : pathToImages){
-            // To fill the progress bar with the current progress
-            checkAndReportProgress(nImgs++);
+
+            if (mainActivityPresenter != null){
+                // To fill the progress bar with the current progress
+                partialProgress = checkAndReportProgress(nImgs++, pathToImages.length, partialProgress,
+                        mainActivityPresenter);
+            }
 
             // Read image as Bitmap in a particular resolution given by (IMG_W, IMG_H)
             image = ImageUtils.readBitmapFromDisk(imgPath, TensorFlowImageClassifier.IMG_W,
@@ -492,7 +522,7 @@ public class MainActivityModel implements MainActivityMvpModel {
                     // Process the obtained predictions to get the WNIDs of the related families
                     // TODO: improve speed
                     wnIdPredictionsList = ImageNetUtils.processTopPredictions(results,
-                                wnidWordsList,hierarchyLookupList, maxDepthHierarchy, minConfidence);
+                            wnidWordsList,hierarchyLookupList, maxDepthHierarchy, minConfidence);
 
                 }
                 topPredictions.add(new TopPredictions(imgPath, wnIdPredictionsList));
@@ -506,6 +536,8 @@ public class MainActivityModel implements MainActivityMvpModel {
         // NOTE: in the future, loop over all the chosen affinity methods and then aggregate them
 
         // TODO: clear memory by deleting these previous matrices not longer used
+
+        // TODO: assert complete matrix, otherwise it will add wrong matrices
 
         List<DMatrixRMaj> matList = new ArrayList<>();
         matList.add(new DMatrixRMaj(g_aff_matrix));
@@ -534,6 +566,18 @@ public class MainActivityModel implements MainActivityMvpModel {
         }
 
         MCLDenseEJML.postCluster(vClusters, affinityMatrix);
+
+        // if (mainActivityPresenter != null)
+        //    mainActivityPresenter.clustersReady();
+
+        return affinityMatrix;
+    }
+
+    @SuppressLint("DefaultLocale")
+    private void processImages() {
+
+        affinityMatrix = runProcessing(pathToImages, mainActivityPresenter, classifier,
+                wnidWordsList, hierarchyLookupList, vImages, vClusters);
 
         // Fill the set of clusters with the given results
         fillClustersResult(vClusters);
@@ -586,6 +630,7 @@ public class MainActivityModel implements MainActivityMvpModel {
         });
     }
     private void setParameters() {
+        // TODO: this is not setting any parameter, so change the name
         // TODO: is it necessary to check size?
         if (vImages.size()>0){
             vImages.clear();
@@ -593,14 +638,15 @@ public class MainActivityModel implements MainActivityMvpModel {
         if (vClusters.size()>0){
             vClusters.clear();
         }
+
+        // TODO: this step should be executed as part of a more clear pipeline (i.e. not part of setting parameters)
         processImages();
     }
 
     public DMatrixRMaj getAffinityMatrix(){
         return affinityMatrix;
     }
-    public DMatrixRMaj getClusterMatrix(){
-        return clusterMatrix;
-    }
+    // public DMatrixRMaj getClusterMatrix() {return clusterMatrix;}
+
 
 }
