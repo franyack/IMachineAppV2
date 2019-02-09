@@ -1,81 +1,162 @@
 package com.example.fran.imachineappv2.CIEngine.clustering;
 
-import com.example.fran.imachineappv2.MainActivityView;
-
 import org.ejml.data.DMatrixRMaj;
 
 import java.io.File;
+import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.Objects;
 import java.util.TreeMap;
+import java.util.logging.ConsoleHandler;
+import java.util.logging.FileHandler;
+import java.util.logging.LogRecord;
 import java.util.logging.Logger;
+import java.util.logging.SimpleFormatter;
 
 /**
  * Created by fran on 07/07/18.
  */
 
-
-// TODO: move to CIEngine
-
 public class MetricsReporter {
-    // TODO: buscar manera de reportar hora, paquete, etc
-    // --> check this: https://www.logicbig.com/tutorials/core-java-tutorial/logging/customizing-default-format.html
-    private static final Logger LOGGER = Logger.getLogger(MainActivityView.class.getName());
-    private String pathActual;
-    private String pathPredicted;
-    private List<String> mclParameters = new ArrayList<>();
-    private DMatrixRMaj affinityMatrix;
-    private ArrayList<String> vImages;
-    private ArrayList<Integer> vClusters;
+    private static Logger LOGGER;
+    private FileHandler fileHandler;
 
-    public MetricsReporter(String pathActual, String pathPredicted, List<String> mclParameters){
-        this.pathActual = pathActual;
-        this.pathPredicted = pathPredicted;
-        this.mclParameters = mclParameters;
+    static {
+        Logger mainLogger = Logger.getLogger("com.example.fran.imachineapp");
+        mainLogger.setUseParentHandlers(false);
+        ConsoleHandler handler = new ConsoleHandler();
+        handler.setFormatter(new SimpleFormatter() {
+            private static final String format = "[%1$tF %1$tT] [%2$-7s] %3$s %n";
+
+            @Override
+            public synchronized String format(LogRecord lr) {
+                return String.format(Locale.US, format,
+                        new Date(lr.getMillis()),
+                        lr.getLevel().getLocalizedName(),
+                        lr.getMessage()
+                );
+            }
+        });
+        mainLogger.addHandler(handler);
+
+        // TODO: use mainLogger
+        //LOGGER = Logger.getLogger(MetricsReporter.class.getName());
+        LOGGER = mainLogger;
     }
 
-    public MetricsReporter(DMatrixRMaj affinityMatrix, ArrayList<String> vImages, ArrayList<Integer> vClusters){
+    private String pathLogs;
+    private List<String> imagesName;
+    private List<Integer> clusters;
+
+    private Map<Integer, List<String>> clustersMap;
+    private Map<Integer, List<Integer>> clustersMapIdx;
+
+    private Map<String, Number> mclParameters;
+    private DMatrixRMaj affinityMatrix;
+
+    public MetricsReporter(List<String> imagesName, List<Integer> clusters,
+                           DMatrixRMaj affinityMatrix, Map<String, Number> mclParameters,
+                           String pathLogs){
+        this.pathLogs = pathLogs;
+        this.imagesName = imagesName;
+        this.clusters = clusters;
+        this.mclParameters = mclParameters;
         this.affinityMatrix = affinityMatrix;
-        this.vImages = vImages;
-        this.vClusters = vClusters;
+
+        try {
+            // TODO: check this, its not working
+            // This block configure the logger with handler and formatter
+            fileHandler = new FileHandler(this.pathLogs);
+            LOGGER.addHandler(fileHandler);
+            SimpleFormatter formatter = new SimpleFormatter();
+            fileHandler.setFormatter(formatter);
+
+        } catch (SecurityException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+        setUpClusters();
+
+    }
+
+    private void setUpClusters(){
+        //------------Getting clusters---------------------------
+        clustersMap = new TreeMap<>();
+        clustersMapIdx = new TreeMap<>();
+
+        List<String> imagesMap;
+        List<Integer> imagesMapIdx;
+
+        for(int i=0;i<clusters.size();i++){
+            if(!clustersMap.containsKey(clusters.get(i))){
+                imagesMap = new ArrayList<>();
+                imagesMap.add(imagesName.get(i));
+                clustersMap.put(clusters.get(i),imagesMap);
+
+
+                imagesMapIdx = new ArrayList<>();
+                imagesMapIdx.add(i);
+                clustersMapIdx.put(clusters.get(i),imagesMapIdx);
+
+            }else{
+                imagesMap = clustersMap.get(clusters.get(i));
+                if (imagesMap != null) {
+                    imagesMap.add(imagesName.get(i));
+                    clustersMap.put(clusters.get(i),imagesMap);
+                }
+
+
+                imagesMapIdx = clustersMapIdx.get(clusters.get(i));
+                if (imagesMapIdx != null) {
+                    imagesMapIdx.add(i);
+                    clustersMapIdx.put(clusters.get(i), imagesMapIdx);
+                }
+            }
+        }
+        //------------------------------------------------------
     }
 
     public String getShortName(String s){
         /*
           Get a short name for those folders that are going to be processed in this class
          */
-        int endIdx = Math.min(3, s.length());
-        return s.substring(0, endIdx).toUpperCase();
+        s = new File(s).getName().split("\\.")[0];
+        s = s.toUpperCase();
+        s = s.replaceAll("\\d", "");
+        s = s.replaceAll("_", "");
+        // TODO: remove number
+        return s;
     }
+
 
     //The function need the 3 first characters of the actual-folder names are the same 3 first characters of
     //the images inside them.
 
-    public void getScore(){
-        LOGGER.info("-");
-        LOGGER.info("MCL maxIt: " + mclParameters.get(0));
-        LOGGER.info("MCL expPow: " + mclParameters.get(1));
-        LOGGER.info("MCL infPow: " + mclParameters.get(2));
-        LOGGER.info("MCL threshPrune: " + mclParameters.get(3));
-        LOGGER.info("-");
+    public void run(){
+        LOGGER.info("###############");
+        LOGGER.info("MCL Parameters:");
 
-        File actualFolders = new File(pathActual);
-        File [] actualFoldersList = actualFolders.listFiles();
+        for(Map.Entry<String, Number> param : mclParameters.entrySet())
+            LOGGER.info(String.format(Locale.US, "%s: %s", param.getKey(), param.getValue()));
+
+        LOGGER.info("###############");
+
         Map<String, Integer> actualFoldersSize = new TreeMap<>();
 
-        File filePathPredicted = new File(pathPredicted);
-        File [] foldersPredictedList = filePathPredicted.listFiles();
-
-        Map<String, Integer> predictedFoldersMapInit = new TreeMap<>();
+        // Map<String, Integer> predictedFoldersMapInit = new TreeMap<>();
 
         // Initialize empty counters
-        for(File actualFolder: actualFoldersList)
-            predictedFoldersMapInit.put(getShortName(actualFolder.getName()), 0);
+        //for(File actualFolder: actualFoldersList)
+        //    predictedFoldersMapInit.put(getShortName(actualFolder.getName()), 0);
 
         // This will start from predictedFoldersMapInit, and then filled in a loop
-        Map<String, Integer> predictedFoldersMap;
+        Map<String, Integer> predictedClusterMap;
 
         //----------------Used only for extra-information------------------------------------
         /*
@@ -93,25 +174,39 @@ public class MetricsReporter {
 
         Map.Entry<String, Integer> winningClass;
         //----------------------------------Getting size by each actual folder in actualFoldersSize---------------------------
-        for(File actualFolder: actualFoldersList){
-            actualFoldersSize.put(getShortName(actualFolder.getName()), actualFolder.listFiles().length);
-            LOGGER.info("Length of " + actualFolder.getName().toUpperCase() +" (" + getShortName(actualFolder.getName())+") folder: " + actualFolder.listFiles().length);
+        for(String image: imagesName){
+            image = getShortName(image);  // TODO: check not valid imageNames
+
+            if (actualFoldersSize.containsKey(image))
+                actualFoldersSize.put(image, Objects.requireNonNull(actualFoldersSize.get(image))+1);
+            else
+                actualFoldersSize.put(image, 0);
+
         }
+        //LOGGER.info("Length of " + actualFolder.getName().toUpperCase() +" (" + getShortName(actualFolder.getName())+") folder: " + actualFolder.listFiles().length);
+
         //--------------------------------------------------------------------------------------------------------------------
         LOGGER.info("-");
-        for(File folderPredicted: foldersPredictedList){
+        for(Map.Entry<Integer, List<String>> cluster: clustersMap.entrySet()){
             //--------------------Seeking the winning class for each folder predicted------------------------------
-            predictedFoldersMap = new TreeMap<>(predictedFoldersMapInit);  // Start from a zero-counters map
+            predictedClusterMap = new TreeMap<>();
 
             // Counting number of images in actual folders that are present in this predicted folder
-            for(File image: folderPredicted.listFiles())
-                predictedFoldersMap.put(getShortName(image.getName()), predictedFoldersMap.get(getShortName(image.getName()))+1);
+            for(String image: cluster.getValue()) {
+                image = getShortName(image);
 
-            // The most frequent class is considered the most representative for this predicted folder
+                if (predictedClusterMap.containsKey(image))
+                    predictedClusterMap.put(image, Objects.requireNonNull(predictedClusterMap.get(image))+1);
+                else
+                    predictedClusterMap.put(image, 0);
+            }
+
+
+            // The most frequent class is considered the most representative for this predicted cluster
             winningClass = null;
-            for(Map.Entry<String, Integer> predictedMap: predictedFoldersMap.entrySet()){
-                if(winningClass == null || predictedMap.getValue().compareTo(winningClass.getValue())>0)
-                    winningClass = predictedMap;
+            for(Map.Entry<String, Integer> predictedCluster: predictedClusterMap.entrySet()){
+                if(winningClass == null || predictedCluster.getValue().compareTo(winningClass.getValue())>0)
+                    winningClass = predictedCluster;
             }
 
             if(winningClass == null)
@@ -137,20 +232,26 @@ public class MetricsReporter {
             */
 
             //-----------Looking for true positives, grouping in one folder by group, for each predicted folder-----
-            if(truePositivesGroupedFolders.containsKey(winningClass.getKey()))
-                truePositivesGroupedFolders.put(winningClass.getKey(), truePositivesGroupedFolders.get(winningClass.getKey()) + winningClass.getValue());
-            else
-                truePositivesGroupedFolders.put(winningClass.getKey(), winningClass.getValue());
+
+            Integer size = truePositivesGroupedFolders.get(winningClass.getKey());
+            if (size == null)
+                size = 0;
+
+            truePositivesGroupedFolders.put(winningClass.getKey(), size + winningClass.getValue());
+
+
             //-------------------------------------------------------------------------------------------------------
 
             //--------------Getting total size, grouping in one folder by group, for each predicted folder-----------
-            if(totalSizeGroupedFolders.containsKey(winningClass.getKey()))
-                totalSizeGroupedFolders.put(winningClass.getKey(), totalSizeGroupedFolders.get(winningClass.getKey()) + folderPredicted.listFiles().length);
-            else
-                totalSizeGroupedFolders.put(winningClass.getKey(), folderPredicted.listFiles().length);
+            size = totalSizeGroupedFolders.get(winningClass.getKey());
+            if (size == null)
+                size = 0;
+
+            totalSizeGroupedFolders.put(winningClass.getKey(), size + cluster.getValue().size());
+
             //--------------------------------------------------------------------------------------------------------
 
-            predictedFoldersMap.clear();
+            predictedClusterMap.clear();
 
         }
 
@@ -159,22 +260,20 @@ public class MetricsReporter {
         Map<String, Float> recallGrouped = new TreeMap<>();
         Map<String, Float> f1ScoreGrouped = new TreeMap<>();
 
-        String folderName;
 
-        for(File actualFolder: actualFoldersList){
-            folderName = getShortName(actualFolder.getName());
-            sorensenDiceGrouped.put(folderName, 0.f);
-            precisionGrouped.put(folderName,0.f);
-            recallGrouped.put(folderName, 0.f);
-            f1ScoreGrouped.put(folderName, 0.f);
+        for(String actualClass: actualFoldersSize.keySet()){
+            sorensenDiceGrouped.put(actualClass, 0.f);
+            precisionGrouped.put(actualClass,0.f);
+            recallGrouped.put(actualClass, 0.f);
+            f1ScoreGrouped.put(actualClass, 0.f);
         }
         //-----------------------Getting metrics for each grouped folders----------------------------------------------
         float precision, recall, sd, f1;
         int tp, totalp, totala;
         for(Map.Entry<String, Integer> truePositivesGroup:truePositivesGroupedFolders.entrySet()){
             tp = truePositivesGroup.getValue();  // True positives
-            totalp = totalSizeGroupedFolders.get(truePositivesGroup.getKey());  // TP + FP = Total predicted positives
-            totala = actualFoldersSize.get(truePositivesGroup.getKey());  // TP + FN = Total actual positives
+            totalp = Objects.requireNonNull(totalSizeGroupedFolders.get(truePositivesGroup.getKey()));  // TP + FP = Total predicted positives
+            totala = Objects.requireNonNull(actualFoldersSize.get(truePositivesGroup.getKey()));  // TP + FN = Total actual positives
 
             precision = (float) tp/totalp;  // P = TP/(TP+FP)
             recall = (float) tp/totala;  // R = TP/(TP+FN)
@@ -235,34 +334,22 @@ public class MetricsReporter {
         LOGGER.info("F1-Score Macro-Averaging: "+ macroAveraginF1Score);
         LOGGER.info("-");
 
-        // TODO: return these results?
+        this.runSilhouette();
+
+        // TODO: return these results in a Map?
     }
 
-    public void Silhouette(){
+    public void runSilhouette(){
         // From https://en.wikipedia.org/wiki/Silhouette_(clustering)
-        //------------Getting clusters---------------------------
-        Map<Integer, List<String>> clusters = new TreeMap<>();
-        List<String> images;
-        for(int i=0;i<vClusters.size();i++){
-            images = new ArrayList<>();
-            if(!clusters.containsKey(vClusters.get(i))){
-                images.add(vImages.get(i));
-                clusters.put(vClusters.get(i),images);
-            }else{
-                images = clusters.get(vClusters.get(i));
-                images.add(vImages.get(i));
-                clusters.put(vClusters.get(i),images);
-            }
-        }
-        //------------------------------------------------------
+
         float averageClusterDistance, lowestAverageDistance, lowestAverageDistanceAuxiliary, silhouette, silhouetteAuxiliary;
         //Map<Integer, Float> silhouetteAvgCluster = new TreeMap<>();
         float silhouetteCluster;
         silhouette=0.f;
-        String imgPointI;
+        Integer imgPointI;
         int sizeCluster;
 
-        for(Map.Entry<Integer, List<String>> cluster:clusters.entrySet()){
+        for(Map.Entry<Integer, List<Integer>> cluster:clustersMapIdx.entrySet()){
             sizeCluster = cluster.getValue().size();
             silhouetteCluster = 0.f;
             // for clusters with size=1, the score is 0 to prevent large number of clusters
@@ -275,7 +362,7 @@ public class MetricsReporter {
                     averageClusterDistance=0.f;
                     for(int j=0;j<sizeCluster;j++){
                         if(i == j) continue;  // we don't have to take into account the given point i
-                        averageClusterDistance+=getAffinityDistance(imgPointI, cluster.getValue().get(j));
+                        averageClusterDistance+= getAffinityValue(imgPointI, cluster.getValue().get(j));
                     }
                     averageClusterDistance/=(sizeCluster-1);  // all the data excepting by the given point i
 
@@ -284,11 +371,11 @@ public class MetricsReporter {
                     // The cluster with this lowest average dissimilarity is said to be the "neighbouring cluster" of i
                     // because it is the next best fit cluster for point i
                     lowestAverageDistance=Float.POSITIVE_INFINITY;
-                    for(Map.Entry<Integer, List<String>> cluster2:clusters.entrySet()){
+                    for(Map.Entry<Integer, List<Integer>> cluster2:clustersMapIdx.entrySet()){
                         if(!Objects.equals(cluster.getKey(), cluster2.getKey())){  // if this is any other cluster
                             lowestAverageDistanceAuxiliary=0.f;
                             for(int j=0;j<cluster2.getValue().size();j++)
-                                lowestAverageDistanceAuxiliary+=getAffinityDistance(imgPointI,cluster2.getValue().get(j));
+                                lowestAverageDistanceAuxiliary+= getAffinityValue(imgPointI,cluster2.getValue().get(j));
 
                             lowestAverageDistanceAuxiliary/=cluster2.getValue().size();
                             if(lowestAverageDistanceAuxiliary<lowestAverageDistance)
@@ -306,24 +393,72 @@ public class MetricsReporter {
             }
             silhouetteCluster /= sizeCluster;
             //silhouetteAvgCluster.put(cluster.getKey(), silhouetteCluster);
-//            LOGGER.info(String.format(Locale.ENGLISH,"Silhouette for cluster %d: %a", cluster.getKey(), silhouetteCluster));
+            //LOGGER.info(String.format(Locale.ENGLISH,"Silhouette for cluster %d: %a", cluster.getKey(), silhouetteCluster));
         }
         // The average of s(i) over all points of a cluster is a measure of how tightly grouped all the points in the cluster are.
         // Thus the average s(i) over all data of the entire dataset is a measure of how appropriately the data have been clustered.
-        LOGGER.info("Average Silhouette: " + silhouette/vImages.size());
+        LOGGER.info("Average Silhouette: " + silhouette/imagesName.size());
     }
 
-    private float getAffinityDistance(String img1, String img2) {
-        int i=0;
-        while(!vImages.get(i).equals(img1)){
-            i++;
-        }
-        int j=0;
-        while(!vImages.get(j).equals(img2)){
-            j++;
-        }
-        return (float) (1-affinityMatrix.get(i,j));
+    private float getAffinityValue(Integer i1, Integer i2) {
+        return (float) (1-affinityMatrix.get(i1, i2));
     }
 
+    /*
 
+    private void write(String pathMetrics){
+
+        //String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
+        //String pathFolder = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppTemporaryResults";
+        //String pathMetrics = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppMetrics";
+        File file = new File(pathMetrics);
+        if(file.exists()){
+            try {
+                FileUtils.cleanDirectory(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }else{
+            try {
+                FileUtils.forceMkdir(file);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+        }
+        if(metrics == null){
+            FileOutputStream fout = null;
+            ObjectOutputStream oos = null;
+            metrics = new Metrics(affinityMatrix, vImages, vClusters, pathFolderChosen, pathFolder, getMclParameters(), tLoop);
+            try {
+                fout = new FileOutputStream(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppMetrics" + File.separator + "objectMetrics.ser");
+                oos = new ObjectOutputStream(fout);
+                oos.writeObject(metrics);
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            } finally {
+                if (fout != null) {
+                    try {
+                        fout.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+
+                if (oos != null) {
+                    try {
+                        oos.close();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }
+                }
+            }
+
+        }
+
+
+    }
+
+    */
 }
