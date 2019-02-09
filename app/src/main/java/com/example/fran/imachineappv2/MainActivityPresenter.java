@@ -4,8 +4,6 @@ import android.content.Context;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 
-import java.util.List;
-
 /**
  * Created by fran on 24/05/18.
  */
@@ -100,6 +98,7 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     }
 
     // TODO: deprecate. used reportProgress instead
+    @Deprecated
     @Override
     public void growProgress() {
         view.growProgress();
@@ -110,10 +109,10 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
         view.reportProgress(p);
     }
 
-    @Override
-    public List<String> getMclParameters() {
-        return dataManager.getMclParameters();
-    }
+    //@Override
+    // public Map<String, Number> getMCLParameters() {
+    // return dataManager.getMCLParameters();
+    //}
 
     @Override
     public void callErrorToast(String s) {

@@ -17,7 +17,6 @@ import com.daimajia.numberprogressbar.NumberProgressBar;
 import com.example.fran.imachineappv2.FilesManager.FilesMainActivity;
 
 import java.io.File;
-import java.util.List;
 import java.util.logging.Logger;
 
 public class MainActivityView extends AppCompatActivity implements MainActivityMvpView {
@@ -157,7 +156,6 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
 
     @Override
     public void reportProgress(final int p) {
-        // TODO: check why the bar is being reset
         runOnUiThread(new Runnable() {
             @Override
             public void run() {
@@ -183,11 +181,11 @@ public class MainActivityView extends AppCompatActivity implements MainActivityM
             Toast.makeText(getApplicationContext(),getString(R.string.previousresultsnotexists), Toast.LENGTH_SHORT).show();
             return;
         }
-        List<String> mclParameters = presenter.getMclParameters();
-        String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
-        // TODO: remove this entry point for metrics, and put it into a different class
-//        Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
-//        a.getScore();
+        // TODO: remove this snippet deprecated
+        // Map<String, Number> mclParameters = presenter.getMCLParameters();
+        // String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
+        // Metrics a = new Metrics(pathFolderChosen, pathFoldersResult, mclParameters);
+        // a.getScore();
         Intent i = new Intent(this, FilesMainActivity.class);
         i.putExtra("pathFolder",pathFoldersResult);
         startActivity(i);

@@ -4,8 +4,6 @@ import android.content.Context;
 import android.widget.CheckBox;
 import android.widget.ProgressBar;
 
-import java.util.List;
-
 /**
  * Created by fran on 24/05/18.
  */
@@ -41,11 +39,12 @@ public interface MainActivityMvpPresenter {
     boolean folderResultsExists(String pathFoldersResult);
 
     // TODO: deprecate. used reportProgress instead
+    @Deprecated
     void growProgress();
 
     void reportProgress(final int p);
 
-    List<String> getMclParameters();
+    // Map<String, Number> getMCLParameters();
 
     void callErrorToast(String s);
 

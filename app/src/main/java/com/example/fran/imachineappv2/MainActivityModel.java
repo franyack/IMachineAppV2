@@ -401,17 +401,6 @@ public class MainActivityModel implements MainActivityMvpModel {
         return folder.exists();
     }
 
-    @Deprecated
-    @Override
-    public List<String> getMclParameters() {
-        List<String> mclParameters = new ArrayList<>();
-        mclParameters.add(""+maxIt);
-        mclParameters.add(""+expPow);
-        mclParameters.add(""+infPow);
-        mclParameters.add(""+threshPrune);
-        return  mclParameters;
-    }
-
     @Override
     public void checkNumberImages(MainActivityView mainActivityView) {
         if(tooManyImages){

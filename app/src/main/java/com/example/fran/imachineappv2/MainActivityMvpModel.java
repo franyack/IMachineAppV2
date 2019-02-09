@@ -3,8 +3,6 @@ package com.example.fran.imachineappv2;
 import android.content.Context;
 import android.widget.CheckBox;
 
-import java.util.List;
-
 /**
  * Created by fran on 24/05/18.
  */
@@ -27,7 +25,7 @@ public interface MainActivityMvpModel {
 
     boolean folderResultsExist(String pathFoldersResult);
 
-    List<String> getMclParameters();
+    // List<String> getMclParameters();
 
     void checkNumberImages(MainActivityView mainActivityView);
 }
