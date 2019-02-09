@@ -10,7 +10,8 @@
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
-        android:theme="@style/AppTheme">
+        android:theme="@style/AppTheme"
+        tools:ignore="AllowBackup,GoogleAppIndexingWarning">
         <activity android:name=".MainActivityView">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -19,19 +20,22 @@
             </intent-filter>
         </activity>
         <activity android:name=".ResultsActivityView" />
-        <activity android:name=".FilesManager.FilesMainActivity"/>
+        <activity android:name=".FilesManager.FilesMainActivity"
+            tools:ignore="InnerclassSeparator" />
         <provider
             android:name=".FilesManager.GenericFileProvider"
             android:authorities="${applicationId}.provider"
             android:exported="false"
-            android:grantUriPermissions="true">
+            android:grantUriPermissions="true"
+            tools:ignore="InnerclassSeparator">
             <meta-data
                 android:name="android.support.FILE_PROVIDER_PATHS"
                 android:resource="@xml/provider_paths"/>
         </provider>
     </application>
 
-    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"/>
+    <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE"
+        tools:ignore="ManifestOrder" />
     <uses-permission android:name="android.permission.WRITE_EXTERNAL_STORAGE" />
 
 
