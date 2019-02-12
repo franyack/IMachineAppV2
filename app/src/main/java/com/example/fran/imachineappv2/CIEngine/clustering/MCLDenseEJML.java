@@ -294,9 +294,11 @@ public class MCLDenseEJML {
             // TODO: most similar image, or most similar cluster (in avg) ??
             maxAffIdx=getIndexMaxAffinity(imageIdx, affinityMatrix);
 
-            if (maxAffIdx == -1)
+            if (maxAffIdx == -1){
                 // Put this image in a single cluster for all the images with no similar cluster
                 othersCluster.add(imageIdx);
+                continue;
+            }
 
             // Otherwise, set a the new closest cluster to the given image
             clusters.set(imageIdx, clusters.get(maxAffIdx));
