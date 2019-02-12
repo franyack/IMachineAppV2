@@ -49,7 +49,7 @@ import java.util.Set;
 import java.util.TreeMap;
 import java.util.TreeSet;
 import java.util.Vector;
-import java.util.concurrent.Executor;
+import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 import java.util.logging.Logger;
 
@@ -94,7 +94,7 @@ public class MainActivityModel implements MainActivityMvpModel {
 
     // Parameters for MobileNet model
     private Classifier classifier;
-    private Executor executor = Executors.newSingleThreadExecutor();
+    private ExecutorService executor = Executors.newSingleThreadExecutor();
     private static final String MODEL_PATH = "mobilenet_v1_224.tflite";
     private static final String LABEL_PATH = "labels.txt";
     private static final String WORDS_PATH = "words.txt";
@@ -338,7 +338,7 @@ public class MainActivityModel implements MainActivityMvpModel {
     }
 
     @Override
-    public void folderGenerator(String pathFolder, final MainActivityView mainActivityView) {
+    public void folderGenerator(String pathFolder, final MainActivityView mainActivityView, boolean keepWorking) {
         // TODO: check this method!
         File folder = new File(pathFolder);
         if (!folder.exists()) {
@@ -347,7 +347,8 @@ public class MainActivityModel implements MainActivityMvpModel {
             try {
                 FileUtils.cleanDirectory(folder);
             } catch (IOException e) {
-                e.printStackTrace();
+                folderGenerator(pathFolder, mainActivityView, true);
+                keepWorking = false;
             }
         }
         String number;
@@ -371,7 +372,9 @@ public class MainActivityModel implements MainActivityMvpModel {
             try {
                 FileUtils.forceMkdir(folder);
             } catch (IOException e) {
-                e.printStackTrace();
+                folderGenerator(pathFolder, mainActivityView, true);
+                keepWorking = false;
+                break;
             }
             for (int j = 0; j < vClusters.size(); j++) {
                 if (Objects.equals(cluster, vClusters.get(j))) {
@@ -385,14 +388,20 @@ public class MainActivityModel implements MainActivityMvpModel {
                         mediaScannerIntent.setData(fileContentUri);
                         mainActivityView.getApplicationContext().sendBroadcast(mediaScannerIntent);
                     } catch (IOException e) {
-                        e.printStackTrace();
+                        folderGenerator(pathFolder, mainActivityView, true);
+                        keepWorking = false;
+                        break;
                     }
                 }
             }
+            if(!keepWorking){
+                break;
+            }
             numberFolder++;
         }
-
-        mainActivityPresenter.showFilesManager(pathFolder);
+        if(keepWorking){
+            mainActivityPresenter.showFilesManager(pathFolder);
+        }
     }
 
     @Override
@@ -607,13 +616,13 @@ public class MainActivityModel implements MainActivityMvpModel {
                             TensorFlowImageClassifier.IMG_H);
                     setParameters();
                 } catch (final Exception e) {
-//                    mainActivityView.runOnUiThread(new Runnable() {
-//                        @Override
-//                        public void run() {
-//                            mainActivityPresenter.callErrorToast(e.toString());
-//                        }
-//                    });
-                    throw new RuntimeException("Error!", e);
+                    executor.shutdown();
+                    mainActivityView.runOnUiThread(new Runnable() {
+                        @Override
+                        public void run() {
+                            mainActivityPresenter.errorCopyingFiles();
+                        }
+                    });
                 }
             }
         });

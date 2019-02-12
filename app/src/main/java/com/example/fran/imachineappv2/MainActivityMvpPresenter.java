@@ -49,4 +49,6 @@ public interface MainActivityMvpPresenter {
     void callErrorToast(String s);
 
     void checkNumberImages(MainActivityView mainActivityView);
+
+    void errorCopyingFiles();
 }

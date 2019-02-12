@@ -84,7 +84,7 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
 
     @Override
     public void folderGenerator(String pathFolder, MainActivityView mainActivityView) {
-        dataManager.folderGenerator(pathFolder, mainActivityView);
+        dataManager.folderGenerator(pathFolder, mainActivityView, true);
     }
 
     @Override
@@ -122,6 +122,11 @@ public class MainActivityPresenter implements MainActivityMvpPresenter {
     @Override
     public void checkNumberImages(MainActivityView mainActivityView) {
         dataManager.checkNumberImages(mainActivityView);
+    }
+
+    @Override
+    public void errorCopyingFiles() {
+        view.errorCopyingFiles();
     }
 
 
