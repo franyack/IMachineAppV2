@@ -3,6 +3,7 @@ package com.example.fran.imachineappv2;
 import android.content.Context;
 import android.content.res.AssetFileDescriptor;
 import android.content.res.AssetManager;
+import android.os.Environment;
 import android.support.test.InstrumentationRegistry;
 import android.support.test.runner.AndroidJUnit4;
 
@@ -41,8 +42,8 @@ public class ExperimentRunner {
     private List<HierarchyLookup> hierarchyLookupList = new ArrayList<>();
     private List<String> vImages = new ArrayList<>();
     private List<Integer> vClusters = new ArrayList<>();
-    private static final String imagesDir = "/storage/7B5C-15FF/ImagenesEntrada";  // TODO: set this!
-    private static final String PATH_TO_LOGS = "%t/imachineapp-metrics-%g.log";  // TODO: set this!
+    private static final String imagesDir = "/storage/emulated/0/Models"; // TODO: set this!
+    private static final String PATH_TO_LOGS = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppMetrics";  // TODO: set this!
     private String[] imagesPath;
 
 
@@ -78,28 +79,45 @@ public class ExperimentRunner {
         hierarchyLookupList = ImageNetUtils.loadHierarchyLookup(reader);
         reader.close();
 
-        File imagesDirFile = new File(imagesDir);
+        File imagesDirFiles = new File(imagesDir);
 
-        imagesPath = new String[imagesDirFile.list().length];
+        int imagesPathSize = 0;
+
+        for (File imagesDirFile: imagesDirFiles.listFiles()){
+            if(imagesDirFile.isDirectory()){
+                imagesPathSize += imagesDirFile.listFiles().length;
+            }else {
+                imagesPathSize = imagesDirFiles.listFiles().length;
+                break;
+            }
+        }
+
+        imagesPath = new String[imagesPathSize];
 
         int i = 0;
 
-        for (File imageFile : imagesDirFile.listFiles()){
-            // TODO: allow tree structure of dirs
-            imagesPath[i++] = imageFile.getAbsolutePath();
-
+        for (File imageFile : imagesDirFiles.listFiles()){
+            if(imageFile.isDirectory()){
+                for(File image: imageFile.listFiles()){
+                    imagesPath[i++] = image.getAbsolutePath();
+                }
+            } else{
+                imagesPath[i++] = imageFile.getAbsolutePath();
+            }
         }
     }
 
     @Test
     public void run(){
-
+        //Tic
+        long startProcess = System.nanoTime();
         DMatrixRMaj affinityMatrix = MainActivityModel.runProcessing(imagesPath,null,
                 classifier, wnidWordsList, hierarchyLookupList, vImages, vClusters);
-
+        //Toc
+        double timeProcess = (System.nanoTime() - startProcess) / 1e9;
         // TODO: WARNING: getMCLParameters may not be static in the future
         MetricsReporter metricsReporter = new MetricsReporter(vImages, vClusters, affinityMatrix,
-                MainActivityModel.getMCLParameters(), PATH_TO_LOGS);
+                MainActivityModel.getMCLParameters(), PATH_TO_LOGS, timeProcess);
 
         metricsReporter.run();
 

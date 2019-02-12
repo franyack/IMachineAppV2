@@ -1,8 +1,10 @@
 package com.example.fran.imachineappv2.CIEngine.clustering;
 
+import org.apache.commons.io.FileUtils;
 import org.ejml.data.DMatrixRMaj;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.Date;
@@ -49,6 +51,7 @@ public class MetricsReporter {
     }
 
     private String pathLogs;
+    private double timeProcess;
     private List<String> imagesName;
     private List<Integer> clusters;
 
@@ -60,12 +63,13 @@ public class MetricsReporter {
 
     public MetricsReporter(List<String> imagesName, List<Integer> clusters,
                            DMatrixRMaj affinityMatrix, Map<String, Number> mclParameters,
-                           String pathLogs){
+                           String pathLogs, double timeProcess){
         this.pathLogs = pathLogs;
         this.imagesName = imagesName;
         this.clusters = clusters;
         this.mclParameters = mclParameters;
         this.affinityMatrix = affinityMatrix;
+        this.timeProcess = timeProcess;
 
         try {
             // TODO: check this, its not working
@@ -139,14 +143,20 @@ public class MetricsReporter {
     //the images inside them.
 
     public void run(){
+        String report;
+
         LOGGER.info("###############");
+        report = "###############\n\n";
+        report += "Time to process: " + timeProcess + " seconds.\n\n";
+        report += "###############\n\n";
         LOGGER.info("MCL Parameters:");
-
-        for(Map.Entry<String, Number> param : mclParameters.entrySet())
+        report += "MCL Parameters:\n";
+        for(Map.Entry<String, Number> param : mclParameters.entrySet()){
             LOGGER.info(String.format(Locale.US, "%s: %s", param.getKey(), param.getValue()));
-
+            report += String.format(Locale.US, "%s: %s", param.getKey(), param.getValue()) + "\n";
+        }
         LOGGER.info("###############");
-
+        report += "###############\n";
         Map<String, Integer> actualFoldersSize = new TreeMap<>();
 
         // Map<String, Integer> predictedFoldersMapInit = new TreeMap<>();
@@ -187,6 +197,7 @@ public class MetricsReporter {
 
         //--------------------------------------------------------------------------------------------------------------------
         LOGGER.info("-");
+        report += "-\n";
         for(Map.Entry<Integer, List<String>> cluster: clustersMap.entrySet()){
             //--------------------Seeking the winning class for each folder predicted------------------------------
             predictedClusterMap = new TreeMap<>();
@@ -306,10 +317,15 @@ public class MetricsReporter {
         //----------------------------------------------------------------------------------------------------------------
 
         LOGGER.info("-");
+        report += "-\n";
         LOGGER.info("Sorensen-Dice Average: " + sorensenAverage);
+        report += "Sorensen-Dice Average: " + sorensenAverage + "\n";
         LOGGER.info("-");
+        report += "-\n";
         LOGGER.info("Accuracy: " + accuracy);
+        report += "Accuracy: " + accuracy + "\n";
         LOGGER.info("-");
+        report += "-\n";
 
         //-------------------------------------Getting macro-averaging metrics---------------------------------------------
         float macroAveraginPrecision = 0;
@@ -317,9 +333,13 @@ public class MetricsReporter {
         float macroAveraginF1Score = 0;
         for(Map.Entry<String, Float> precisionG:precisionGrouped.entrySet()){
             LOGGER.info("Precision for " + precisionG.getKey() + ": "+precisionG.getValue());
+            report += "Precision for " + precisionG.getKey() + ": "+precisionG.getValue() + "\n";
             LOGGER.info("Recall for " + precisionG.getKey() + ": "+recallGrouped.get(precisionG.getKey()));
+            report += "Recall for " + precisionG.getKey() + ": "+recallGrouped.get(precisionG.getKey()) + "\n";
             LOGGER.info("F1-Score for " + precisionG.getKey() + ": "+f1ScoreGrouped.get(precisionG.getKey()));
+            report += "F1-Score for " + precisionG.getKey() + ": "+f1ScoreGrouped.get(precisionG.getKey()) + "\n";
             LOGGER.info("-");
+            report += "-\n";
             macroAveraginPrecision+=precisionG.getValue();
             macroAveraginRecall+=recallGrouped.get(precisionG.getKey());
             macroAveraginF1Score+=f1ScoreGrouped.get(precisionG.getKey());
@@ -330,16 +350,20 @@ public class MetricsReporter {
         //-------------------------------------------------------------------------------------------------------------------
 
         LOGGER.info("Precision Macro-Averaging: "+ macroAveraginPrecision);
+        report += "Precision Macro-Averaging: "+ macroAveraginPrecision + "\n";
         LOGGER.info("Recall Macro-Averaging: "+ macroAveraginRecall);
+        report += "Recall Macro-Averaging: "+ macroAveraginRecall + "\n";
         LOGGER.info("F1-Score Macro-Averaging: "+ macroAveraginF1Score);
+        report += "F1-Score Macro-Averaging: "+ macroAveraginF1Score + "\n";
         LOGGER.info("-");
+        report += "-\n";
 
-        this.runSilhouette();
+        this.runSilhouette(report);
 
         // TODO: return these results in a Map?
     }
 
-    public void runSilhouette(){
+    public void runSilhouette(String report){
         // From https://en.wikipedia.org/wiki/Silhouette_(clustering)
 
         float averageClusterDistance, lowestAverageDistance, lowestAverageDistanceAuxiliary, silhouette, silhouetteAuxiliary;
@@ -398,67 +422,37 @@ public class MetricsReporter {
         // The average of s(i) over all points of a cluster is a measure of how tightly grouped all the points in the cluster are.
         // Thus the average s(i) over all data of the entire dataset is a measure of how appropriately the data have been clustered.
         LOGGER.info("Average Silhouette: " + silhouette/imagesName.size());
+        report += "Average Silhouette: " + silhouette/imagesName.size() + "\n";
+        write(report);
     }
 
     private float getAffinityValue(Integer i1, Integer i2) {
         return (float) (1-affinityMatrix.get(i1, i2));
     }
 
-    /*
 
-    private void write(String pathMetrics){
 
-        //String pathFolderChosen = Environment.getExternalStorageDirectory() + File.separator + "Models";
-        //String pathFolder = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppTemporaryResults";
-        //String pathMetrics = Environment.getExternalStorageDirectory() + File.separator + "IMachineAppMetrics";
-        File file = new File(pathMetrics);
-        if(file.exists()){
-            try {
+    private void write(String report){
+        try {
+            File file = new File(pathLogs);
+            if(file.exists()){
                 FileUtils.cleanDirectory(file);
-            } catch (IOException e) {
-                e.printStackTrace();
-            }
-        }else{
-            try {
+            }else{
                 FileUtils.forceMkdir(file);
-            } catch (IOException e) {
-                e.printStackTrace();
             }
-        }
-        if(metrics == null){
-            FileOutputStream fout = null;
-            ObjectOutputStream oos = null;
-            metrics = new Metrics(affinityMatrix, vImages, vClusters, pathFolderChosen, pathFolder, getMclParameters(), tLoop);
-            try {
-                fout = new FileOutputStream(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppMetrics" + File.separator + "objectMetrics.ser");
-                oos = new ObjectOutputStream(fout);
-                oos.writeObject(metrics);
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            } finally {
-                if (fout != null) {
-                    try {
-                        fout.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-
-                if (oos != null) {
-                    try {
-                        oos.close();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
+            File metrics = new File(pathLogs, "Metrics");
+            if(!metrics.exists()){
+                metrics.mkdirs();
             }
-
+            File gpxfile = new File(metrics, "metrics.txt");
+            FileWriter writer = new FileWriter(gpxfile);
+            writer.append(report);
+            writer.flush();
+            writer.close();
         }
-
-
+        catch (IOException e) {
+            e.printStackTrace();
+        }
     }
 
-    */
 }
