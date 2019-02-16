@@ -22,4 +22,6 @@ public interface MainActivityMvpView {
     void reportProgress(final int p);
 
     void callErrorToast(String s);
+
+    void errorCopyingFiles();
 }

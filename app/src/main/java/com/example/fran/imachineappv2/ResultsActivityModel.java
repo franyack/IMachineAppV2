@@ -212,9 +212,14 @@ public class ResultsActivityModel implements ResultsActivityMvpModel {
                     resultsActivityView.sendBroadcast(mediaScannerIntent);
                 }
             }
+            presenter.backToMainActivity(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppResult" + i);
         } catch (IOException e) {
-            e.printStackTrace();
+            try {
+                FileUtils.deleteDirectory(dstFolder);
+            } catch (IOException e1) {
+                e1.printStackTrace();
+            }
+            generateNewResultFolder(pathFolderTemporary,resultsActivityView);
         }
-        presenter.backToMainActivity(Environment.getExternalStorageDirectory() + File.separator + "IMachineAppResult" + i);
     }
 }

@@ -63,4 +63,5 @@
     <string name="folder">Carpeta</string>
     <string name="noclusterfound">ImagenesSinAgrupar</string>
     <string name="tooMuchImages">Esta carpeta contiene demasiadas imágenes. Solo se procesarán 400!</string>
+    <string name="errorWithFilesMain">Disculpe las molestias, hubo un error con los archivos. Por favor, repita el proceso.</string>
 </resources>
