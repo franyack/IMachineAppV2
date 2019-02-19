@@ -543,6 +543,8 @@ public class MainActivityModel implements MainActivityMvpModel {
 
         affinityMatrix = MCLDenseEJML.averageMatrices(matList);
 
+        DMatrixRMaj affinityMatrix2 = affinityMatrix.copy();
+
         // Now run MCL clustering over A with the given parameters
         MCLDenseEJML mcl = new MCLDenseEJML(maxIt, expPow, infPow, epsConvergence, threshPrune);
         clusterMatrix = mcl.run(affinityMatrix);
@@ -563,12 +565,12 @@ public class MainActivityModel implements MainActivityMvpModel {
             }
         }
 
-        MCLDenseEJML.postCluster(vClusters, affinityMatrix);
+        MCLDenseEJML.postCluster(vClusters, affinityMatrix2);
 
         // if (mainActivityPresenter != null)
         //    mainActivityPresenter.clustersReady();
 
-        return affinityMatrix;
+        return affinityMatrix2;
     }
 
     @SuppressLint("DefaultLocale")
